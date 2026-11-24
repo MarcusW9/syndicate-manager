@@ -13,7 +13,7 @@
 // 2026-10-28). Its own smooth scrolling never counts as you scrolling away (2026-11-03: it
 // sometimes stopped following when a new moment arrived mid-scroll).
 
-import { runPlace, DEFAULT_HEADING } from '../core/multimap.js';
+import { runPlace, DEFAULT_HEADING, mapsOf } from '../core/multimap.js';
 import { feedItems } from '../core/feed.js';
 import { needsPlayer } from '../core/autorun.js';
 import { ALERT_MAX, OVERWATCH_KIT, ZONES } from '../core/incidents.js';
@@ -388,7 +388,7 @@ function tally(state) {
   const pips = el.querySelector('.watch__alert');
   pips.innerHTML = `Alert ${Array.from({ length: ALERT_MAX }, (_, i) => `<i class="${i < alert ? 'is-on' : ''}"></i>`).join('')}`;
   pips.setAttribute('aria-label', `Alert ${alert} of ${ALERT_MAX}${am.wentLoud ? ', gone loud' : ''}`);
-  el.querySelector('.watch__phase').textContent = am.maps && am.maps.at && am.maps.at !== 'finale' ? (templateById(am.templateId)?.maps?.heading ?? DEFAULT_HEADING) : am.raid ? 'Holding the hall' : am.post ? 'Holding the post' : am.expedition ? 'The deal went wrong' : am.wentLoud ? 'Gone loud' : ZONES[am.zone]?.name ?? 'Getting there';
+  el.querySelector('.watch__phase').textContent = am.maps && am.maps.at && am.maps.at !== 'finale' ? (mapsOf(templateById(am.templateId), am)?.heading ?? DEFAULT_HEADING) : am.raid ? 'Holding the hall' : am.post ? 'Holding the post' : am.expedition ? 'The deal went wrong' : am.wentLoud ? 'Gone loud' : ZONES[am.zone]?.name ?? 'Getting there';
   pips.style.display = am.raid || am.post || am.expedition ? 'none' : ''; // a raid has no alarm to raise: they're already here
   const events = am.events ?? [];
   const saves = events.filter((e) => e.kind === 'save' && e.success && e.via !== 'patch').length;

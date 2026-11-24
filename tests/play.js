@@ -45,6 +45,7 @@ export function toCrisis(state, policy = carefulPolicy) {
     else if (type === 'zone') s = M.enterZone(s);
     else if (type === 'incident') s = M.runIncident(s);
     else if (type === 'battle') s = M.runBattle(s);
+    else if (type === 'stop' || type === 'clue') s = M.followStops(s); // a route's stops (core/multimap.js, core/prep.js)
     else return s;
   }
   throw new Error('toCrisis got stuck');

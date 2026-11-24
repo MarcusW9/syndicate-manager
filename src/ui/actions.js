@@ -19,12 +19,12 @@ import { money } from '../core/money.js';
 import { startMission, resolvePending, runBattle, handOffFight, pullBack, chooseOption, resolveCritical, closeMission } from '../core/mission.js';
 import { fightTap, takeOrders } from './fightorders.js';
 import { fightScreenTap, takeFightChange } from './fightscreen.js';
-import { sendOff, autoStep } from '../core/autorun.js';
+import { sendOff, autoStep, watchOff, watchByDay } from '../core/autorun.js';
 import { takeCall, letThemRun, takeCommand } from '../core/away.js';
 import { assignSlot, planKit } from './board.js';
 import { leanPicks } from './plan.js';
 import { gearPlace } from './gear.js';
-import { buyGear, buyOffer, itemName, sellPrice, sellGear, sellMany, equip, unequip } from '../core/gear.js';
+import { buyGear, buyOffer, itemName, sellPrice, sellGear, sellMany, equip, unequip, markSeen } from '../core/gear.js';
 import { togglePause, toggleSpeed, showLatest, paceChanged, closeFinale } from './watch.js';
 import { sideTaskById, sendOnSideTask } from '../core/sidetasks.js';
 import { markRead } from '../core/inbox.js';
@@ -161,7 +161,8 @@ export function onClick(e) {
       V.sellPick = null;
       return setState(sellMany(state, uids));
     }
-    case 'stash-open': V.stashOpen = id; break;
+    case 'stash-open': V.stashOpen = id; return setState(markSeen(state, [id])); // opened: no more NEW tag (2026-11-24)
+    case 'gear-seen': return setState(markSeen(state)); // Today's "New in the stash" dismissed
     case 'stash-close': V.focusNext = { action: 'stash-open', id: V.stashOpen }; V.stashOpen = null; break;
     case 'stash-give': { const [uid, opId] = id.split('|'); V.stashOpen = null; return setState(equip(state, uid, opId, null)); }
     case 'op-tab': V.opTab = id; V.gearSlot = null; V.bagPick = null; break;
@@ -439,6 +440,18 @@ export function onClick(e) {
     }
     case 'skip-report': break; // tapping a report as it plays shows the end at once
     case 'start-job': {
+      // A long job with stops is watched day by day (2026-11-24): the crew goes out and calls you to each stop.
+      if (watchByDay(state, state.jobs.find((j) => j.id === V.plan.jobId))) {
+        const next = watchOff(state, V.plan.jobId, V.plan.crew, V.plan.approach, V.plan.orders ?? 'steady', planOpts());
+        const out = (next.awayJobs ?? []).find((j) => j.mission.jobId === V.plan.jobId);
+        if (out) V.sendOffCue = { jobId: V.plan.jobId, name: templateById(out.mission.templateId).name, returnDay: out.returnDay,
+          crewIds: [...out.mission.crewIds, out.mission.overwatch?.id, out.mission.wheels, out.mission.standby?.id].filter(Boolean) };
+        V.plan = null;
+        nav.clear();
+        V.screen = 'city'; V.cityTab = 'map'; V.cityDistrict = null;
+        V.openMessageId = null;
+        return setState(next);
+      }
       const next = startMission(state, V.plan.jobId, V.plan.crew, V.plan.approach, planOpts());
       V.plan = null;
       return setState(next);

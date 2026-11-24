@@ -4,7 +4,8 @@
 //
 // ui: helpers from app.js { esc, money, face, statusChip }.
 
-import { GEAR, SLOTS, TIERS, APEX_GEAR, perkById, perksOf, apexSwapOut, carried, itemName, itemTitle, buyPrice, sellPrice, canChangeGear, kitsFor, sidearmStats, placeOf, cellsOf, fitsAt, firstFit, bagUsed } from '../core/gear.js';
+import { GEAR, SLOTS, TIERS, APEX_GEAR, perkById, perksOf, apexSwapOut, carried, itemName, itemTitle, buyPrice, sellPrice, canChangeGear, kitsFor, sidearmStats, placeOf, cellsOf, fitsAt, firstFit, bagUsed, unseenGear } from '../core/gear.js';
+import { bestTaker } from '../core/loot.js';
 import { BAG, SOCKETS, BASE_TIER } from '../data/gear.js';
 import { hitOf, soakOf } from '../core/fight.js';
 import { lineText } from '../core/fighttext.js';
@@ -200,7 +201,7 @@ function stashRow(ui, item) {
   const perks = perksOf(item).length;
   return `<li><button class="row stashrow stashrow--${(TIERS[item.tier] ?? TIERS[BASE_TIER]).colour}" data-action="stash-open" data-id="${esc(item.uid)}" aria-label="${esc(itemTitle(item))}: ${esc(itemEffect(item))}. Tap to give it to someone or sell it.">
     ${thumb(item)}
-    <span class="stashrow__main"><strong class="stashrow__name">${esc(itemTitle(item))}</strong>
+    <span class="stashrow__main"><strong class="stashrow__name">${esc(itemTitle(item))}${item.unseen ? ' <span class="newtag">New</span>' : ''}</strong>
       <span class="stashrow__eff small">${esc(itemEffect(item))}${perks ? ` · ${perks} perk${perks > 1 ? 's' : ''}` : ''}</span></span>
     <span class="stashrow__go" aria-hidden="true">›</span>
   </button></li>`;
@@ -212,7 +213,7 @@ function stashTick(ui, item, on) {
   return `<li><button class="row stashrow stashrow--tick stashrow--${(TIERS[item.tier] ?? TIERS[BASE_TIER]).colour} ${on ? 'is-on' : ''}" data-action="sell-tick" data-id="${esc(item.uid)}" aria-pressed="${on}" aria-label="${esc(itemTitle(item))}, sells for ${esc(money(sellPrice(item)))}. ${on ? 'Ticked' : 'Tap to tick'}.">
     <span class="stashrow__box" aria-hidden="true">${on ? '✓' : ''}</span>
     ${thumb(item)}
-    <span class="stashrow__main"><strong class="stashrow__name">${esc(itemTitle(item))}</strong>
+    <span class="stashrow__main"><strong class="stashrow__name">${esc(itemTitle(item))}${item.unseen ? ' <span class="newtag">New</span>' : ''}</strong>
       <span class="stashrow__eff small">${esc(itemEffect(item))}</span></span>
     <span class="stashrow__price small">${esc(money(sellPrice(item)))}</span>
   </button></li>`;
@@ -435,5 +436,58 @@ export function renderGearSheet(ui, state, op, slot) {
       ${others.length ? `<details class="sheet__others"><summary class="sheet__group">Carried by others (${others.length}) <span>takes it off them</span></summary>
       <ul class="list list--plain gearlist">${others.map(({ item, o }) => itemRow(ui, item, { action: 'equip', carrier: o, ...apexBlock(esc, op, item, current, `From ${o.handle}`, !canChangeGear(state, o).ok) })).join('')}</ul>` : ''}
       ${current ? `<button class="btn btn--ghost btn--block" data-action="unequip" data-id="${esc(current.uid)}">Put it back in the stash</button>` : ''}
+    </div>`;
+}
+
+/**
+ * The report's spoils card (owner, 2026-11-24, drafts/PROPOSAL-rewards-visibility.md A1): a dropped piece Verified or
+ * better, large, with what it does, its perks, and Give to (the runner it helps most, core/loot.js bestTaker) or the
+ * stash. Once given, it says who has it. line: the report's loot line ({ uid, tier }). Empty when the item is gone.
+ */
+export function spoilsCard(ui, state, line) {
+  const { esc } = ui;
+  const inStash = (state.stash ?? []).find((i) => i.uid === line?.uid);
+  const holder = inStash ? null : state.crew.find((op) => carried(op).some((i) => i.uid === line?.uid));
+  const item = inStash ?? (holder && carried(holder).find((i) => i.uid === line.uid));
+  if (!item) return '';
+  const colour = (TIERS[item.tier] ?? TIERS[BASE_TIER]).colour;
+  const best = inStash ? bestTaker(state, item) : null;
+  const art = gearArt(item, { width: 160 });
+  return `
+    <section class="spoils spoils--${colour}" aria-label="Spoils">
+      <p class="spoils__kicker">Spoils ${tierTag(item)}</p>
+      <div class="spoils__body">
+        ${art ? `<span class="spoils__art ${tierFrame(item)}" aria-hidden="true">${art}</span>` : `<span class="spoils__icon" aria-hidden="true">${glyphFor(item)}</span>`}
+        <div class="spoils__text"><strong class="spoils__name">${esc(itemTitle(item))}</strong>
+          <span class="spoils__eff small">${esc(itemEffect(item))}</span>${apexHistory(item)}</div>
+      </div>
+      ${perkList(item)}
+      ${holder ? `<p class="spoils__who small">${esc(holder.handle)} carries it now.</p>` : `<div class="spoils__go">
+        ${best ? `<button class="btn btn--primary" data-action="stash-give" data-id="${esc(`${item.uid}|${best.op.id}`)}">Give to ${esc(best.op.handle)} <span>${esc(best.text)}</span></button>` : ''}
+        <button class="btn btn--ghost" data-action="open-armoury" data-tab="stash">${best ? 'Stash' : 'To the stash'}</button>
+      </div>`}
+    </section>`;
+}
+
+/**
+ * Today's "New in the stash" line (2026-11-24, B1): the newest unseen piece, who it would help most, Give to,
+ * the Armoury, and a dismiss that marks them all seen. Not a decision: it never counts on Today's badge.
+ */
+export function newGearLine(ui, state) {
+  const { esc } = ui;
+  const fresh = unseenGear(state);
+  if (!fresh.length) return '';
+  const item = fresh[0];
+  const best = bestTaker(state, item);
+  const more = fresh.length > 1 ? ` and ${fresh.length - 1} more` : '';
+  return `
+    <div class="newgear newgear--${(TIERS[item.tier] ?? TIERS[BASE_TIER]).colour}" role="status">
+      ${thumb(item)}
+      <p class="newgear__text"><strong>New in the stash:</strong> ${esc(itemTitle(item))}${esc(more)}.${best ? ` <span class="muted">Best for ${esc(best.op.handle)}, ${esc(best.text)}.</span>` : ''}</p>
+      <div class="newgear__go">
+        ${best ? `<button class="btn" data-action="stash-give" data-id="${esc(`${item.uid}|${best.op.id}`)}">Give to ${esc(best.op.handle)}</button>` : ''}
+        <button class="btn btn--ghost" data-action="open-armoury" data-tab="stash">Armoury</button>
+        <button class="btn btn--ghost newgear__x" data-action="gear-seen" aria-label="Seen: hide this">✕</button>
+      </div>
     </div>`;
 }

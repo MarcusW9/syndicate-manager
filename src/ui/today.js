@@ -19,7 +19,8 @@ import { renderWord } from './tongs.js';
 import { backupBanner } from './app.js';
 import { renderMessage, crewLinks } from './messages.js';
 import { renderThreatLines, calls, raidCalls } from './raidcards.js';
-import { esc, pickLine, face, cityName, fillLine, andList, hallLabel } from './shared.js';
+import { esc, pickLine, face, cityName, fillLine, andList, hallLabel, gearUi } from './shared.js';
+import { newGearLine } from './gear.js';
 import { needsYou } from './nav.js';
 import { state, backPlayed, V } from './view.js';
 
@@ -72,6 +73,7 @@ export function renderInbox() {
           ${renderBriefing()}
           ${renderNextUp()}
           ${renderBack()}
+          ${newGearLine(gearUi, state)}
           ${renderOutLine()}
           ${list}
         </section>

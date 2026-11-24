@@ -11,13 +11,15 @@
 // can put someone at death's door, never dead: only "keep fighting" (the push on of a fight)
 // leaves them dying, and any exit after that still brings them home.
 
-import { stopOf, nextStop } from './multimap.js';
+import { stopOf, nextStop, mapsOf } from './multimap.js';
+import { prepRoute } from './prep.js';
+import { prepCrisisById } from '../data/prepStops.js';
 import { finishPost } from './contracts.js';
 import { finishExpeditionFight } from './expeditions.js';
 import { jobGrudge, addGrudge, grudgeOf, GANGS } from './gangs.js';
 import { finishRaid, followHome } from './raids.js';
 import { crewLead } from './lead.js';
-import { templateById, twistById, jobView, namedBonus } from './jobs.js';
+import { templateById, twistById, jobView, namedBonus, baseDays } from './jobs.js';
 import { legendResult } from './legend.js';
 import { rivalForJob, noteRivalEncounter } from './rivals.js';
 import { NAMED_OFFER, NAMED_TEXT } from '../data/fame.js';
@@ -56,13 +58,14 @@ import { checkLevelUps } from './levelup.js';
 import { noteJobMarks } from './marks.js';
 import { planIncidents, weaveIncidents, incidentById, incidentIn, incidentDifficulty, handlerFor, bestSave, standbySave, decisionChoices, ALERT_MAX, SERIOUS_CHANCE, SERIOUS_PER_ALERT, PATCH_MIN_MEDICAL, ZONES } from './incidents.js';
 import { openingResult } from './halls.js';
-import { heistResult } from './heists.js';
+import { heistResult, heistFor } from './heists.js';
 import { lootFor } from './loot.js';
 
 const EXIT_KINDS = new Set(['abort', 'extract']);
 const STABILISE_DIFFICULTY = 9;
 
-const crisisById = (tpl, id) => tpl.crises.find((c) => c.id === id) ?? twistById(id);
+// A long job's prep stops are crises of the shared library (data/prepStops.js), not the template's.
+const crisisById = (tpl, id) => tpl.crises.find((c) => c.id === id) ?? prepCrisisById(id) ?? twistById(id);
 
 /** Difficulty of a roll on this job: the offer's threat change shifts every roll by 1 per step. */
 export const REP_PER_THREAT = 0.75;
@@ -226,14 +229,18 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
   const watched = watchedIn(state, tpl.district) ? WATCHED_PENALTY : 0; // only a job in the watched district
   if (watched) state.heatWatched = false;
   // The approach's costs: time away, and props and bribes paid up front (data/approaches.js).
-  const days = Math.max(1, (job.days ?? tpl.days) + (ap.days ?? 0)); // the offer's days (core/jobs.js daysRange)
+  const days = Math.max(1, (job.days ?? baseDays(tpl)) + (ap.days ?? 0)); // the offer's days (core/jobs.js daysRange)
   const bribe = (ap.bribePerThreat ?? 0) * view.threat;
   state.cash -= bribe;
   // A multi-map job (core/multimap.js) plays its stops first; the finale's queue waits until the route gets there.
-  const maps = tpl.maps ? { at: null, path: [], wrongUsed: false, then: null } : null;
-  const finale = tpl.maps ? queue.splice(0, queue.length, { type: 'stop', id: tpl.maps.start }) : null;
+  // A long job with no route of its own plays its prep stops (core/prep.js) the same way, from the offer's picks.
+  const route = !tpl.maps && job.prep?.length ? prepRoute(job.prep, tpl, approach) : null;
+  const routeOf = tpl.maps ?? route;
+  const maps = routeOf ? { at: null, path: [], wrongUsed: false, then: null } : null;
+  const finale = routeOf ? queue.splice(0, queue.length, { type: 'stop', id: routeOf.start }) : null;
   state.activeMission = {
     ...(maps ? { maps, finale } : {}),
+    ...(route ? { route } : {}),
     jobId, templateId: tpl.id, crewIds, approach, days, bribe,
     overwatch: ow ? { id: ow.id, kit: ow.kit, left: overwatchKit(owOp, ow.kit).uses } : null,
     wheels: wheels ?? null, standby: standby ? { id: standby, used: false } : null,
@@ -267,8 +274,22 @@ export function followStops(prev) {
   const state = structuredClone(prev);
   const am = state.activeMission;
   const tpl = templateById(am.templateId);
+  // Arriving at the job itself (its own map): the arrival line, then the job's own queue. A step of its own (2026-11-24),
+  // so a crew out on a long job waits for the job's day before it gets here (core/autorun.js stopIndex).
+  if (step.type === 'stop' && step.id === 'finale') {
+    const h = stopOf(tpl, 'finale', am);
+    const text = fill(`${h.time}. ${h.arrive}`, state, am);
+    am.maps.at = 'finale';
+    am.log.push({ kind: 'beat', text });
+    record(am, { kind: 'stop', stop: 'finale', district: tpl.district, place: h.place ?? null, text, report: text, finale: true });
+    am.report = [...(am.report ?? []), text];
+    am.queue.splice(am.step + 1, 0, ...(am.finale ?? []));
+    am.finale = null;
+    advance(state);
+    return state;
+  }
   if (step.type === 'stop') {
-    const s = stopOf(tpl, step.id);
+    const s = stopOf(tpl, step.id, am);
     am.maps.at = step.id;
     am.maps.path.push(step.id);
     const text = fill(`${s.time}. ${s.arrive}`, state, am);
@@ -283,18 +304,9 @@ export function followStops(prev) {
   const from = am.events.map((e) => e.kind).lastIndexOf('stop');
   const rolled = am.events.slice(from).reverse().find((e) => (e.kind === 'roll' || e.kind === 'sure') && !e.incident);
   const result = rolled ? { success: rolled.success !== false, margin: rolled.die == null ? 0 : rolled.die + rolled.value - rolled.need } : null;
-  const go = nextStop(state.seed, am.jobId, tpl, am.maps, step.id, result);
+  const go = nextStop(state.seed, am.jobId, tpl, am.maps, step.id, result, mapsOf(tpl, am));
   if (go.wrong) { am.maps.wrongUsed = true; am.maps.then = go.then; }
-  if (go.next === 'finale') {
-    const h = stopOf(tpl, 'finale');
-    const text = fill(`${h.time}. ${h.arrive}`, state, am);
-    am.maps.at = 'finale';
-    am.log.push({ kind: 'beat', text });
-    record(am, { kind: 'stop', stop: 'finale', district: tpl.district, place: h.place ?? null, text, report: text, finale: true });
-    am.report = [...(am.report ?? []), text];
-    am.queue.splice(am.step + 1, 0, ...(am.finale ?? []));
-    am.finale = null;
-  } else am.queue.splice(am.step + 1, 0, { type: 'stop', id: go.next });
+  am.queue.splice(am.step + 1, 0, { type: 'stop', id: go.next });
   advance(state);
   return state;
 }
@@ -698,6 +710,20 @@ function failureTarget(state, am, roller, choice) {
   return roller;
 }
 
+/**
+ * A prep stop's effect on the job ahead (data/prepStops.js, 2026-11-24): ease lowers every later roll (as a heist's
+ * prep does, am.threatDelta), dropCrisis takes the job's last drawn crisis out of the finale's queue, alert starts the
+ * job that much more alert (capped below going loud). Mutates am.
+ */
+function prepEffect(am, cost) {
+  if (cost.ease) am.threatDelta = (am.threatDelta ?? 0) - cost.ease;
+  if (cost.alert) am.alert = Math.min(ALERT_MAX - 1, (am.alert ?? 0) + cost.alert);
+  for (let n = 0; n < (cost.dropCrisis ?? 0); n++) {
+    const at = (am.finale ?? []).findLastIndex((q) => q.type === 'crisis' && !q.twist);
+    if (at >= 0) am.finale.splice(at, 1);
+  }
+}
+
 function costText(cost = {}) {
   const parts = [];
   if (cost.payCut > 0) parts.push(cost.payCut >= 1 ? 'lose all pay' : `lose ${Math.round(cost.payCut * 100)}% of pay`);
@@ -705,6 +731,10 @@ function costText(cost = {}) {
   if (cost.heat) parts.push(`+${cost.heat} heat`);
   if (cost.clientTrust) parts.push('client unhappy');
   if (cost.cash) parts.push(`${cost.cash > 0 ? '+' : ''}${cost.cash} cash`);
+  // A prep stop's effect on the job ahead (data/prepStops.js).
+  if (cost.ease) parts.push('the job gets easier');
+  if (cost.dropCrisis) parts.push('one less problem on the job');
+  if (cost.alert) parts.push(`the job starts on alert +${cost.alert}`);
   return parts.join(', ');
 }
 
@@ -839,6 +869,7 @@ export function chooseOption(prev, choiceId) {
     am.payCut += sc.payCut ?? 0;
     am.extraHeat += sc.heat ?? 0;
     if (sc.cash) state.cash += sc.cash;
+    prepEffect(am, sc);
   } else {
     am.log.push({ kind: 'bad', text: fill(choice.failure, state, voice) });
     const fc = choice.failureCost ?? {};
@@ -852,6 +883,7 @@ export function chooseOption(prev, choiceId) {
       event.saved = 'Clean Professional: one less heat';
     }
     if (fc.cash) state.cash += fc.cash;
+    prepEffect(am, fc);
     if (choice.failureInjury && choice.failureInjury !== 'none') {
       const target = failureTarget(state, am, roller.op, choice);
       const injury = worsenInjury(target.condition.injury, choice.failureInjury);
@@ -1132,9 +1164,10 @@ function finish(state) {
 
   const outcome = deaths.length ? 'loss' : am.aborted ? 'aborted' : 'completed';
   const opened = openingResult(state, am.jobId, outcome); // a district's opening favour (core/halls.js)
+  const heistNow = heistFor(state, am.jobId); // read before heistResult closes it: a finale always drops (core/loot.js)
   const heistLines = heistResult(state, am.jobId, outcome); // a heist's prep or finale (core/heists.js)
-  // A clean main job may leave gear in the stash, or scrap to fence (core/loot.js). Side tasks never reach finish().
-  const loot = outcome === 'completed' ? lootFor(state, am.jobId) : null;
+  // A clean main job may leave gear in the stash, or scrap to fence (core/loot.js), better on harder work. Side tasks never reach finish().
+  const loot = outcome === 'completed' ? lootFor(state, am.jobId, { threat: am.threat, heist: !!heistNow && !heistNow.step }) : null;
   const client = clientById(am.clientId);
   am.result = { report: am.report ?? [], outcome, pay, heatGain, injuries, deaths: deaths.map((d) => d.handle), freelance, growth: growthEvents, graduated: graduatedOps.map((o) => ({ id: o.id, handle: o.handle, name: o.name, role: o.role, color: o.color })), client: client?.name ?? null, trustChange };
   am.done = true;

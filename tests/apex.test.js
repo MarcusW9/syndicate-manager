@@ -37,9 +37,11 @@ const wear = (state, op, id) => {
 };
 /** Run with every drop an Apex one (the tier odds and the drop chance forced), then put them back. */
 const forceApex = (fn) => {
-  const { chance } = LOOT; const { drop } = TIERS.apex;
+  // The odds by threat (2026-11-24, LOOT.byThreat) too: every row Apex for the test.
+  const { chance } = LOOT; const { drop } = TIERS.apex; const rows = structuredClone(LOOT.byThreat);
   LOOT.chance = 1; TIERS.apex.drop = 100;
-  try { return fn(); } finally { LOOT.chance = chance; TIERS.apex.drop = drop; }
+  for (const r of Object.values(LOOT.byThreat)) r.apex = 100;
+  try { return fn(); } finally { LOOT.chance = chance; TIERS.apex.drop = drop; LOOT.byThreat = rows; }
 };
 
 test('eight named pieces, most types covered, each valid: a real type, a look that draws, a history, one unique perk the rules read', () => {

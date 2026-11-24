@@ -98,17 +98,20 @@ test('aborting at a stop brings everyone home; cautious and steady lose nobody',
   }
 });
 
-test('hands-off: the stops on the days before the last, the finale on the last', () => {
+test('hands-off: one stop a day on the days before the last, the finale on the last', () => {
   let s = game(5);
   s = sendOff(s, s.jobs[0].id, s.crew.map((o) => o.id), 'stealth', 'steady', { callIn: 'never' });
-  s = advanceDay(s);
-  const am = s.awayJobs[0]?.mission;
-  if (am) { // still out: the stops are done and the finale waits for the last day
-    assert.equal(am.maps.at, 'finale');
-    assert.equal(M.currentStep(am).type, 'beat');
-    assert.equal(M.currentStep(am).index, 0);
+  const days = s.awayJobs[0].mission.days;
+  for (let d = 1; d < days && s.awayJobs.length; d++) {
+    s = advanceDay(s);
+    const am = s.awayJobs[0]?.mission;
+    if (!am) break; // they walked away: the report is in
+    // Still out: one stop a day (2026-11-24, long jobs), and the finale waits for the last day.
+    assert.ok(am.maps.path.length <= d, `day ${d}: ${am.maps.path.length} stops`);
+    assert.notEqual(am.maps.at, 'finale');
+    assert.equal(M.currentStep(am).type, 'stop');
   }
-  for (let i = 0; i < 5 && s.awayJobs.length; i++) s = advanceDay(s);
+  for (let i = 0; i < 8 && s.awayJobs.length; i++) s = advanceDay(s);
   const r = s.inbox.find((m) => m.type === 'report' && m.back?.templateId === 'kidnap');
   assert.ok(r, 'the report came back');
   assert.match(r.timeline.steps[0], /^11:20\./, 'the report starts at the first stop');

@@ -239,7 +239,10 @@ d20 + the operative's stat must reach 10 + difficulty. Stats run about 4-14.
     failure as that person's loss, not only the crew's.
 - Size: 4-5 beats, exactly 6 crises. Pay: rookie 1,300-1,800; threat 2 3,000-4,500;
   threat 3 4,000-5,500; threat 4 6,000-7,000; threat 5 ~12,000. days: 1 (2-3 only for big
-  jobs). crewSize: 2 rookie, 3 mid, 4 big. heat: 0.
+  jobs). The game lengthens harder work itself (2026-11-24): a job that is not rookie or routine
+  runs at least its threat in days, with prep stops from a shared library and a pay rise for the
+  days added, so write `days` and `pay` for the job as it is, not for its prep.
+  crewSize: 2 rookie, 3 mid, 4 big. heat: 0.
 - keyStats: the 2-3 stats the job leans on (combat, stealth, tech, social, driving,
   medical, cool).
 - id: snake_case, new. The export name: SCREAMING_SNAKE_CASE of the job's name.
@@ -354,7 +357,8 @@ places, a run of drops, someone to track down. Add a `maps` block after `brief`:
   result go straight to the finale; a stop with `wrong: true` (and no `next`) is a dead end a
   failed stop can send the crew to once, before they get back on track.
 - Times run forward through the day; the finale is usually that night. Give the job
-  `days: 2` (the stops on the first day, the finale on the second), threat 3 or more.
+  `days: 2`, threat 3 or more. Sent off, a crew plays one stop a day and the finale on the job's
+  last day (2026-11-24); a job with its own maps gets no shared prep stops.
 
 FIGHT JOBS (optional; only if the PITCH says "fight: yes"). Most jobs leave this out. A fight
 job plays its fight on the live map with orders, and may have WAVES: groups of enemies that

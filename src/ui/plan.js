@@ -19,7 +19,10 @@ import { rollTarget, riskLabel, successChance } from '../core/risk.js';
 import { money } from '../core/money.js';
 import { fillBrief, CALL_IN } from '../core/mission.js';
 import { renderFightPlan } from './fightscreen.js';
-import { handsOffAllowed, ORDERS } from '../core/autorun.js';
+import { handsOffAllowed, ORDERS, watchByDay } from '../core/autorun.js';
+import { prepPlan } from '../core/prep.js';
+import { spoilsFor } from '../core/loot.js';
+import { TIERS } from '../data/gear.js';
 import { planRead, planTries, leanPicks as leanPicksRaw } from '../core/squad.js';
 import { renderBoard, renderPicker, renderCoverage } from './board.js';
 import { kitsFor } from '../core/gear.js';
@@ -209,11 +212,13 @@ export function renderPlan() {
         // tap away instead of inside the Orders fold. Picking one also sets plan.mode, so the fold agrees.
         const canSend = handsOffAllowed(t);
         const away = V.plan.mode !== 'live' && canSend;
+        // A long job with stops is watched day by day (2026-11-24): you're called to each stop on its day.
+        const watchWord = watchByDay(state, state.jobs.find((j) => j.id === V.plan.jobId)) ? 'Watch each stop' : 'Watch live';
         const n = V.plan.crew.length + [V.plan.overwatch, V.plan.wheels, V.plan.standby].filter(Boolean).length;
         const main = `<button class="btn btn--primary" data-action="${away ? 'send-job' : 'start-job'}" ${V.plan.crew.length ? '' : 'disabled'}>
-        ${V.plan.crew.length ? `${away ? 'Send them' : 'Go live'} (${n})` : 'Pick a crew'}
+        ${V.plan.crew.length ? `${away ? 'Send them' : watchWord === 'Watch live' ? 'Go live' : watchWord} (${n})` : 'Pick a crew'}
       </button>`;
-        const other = !canSend ? '' : `<button class="btn btn--ghost planbar__alt" data-action="${away ? 'start-job' : 'send-job'}" ${V.plan.crew.length ? '' : 'disabled'}>${away ? 'Watch live' : 'Send them'}</button>`;
+        const other = !canSend ? '' : `<button class="btn btn--ghost planbar__alt" data-action="${away ? 'start-job' : 'send-job'}" ${V.plan.crew.length ? '' : 'disabled'}>${away ? watchWord : 'Send them'}</button>`;
         return `<div class="planbar__go">${main}${other}</div>${planOrdersQuick(t)}`;
       })()}
       ${V.planTryList.length && V.whyOpen ? `<div class="planbar__tries"><span>Try</span>${V.planTryList.map((tr, i) => `<button class="trychip" data-action="plan-try" data-id="${i}">${esc(tryWord(tr))} <b>→ ${esc(riskWord(tr.level))}</b></button>`).join('')}</div>` : ''}
@@ -240,6 +245,8 @@ export function renderPlan() {
         return `<p class="openingline small"><strong>A favour for ${esc(v.client?.name ?? 'a contact')}:</strong> finish it and ${esc(hallLabel(d))} is ours to take (${esc(HALL_SITES[d].place)}). Walk away, and they ask again in two weeks.</p>`;
       })()}
       ${heistPlanLine(job)}
+      ${routePlan(job, v)}
+      ${spoilsPlan(v)}
       <div class="plangrid">
       <div class="riskcard plangrid__client">
         <p><strong>Client:</strong> ${clientLine(v)}${v.client ? ` <button class="infobtn" data-action="client-info" aria-expanded="${V.clientOpen}" aria-label="About ${esc(v.client.name)}">${V.clientOpen ? '×' : 'i'}</button>` : ''}</p>
@@ -293,6 +300,25 @@ export function renderPlan() {
     ${V.gearFor && V.gearSlot ? renderGearSheet(gearUi, state, people.find((o) => o.id === V.gearFor), V.gearSlot) : ''}
     ${V.pickSlot ? renderPicker(boardUi, { plan: V.plan, tpl: t, threat: v.threat, slot: V.pickSlot, people: pickerPeople(), freelancersFull: freelancersFull(), fit: pickerFit(t, v.threat), sortBy: V.pickSort, jossId: jossFor(V.pickSlot), overRead: V.pickSlot === 'over' ? overReadFor() : null }) : ''}`;
 }
+/**
+ * A long job's route on its page (owner, 2026-11-24, Q4: named before anyone is sent): a prep stop a day, then the job
+ * on its last day. The days are the offer's plus the approach's (core/mission.js startMission).
+ */
+function routePlan(job, v) {
+  const stops = prepPlan(job);
+  if (!stops.length) return '';
+  const days = Math.max(1, v.days + (APPROACHES[V.plan.approach]?.days ?? 0));
+  return `<div class="routeplan"><p class="routeplan__h small"><strong>The route</strong> · ${days} days: a stop a day, then the job. Each stop can make the job easier, or put them on alert.</p>
+    <ol class="routeplan__list">${stops.map((p, i) => `<li><span class="routeplan__day">Day ${i + 1}</span><span>${esc(p.place.charAt(0).toUpperCase() + p.place.slice(1))}</span></li>`).join('')}<li class="is-job"><span class="routeplan__day">Day ${days}</span><span>The job itself</span></li></ol></div>`;
+}
+
+/** What the job may leave behind (2026-11-24, C1): the same odds the drop rolls (core/loot.js spoilsFor). */
+function spoilsPlan(v) {
+  const sp = spoilsFor(state, v.threat, { heist: !!v.heist });
+  const odds = sp.chance >= 1 ? `always leaves gear, ${TIERS[sp.floor].name} or better` : 'gear about one clean job in three';
+  return `<p class="spoilsline small"><strong>Spoils:</strong> ${esc(odds)}, up to ${esc(TIERS[sp.best].name)}${sp.named ? '. A named piece could turn up' : ''}.</p>`;
+}
+
 const boardUi = { esc, face: (op, size) => face(op, size), riskBadge: (l) => riskBadge(l), riskWord, statusChip: (a) => statusChip(a), keyStats: (op, tpl, threat) => keyStatsFor(op, tpl, threat) };
 
 /**
