@@ -632,6 +632,8 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 /* Cards side by side keep the same height. */
 .list--cols > li { display: flex; }
 .list--cols > li > .row { height: 100%; }
+/* While a stat line is open (2026-11-24), only that card grows: its neighbours keep their own height. */
+.list--cols:has(.statexplain) > li { align-self: start; }
 
 .sizebadge { display: inline-block; margin: 0 0 8px; padding: 6px 10px; border-radius: var(--radius); font-size: 0.85rem; font-weight: 600; background: #262b36; color: var(--text); }
 .sizebadge--full { background: #173328; color: #5fe0a5; }
