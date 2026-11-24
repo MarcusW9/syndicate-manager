@@ -35,20 +35,34 @@ const seasonChanges = (op) => changesSince(op, seasonStartDay(state.day));
 /** Short labels for the crew list's stat strip (2026-11-23): the full names are on the runner's page. */
 const STAT_SHORT = { combat: 'CMB', stealth: 'STL', tech: 'TEC', social: 'SOC', piloting: 'PIL', medical: 'MED', cool: 'COOL', endurance: 'END' };
 
+/**
+ * What the stat strip counts (2026-11-24, owner): this season's changes; but in a season's first week,
+ * a runner with none yet shows last season's, in grey, so the list doesn't go plain the day a season turns.
+ */
+const FRESH_SEASON_DAYS = 7;
+function stripChanges(op) {
+  const start = seasonStartDay(state.day);
+  const now = seasonChanges(op);
+  if (Object.keys(now).length || start === 1 || state.day - start >= FRESH_SEASON_DAYS) return { net: now, last: false };
+  return { net: changesSince(op, seasonStartDay(start - 1)), last: true };
+}
+
 /** "a medic", "an infiltrator", "muscle": the role as the explanation under the stat strip says it. */
 const asRole = (role) => (role === 'muscle' ? 'muscle' : `${/^[aeiou]/.test(role) ? 'an' : 'a'} ${role}`);
 
 /** What a tapped box in the stat strip says (2026-11-24, owner): the stat in full, this season's change, what it is to them. */
 function stripExplain(op, k, main) {
   const v = ratedStat(op, k);
-  const n = seasonChanges(op)[k] ?? 0;
-  const change = n > 0 ? `<span class="statexplain__up">up ${n} this season</span> (was ${v - n})`
-    : n < 0 ? `<span class="statexplain__down">down ${-n} this season</span> (was ${v - n})` : 'no change this season';
+  const { net, last } = stripChanges(op);
+  const n = net[k] ?? 0;
+  const when = last ? 'last season' : 'this season';
+  const change = n > 0 ? `<span class="statexplain__up">up ${n} ${when}</span> (was ${v - n})`
+    : n < 0 ? `<span class="statexplain__down">down ${-n} ${when}</span> (was ${v - n})` : `no change ${when}`;
   const bonus = traitMods(op)[k] ?? 0;
   const what = k === main ? `Their main stat, as ${asRole(op.role)}: it decides most of what they do on a job.` : `One of their two best after ${statName(main)}.`;
   return `<div class="statexplain" id="statexplain-${esc(op.id)}" role="status">
     <p><strong>${esc(statName(k).toUpperCase())} ${v}</strong> · ${change}</p>
-    <p class="muted small">${what}${bonus ? ` Includes ${signed(bonus)} from traits.` : ''}${n < 0 ? ' Age takes a little each season past 40.' : ''} Their page has every stat.</p>
+    <p class="muted small">${what}${bonus ? ` Includes ${signed(bonus)} from traits.` : ''}${n < 0 ? ' Age takes a little each season past 40.' : ''} ${last ? ' A new season has just begun: until they change this season, the strip shows last season\'s, in grey.' : ''} Their page has every stat.</p>
   </div>`;
 }
 
@@ -62,14 +76,14 @@ function stripExplain(op, k, main) {
 function statStrip(op) {
   const main = primaryStat(op);
   const rest = ROLL_STATS.filter((k) => k !== main).sort((a, b) => ratedStat(op, b) - ratedStat(op, a)).slice(0, 2);
-  const net = seasonChanges(op);
+  const { net, last } = stripChanges(op);
   const open = [main, ...rest].find((k) => V.statTip === `${op.id}|${k}`);
   return `<span class="statstrip">${[main, ...rest].map((k) => {
     const n = net[k] ?? 0;
     const on = k === open;
-    const change = n ? `<span class="statstrip__chg ${n < 0 ? 'is-down' : ''}">${signed(n)}</span>` : '';
-    return `<button class="statstrip__cell ${on ? 'is-on' : ''}" data-action="stat-tip" data-id="${esc(`${op.id}|${k}`)}" aria-expanded="${on}" aria-controls="statexplain-${esc(op.id)}" aria-label="${esc(statName(k))} ${ratedStat(op, k)}${n ? `, ${signed(n)} this season` : ''}"><span class="statstrip__k">${STAT_SHORT[k]}</span><span class="statstrip__v">${ratedStat(op, k)}${change}</span></button>`;
-  }).join('')}</span>${open ? stripExplain(op, open, main) : ''}`;
+    const change = n ? `<span class="statstrip__chg ${n < 0 ? 'is-down' : ''} ${last ? 'is-last' : ''}">${signed(n)}</span>` : '';
+    return `<button class="statstrip__cell ${on ? 'is-on' : ''}" data-action="stat-tip" data-id="${esc(`${op.id}|${k}`)}" aria-expanded="${on}" aria-controls="statexplain-${esc(op.id)}" aria-label="${esc(statName(k))} ${ratedStat(op, k)}${n ? `, ${signed(n)} ${last ? 'last' : 'this'} season` : ''}"><span class="statstrip__k">${STAT_SHORT[k]}</span><span class="statstrip__v">${ratedStat(op, k)}${change}</span></button>`;
+  }).join('')}</span>${last && Object.keys(net).length ? '<span class="statstrip__note">Last season</span>' : ''}${open ? stripExplain(op, open, main) : ''}`;
 }
 
 /** The level-up tab on a crew-list portrait (2026-11-23, owner; replaced the "Level up" pill). The Crew tab's badge counts them in words. */
@@ -139,6 +153,7 @@ export function renderCrew() {
           <li>
             <div class="row crewrow">
               <button class="crewrow__open" data-action="open-op" data-id="${esc(op.id)}" aria-label="${esc(`${op.name} "${op.handle}": open their page`)}"></button>
+              <span class="crewrow__hit" data-action="open-op" data-id="${esc(op.id)}" aria-hidden="true"></span>
               ${rowFace(op)}
               <span class="crewrow__name"><strong>${esc(op.name)}</strong> "${esc(op.handle)}"</span>
               <span class="crewrow__info muted">${esc(op.tier ?? '')} ${esc(op.role)} · ${op.age}</span>
