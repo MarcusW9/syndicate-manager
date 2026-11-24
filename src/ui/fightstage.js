@@ -23,6 +23,7 @@ import { SPECIAL_MOVES, SPECIAL_FAST_CUT, SPECIAL_LOOK_DEFAULT, ENEMY_LOOKS } fr
 export const PACE_K = { watch: 1, fast: 0.6, resolve: 0 };
 export const PACES = ['fast', 'watch', 'resolve'];
 // Step lengths at Watch, in ms.
+const CLUTCH_SLOW = 2.6; // a clutch finish's last kill plays this many times slower (0.7 s becomes about 1.8 s)
 const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, aura: 1100, spread: 900, tick: 560, tickOut: 700, dome: 420, patch: 1100, alarm: 1800, rifleOw: 1600, droneOw: 2300, van: 900, patchTag: 1500, jam: 650, ping: 450, flank: 450, settle: 600 };
 const HIDDEN = new Set(['aboard', 'gone', 'fled']);
 
@@ -182,8 +183,11 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       adv(MS.spread);
     } else if (rule === 'tick' && l.guard != null && units[enemyId(l.guard)]) {
       const fell = l.key === 'tickOut' || l.key === 'burnOut';
-      push({ do: 'tick', to: enemyId(l.guard), fell, burn: l.key === 'burnTick' || l.key === 'burnOut', left: fell ? 0 : l.hpLeft ?? l.left, leftExact: l.hpLeft != null, max: l.max, amount: l.hpDamage ?? 0, dur: ms(fell ? MS.tickOut : MS.tick) });
-      adv(fell ? MS.tickOut : MS.tick);
+      // A clutch finish: the kill that wins the fight plays slowed (CLUTCH_SLOW times as long) with the camera already pushed in on its runner.
+      const slow = fell && isClutch(beatAt.get(i)?.key) ? CLUTCH_SLOW : 1;
+      const len = (fell ? MS.tickOut : MS.tick) * slow;
+      push({ do: 'tick', to: enemyId(l.guard), fell, burn: l.key === 'burnTick' || l.key === 'burnOut', left: fell ? 0 : l.hpLeft ?? l.left, leftExact: l.hpLeft != null, max: l.max, amount: l.hpDamage ?? 0, dur: ms(len) });
+      adv(len);
     } else if (rule === 'van' && ['vanIn', 'vanHeld', 'vanCantWait', 'inVan', 'carriedInVan'].includes(l.key)) {
       // The van's clock ring (owner, 2026-11-20): it opens when the van pulls in, holds, says who is left, and counts who boards.
       const mode = { vanIn: 'in', vanHeld: 'held', vanCantWait: 'cant' }[l.key] ?? 'board';

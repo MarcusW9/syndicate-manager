@@ -420,3 +420,15 @@ test('the new lines reach the stage from the rules: the spread, the tick, the ja
   assert.equal(probe({ kind: 'shot', key: 'shotHit', enemy: 1, targetId: 'jax', shieldedBy: 'jax' }).shieldedBy, 'jax');
   assert.deepEqual(probe({ kind: 'patch', key: 'wayOutPatch', actor: 'jax', targets: ['jax', 'mei'] }).targets, ['jax', 'mei']);
 });
+
+test('a clutch finish slows its last kill, and Resolve and reduced motion still skip it', () => {
+  const { cue, prev, ens } = forged([]);
+  const [, b] = ens;
+  cue.lines = [{ kind: 'note', rule: 'tick', key: 'burnOut', guard: b, damage: 1, dropped: true, left: 0, max: 1, status: 'burning' }];
+  cue.beats = [{ tier: 'notable', lines: [0], focus: [], key: null, slots: {}, holdMs: FIGHT.beatMs.notable }];
+  const plain = stepsOf(cue, prev).find((s) => s.do === 'tick');
+  cue.beats = [{ tier: 'spotlight', lines: [0], focus: [], key: 'director.clutchBurn', slots: { who: 'X' }, holdMs: FIGHT.beatMs.spotlight }];
+  const clutch = stepsOf(cue, prev).find((s) => s.do === 'tick');
+  assert.ok(clutch.dur > plain.dur * 2, 'about two and a half times as long');
+  for (const sc of [stepsOf(cue, prev, 'resolve'), stepsOf(cue, prev, 'watch', { reduced: true })]) assert.ok(sc.filter((s) => s.do === 'tick').every((s) => s.dur === 0));
+});
