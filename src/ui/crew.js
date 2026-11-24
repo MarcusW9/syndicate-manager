@@ -88,19 +88,20 @@ function statStrip(op) {
 
 /**
  * A lead's stat strip on the Leads tab (2026-11-24, owner): the same three boxes as a crew card (main stat,
- * then the two highest), with no change figures, and the main stat set against our best in that role:
- * "+2 vs Jax", "−7 vs Jax", "level with Jax", or "none on crew" when we have nobody in the role.
- * The boxes are part of the lead's row (it opens their page), not buttons of their own.
+ * then the two highest), with no change figures, all the same size (owner), and a line under them setting
+ * the main stat against our best in that role: "Combat −7 vs Jax, your best muscle", "level with", or
+ * "No infiltrator on the crew yet". The boxes are part of the lead's row (it opens their page), not buttons.
  */
 function leadStrip(r) {
   const main = primaryStat(r);
   const rest = ROLL_STATS.filter((k) => k !== main).sort((a, b) => ratedStat(r, b) - ratedStat(r, a)).slice(0, 2);
   const best = state.crew.filter((o) => o.role === r.role && !o.freelance).sort((a, b) => ratedStat(b, main) - ratedStat(a, main))[0];
   const d = best ? ratedStat(r, main) - ratedStat(best, main) : 0;
-  const vs = !best ? ['none on crew', 'is-new', `no ${r.role} on the crew`]
-    : d === 0 ? [`level with ${best.handle}`, '', `level with ${best.handle}`]
-      : [`${signed(d)} vs ${best.handle}`, d > 0 ? 'is-up' : 'is-down', `${signed(d)} against ${best.handle}`];
-  return `<span class="statstrip">${[main, ...rest].map((k, i) => `<span class="statstrip__cell" role="img" aria-label="${esc(statName(k))} ${ratedStat(r, k)}${i === 0 ? `, ${esc(vs[2])}` : ''}"><span class="statstrip__k">${STAT_SHORT[k]}</span><span class="statstrip__v">${ratedStat(r, k)}</span>${i === 0 ? `<span class="statstrip__vs ${vs[1]}">${esc(vs[0])}</span>` : ''}</span>`).join('')}</span>`;
+  const who = best ? `, your best ${r.role}` : '';
+  const [line, tone] = !best ? [`No ${r.role} on the crew yet`, 'is-new']
+    : d === 0 ? [`${statName(main)} level with ${best.handle}${who}`, '']
+      : [`${statName(main)} ${signed(d)} vs ${best.handle}${who}`, d > 0 ? 'is-up' : 'is-down'];
+  return `<span class="statstrip">${[main, ...rest].map((k) => `<span class="statstrip__cell" role="img" aria-label="${esc(statName(k))} ${ratedStat(r, k)}"><span class="statstrip__k">${STAT_SHORT[k]}</span><span class="statstrip__v">${ratedStat(r, k)}</span></span>`).join('')}</span><span class="statstrip__vs ${tone}">${esc(line)}</span>`;
 }
 
 /** The level-up tab on a crew-list portrait (2026-11-23, owner; replaced the "Level up" pill). The Crew tab's badge counts them in words. */

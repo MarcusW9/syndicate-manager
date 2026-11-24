@@ -613,8 +613,7 @@ button.runner:hover, button.runner:focus-visible { border-color: var(--accent-2)
 .leadrow > .row__meta { grid-area: meta; align-self: start; text-align: right; }
 .leadrow__strip { grid-area: strip; }
 .leadrow .statstrip__cell { cursor: inherit; }
-.leadrow .statstrip { grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr) minmax(0, 1fr); max-width: 320px; } /* room for the vs line on one line */
-.statstrip__vs { margin-top: 1px; font-size: 0.66rem; font-weight: 600; letter-spacing: 0.02em; line-height: 1.2; color: var(--muted); }
+.statstrip__vs { display: block; margin-top: 4px; font-size: 0.78rem; font-weight: 600; line-height: 1.3; color: var(--muted); }
 .statstrip__vs.is-up { color: #5fe0a5; }
 .statstrip__vs.is-down { color: var(--danger); }
 .statstrip__vs.is-new { color: var(--accent-2); }
