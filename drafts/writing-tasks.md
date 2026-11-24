@@ -54,6 +54,7 @@ Long jobs (threat 2 and up) now play one to three **prep stops** before the job 
 ## Claude's drafts since 2026-11-21, for the owner to mark (added 2026-11-24)
 
 Everything below is already in the game as Claude's placeholder wording. Rewrite in your voice and paste back as `key: "text"` (or the whole line); anything left alone stays as is. Slots in `{braces}` must stay. Order if short on time: the trip and post text (players read it most), then the log lines, then the small UI lines.
+> Alternative wording for review: [Copilot's 2026-11-24 drafts](writing/copilot-drafts-2026-11-24.md).
 
 **1. Security posts** (`src/data/contracts.js`, 109 lines). Three kinds, **Guard**, **Escort**, **Watch**: each has a `blurb` ("Keep a door. Look like trouble so trouble goes elsewhere."), three `posts` (what the client asks for, `{client}`, `{district}`), and day lines in four pools: `quiet`, `good`, `rough` and the incident calls. Say if the kind names or blurbs should change.
 

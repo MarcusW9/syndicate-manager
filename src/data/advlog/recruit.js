@@ -106,7 +106,7 @@ export default {
     ],
     piloting: [
       'The delivery lane closed while the crew were inside. Getting their transport released cost a storage fee.',
-      '{who} scraped a barrier while reversing out of a crowded loading bay. The owner wanted the repair paid in cash.',
+      '{who} backed into a barrier in a crowded loading bay. The owner wanted cash for the damage.',
     ],
   },
   find: {
