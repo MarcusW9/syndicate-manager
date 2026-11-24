@@ -214,6 +214,7 @@ const BASE_MISSIONS = [
   {
     id: 'data_pull',
     name: 'Office Data Pull',
+    breakIn: true,
     district: 'heights',
     threat: 3,
     pay: 5000,
@@ -337,6 +338,7 @@ const BASE_MISSIONS = [
   {
     id: 'warehouse',
     name: 'Warehouse Lift',
+    breakIn: true,
     district: 'docks',
     opposition: 'police', // prototype 2026-11-15: standard-force grunts in numbers (data/fights.js OPPOSITION); placeholder, not canon
     threat: 4,

@@ -40,7 +40,7 @@ import { cpus } from 'node:os';
 
 const SEEDS = Array.from({ length: 60 }, (_, i) => i + 1);
 const WEEKS = 78;
-const CASH52_BEFORE_PAYOFFS = 71730; // re-baselined 2026-11-17 to the measured median after fourteen more jobs moved to engine 2 and the miss bonus (was 82800: median 71730, 13% lower, mostly fights costing more on engine 2); before that, 2026-11-15 for The Wrong Fare (was 73900); derived, not measured: the with-payoffs median 84040 less the +1.5% the payoffs added in the last measured set. Earlier: median cash at week 52 without slice 4's payoffs, same 60 runs, with heists and Rao's own prep jobs (2026-11-07; 62820 with stand-in prep; was 43570 with the jobs added 2026-11-04, 39750 before them)
+const CASH52_BEFORE_PAYOFFS = 95940; // re-baselined 2026-11-24 to the measured median after routine work stopped rolling twists (was 71730: careful crews walked away from routine twists and lost the pay; the owner accepts a richer year one, with more costs such as weapons to come). Before that, re-baselined 2026-11-17 to the measured median after fourteen more jobs moved to engine 2 and the miss bonus (was 82800: median 71730, 13% lower, mostly fights costing more on engine 2); before that, 2026-11-15 for The Wrong Fare (was 73900); derived, not measured: the with-payoffs median 84040 less the +1.5% the payoffs added in the last measured set. Earlier: median cash at week 52 without slice 4's payoffs, same 60 runs, with heists and Rao's own prep jobs (2026-11-07; 62820 with stand-in prep; was 43570 with the jobs added 2026-11-04, 39750 before them)
 const median = (a) => { const s = [...a].sort((x, y) => x - y); return s[Math.floor(s.length / 2)]; };
 
 function playAll() {

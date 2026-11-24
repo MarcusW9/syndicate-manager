@@ -8,6 +8,7 @@
 export const SCRUB = {
   id: 'data_scrub',
   name: 'Data Scrub',
+  breakIn: true,
   district: 'heights',
   opposition: 'corporate', // prototype 2026-11-15: standard-force grunts in numbers (data/fights.js OPPOSITION); placeholder, not canon
   threat: 2,
