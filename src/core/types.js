@@ -108,6 +108,7 @@
  * @property {string[]} beats          Narrated beats, in order
  * @property {Crisis[]} crises         Pool; 2-3 drawn per run
  * @property {number} heat             Heat gained on completion (0 on every job: heat comes from Loud and crisis costs)
+ * @property {boolean} [breakIn]       Working against the owner of the place (a theft, a raid): only these can turn up the 'Unexpected score' twist
  * @property {boolean} [routine]       Everyday work the board offers often (docs/new-job-prompt.md "Routine work"): rookie or threat 2, crew of 2, 1-2 days
  * @property {boolean} [handsOff]      Can be sent hands-off under standing orders (core/autorun.js); defaults to true
  */

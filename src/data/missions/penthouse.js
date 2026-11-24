@@ -4,6 +4,7 @@
 export const PENTHOUSE = {
   id: 'penthouse',
   name: 'Penthouse Heist',
+  breakIn: true,
   district: 'heights',
   threat: 5,
   pay: 12000,

@@ -27,37 +27,44 @@ export const TWISTS = [
     ],
   },
   {
-    id: 'twist_double_cross',
+    id: 'twist_double_cross', // old id kept so saves with this twist on a job need no migration
     situations: ['threat', 'fight'],
-    name: 'Double-cross',
-    text: 'At the handover, the client\'s people try to take everything without paying. Hands are already inside jackets.',
+    // Was "Double-cross" (the client's own people at the handover); changed 2026-11-23: clients come
+    // back, and nothing followed a betrayal. {ambushers} is the gang the job hurts (its `against`,
+    // data/gangs.js `who`), or "a few street toughs" on a job against no gang (core/mission.js fill).
+    name: 'Ambush at the drop',
+    abortWord: '{client} hears the goods were taken on the way to the handover, and doesn\'t blame the crew.',
+    text: '{ambushers} are waiting on the way to the handover. Word of the job got out, and they want what the crew is carrying. Hands are already inside jackets.',
     choices: [
-      { id: 'talk', label: '{face} reminds them who they\'re dealing with', kind: 'adapt', stat: 'social', difficulty: 13,
-        success: 'A calm voice and a long stare. They decide to pay after all.', failure: 'They laugh. Then the shoving starts.', failureInjury: 'light', failureCost: { payCut: 0.5 },
-        report: { success: '{face} reminded the client\'s people who they were dealing with. After a long stare, they produced the agreed payment.', failure: 'The client\'s people laughed at {face}\'s warning. The handover became a fight, someone was hurt, and half the payment was lost. Pay -50%.' } },
+      { id: 'talk', label: '{face} tells them who they\'re dealing with', kind: 'adapt', stat: 'social', difficulty: 13,
+        success: 'A calm voice and a long stare. They decide the goods aren\'t worth it.', failure: 'They laugh. Then the shoving starts.', failureInjury: 'light', failureCost: { payCut: 0.5 },
+        report: { success: '{ambushers} were waiting on the way to the handover. {face} told them who they were dealing with, and after a long stare they stepped aside.', failure: '{ambushers} were waiting on the way to the handover and laughed at {face}\'s warning. It became a fight, someone was hurt, and half the goods were lost. Pay -50%.' } },
       { id: 'force', label: '{muscle} makes the first move', kind: 'push', stat: 'combat', difficulty: 13, cost: { heat: 1 },
-        success: 'Over in seconds. You leave with the goods and the money.', failure: 'They were ready for it.', failureInjury: 'serious',
-        report: { success: '{muscle} moved before the client\'s people could draw. The confrontation ended quickly, and the crew left with the goods and payment. Heat +1.', failure: '{muscle} made the first move, but the client\'s people were ready. Someone was badly hurt in the confrontation. Heat +1.' } },
-      { id: 'abort', label: 'Abort: hand it over and leave', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1 },
-        success: 'You walk away with nothing. The crew will remember who did this.', failure: '', failureInjury: 'none',
-        report: { success: 'The crew handed over the goods rather than risk a fight. They walked away safely, but received no payment.' } },
+        success: 'Over in seconds. The crew walks on to the handover with the goods.', failure: 'They were ready for it.', failureInjury: 'serious',
+        report: { success: '{ambushers} were waiting on the way to the handover. {muscle} moved before they could draw, and the crew delivered the goods. Heat +1.', failure: '{ambushers} were waiting on the way to the handover. {muscle} made the first move, but they were ready, and someone was badly hurt. Heat +1.' } },
+      { id: 'abort', label: 'Abort: drop the goods and go', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1 },
+        success: 'You set the bag down and back away. Nobody follows.', failure: '', failureInjury: 'none',
+        report: { success: '{ambushers} were waiting on the way to the handover. The crew dropped the goods rather than risk a fight and walked away safely, with no payment.' } },
     ],
   },
   {
     id: 'twist_tipoff',
     situations: ['police', 'law', 'escape'],
-    name: 'Police tip-off',
-    text: 'Unmarked cars at both ends of the street. Somebody tipped off the police about this job.',
+    // Was "Police tip-off" (unmarked police cars everywhere); 2026-11-24: Glass Heights has no police and
+    // the Basin's gates are the Racing Association's, so {law} names whoever holds the street in the
+    // job's district (data/districts.js `law`; core/mission.js fill).
+    name: 'Tip-off',
+    text: '{law} at both ends of the street, waiting. Somebody tipped them off about this job.',
     choices: [
       { id: 'slip', label: 'Slip out through the back lanes', kind: 'push', stat: 'stealth', difficulty: 12, cost: { payCut: 0.2 },
-        success: 'Through a laundry, over a wall, and away. You lose a little of the take on the way.', failure: 'An officer sees you go over the wall.', failureInjury: 'light', failureCost: { heat: 2 },
-        report: { success: 'The crew escaped the police cordon through a laundry and over a back wall. Part of the take was lost on the way. Pay -20%.', failure: 'An officer spotted the crew climbing over the back wall. Someone was hurt during the escape. Pay -20%, heat +2.' } },
+        success: 'Through a laundry, over a wall, and away. You lose a little of the take on the way.', failure: 'One of them sees you go over the wall.', failureInjury: 'light', failureCost: { heat: 2 },
+        report: { success: 'The crew slipped past {law} through a laundry and over a back wall. Part of the take was lost on the way. Pay -20%.', failure: '{law} spotted the crew climbing over the back wall. Someone was hurt during the escape. Pay -20%, heat +2.' } },
       { id: 'drive', label: '{driver} drives through the cordon', kind: 'push', stat: 'piloting', difficulty: 14, cost: { heat: 2 },
-        success: 'Sirens behind you for six streets, then nothing.', failure: 'A police car clips the van.', failureInjury: 'serious',
-        report: { success: '{driver} broke through the police cordon and carried the pursuit for six streets before the sirens disappeared. Heat +2.', failure: 'A police car clipped the van as {driver} tried to break through the cordon. Someone was badly hurt. Heat +2.' } },
+        success: 'Lights behind you for six streets, then nothing.', failure: 'A patrol car clips the van.', failureInjury: 'serious',
+        report: { success: '{driver} broke through the cordon and carried the pursuit for six streets before the lights fell away. Heat +2.', failure: 'A patrol car clipped the van as {driver} tried to break through the cordon. Someone was badly hurt. Heat +2.' } },
       { id: 'abort', label: 'Abort: dump everything and walk out separately', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1 },
-        success: 'You drop the goods in a drain and stroll past the police one by one.', failure: '', failureInjury: 'none',
-        report: { success: 'The crew dropped the goods into a drain, separated and walked through the police cordon one at a time. The job was abandoned.' } },
+        success: 'You drop the goods in a drain and stroll past them one by one.', failure: '', failureInjury: 'none',
+        report: { success: 'The crew dropped the goods into a drain, separated and walked past {law} one at a time. The job was abandoned.' } },
     ],
   },
   {
@@ -75,7 +82,8 @@ export const TWISTS = [
       { id: 'race', label: 'Race them to it', kind: 'push', stat: 'cool', difficulty: 13,
         success: 'You get there first, and {rivalTong} backs off.', failure: 'You reach the same doorway at once. It turns into a brawl.', failureInjury: 'serious',
         report: { success: 'The crew reached the objective first. {rivalTong} stopped short, reconsidered and backed off.', failure: 'Both crews reached the same doorway at once. The collision became a brawl, and someone was badly hurt.' } },
-      { id: 'abort', label: 'Abort: let them have it', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1, clientTrust: -5 },
+      // No trust cost (2026-11-24): aborting on a twist is never held against the crew (2026-10-23).
+      { id: 'abort', label: 'Abort: let them have it', kind: 'abort', stat: 'cool', difficulty: 0, cost: { payCut: 1 },
         success: 'You leave it to {rivalTong}. Nobody gets shot tonight.', failure: '', failureInjury: 'none',
         report: { success: 'The crew left the objective to {rivalTong} and withdrew before anyone opened fire. Nobody was paid, but everyone came home.' } },
     ],
@@ -84,6 +92,9 @@ export const TWISTS = [
     id: 'twist_bonus',
     situations: [],
     name: 'Unexpected score',
+    // Break-ins only (2026-11-24): a safe to take is wrong on a favour for Doc Siu or Mrs. Ip.
+    // core/jobs.js addOffer offers it only on a job marked `breakIn`.
+    breakInOnly: true,
     text: 'Something the client didn\'t mention: a safe, an unlocked office, a second crate. Nobody would know if you took it.',
     choices: [
       { id: 'take', label: 'Take it', kind: 'push', stat: 'stealth', difficulty: 12, successCost: { payCut: -0.5 },

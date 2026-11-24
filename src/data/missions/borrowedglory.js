@@ -6,6 +6,7 @@
 export const BORROWED_GLORY = {
   id: 'borrowed_glory',
   name: 'Borrowed Glory',
+  breakIn: true,
   district: 'basin',
   threat: 4,
   pay: 6800,
