@@ -61,6 +61,7 @@ export function onClick(e) {
     case 'toggle-hallart': setPref('hallart', !getPref('hallart')); break;
     case 'today-layout': setPref('today-classic', id === 'classic'); V.openMessageId = null; break; // Save › Look (2026-11-24)
     case 'desk-news-all': V.deskAllNews = !V.deskAllNews; break;
+    case 'desk-week-day': V.deskWeekDay = V.deskWeekDay === Number(id) ? null : Number(id); break;
     case 'theme': setPref('theme-red', id === 'red'); break;
     case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; V.screen = id; nav.clear(); V.scrollDue = 0; V.buildView = null; V.tongsView = null; V.cityDistrict = null; V.leadName = null; V.clientPage = null; V.hallPage = null; V.openMessageId = null; V.openOperativeId = null; V.openRecruitId = null; V.gearSlot = null; V.bagPick = null; V.plan = null; V.sidePlan = null; V.pickSlot = null; break;
     case 'continue': {

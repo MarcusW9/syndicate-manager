@@ -9,7 +9,8 @@ import { crewOutMap } from './minimap.js';
 import { siteFor } from './siteplan.js';
 import { calendar } from '../core/time.js';
 import { templateById, jobView } from '../core/jobs.js';
-import { alerts, upcoming } from '../core/upcoming.js';
+import { alerts, upcoming, outReason } from '../core/upcoming.js';
+import { availability, isAway } from '../core/crew.js';
 import { money } from '../core/money.js';
 import { crewsOut } from '../core/away.js';
 import { sideTasksOut } from '../core/sidetasks.js';
@@ -385,23 +386,62 @@ function answerLabel(m) {
   }
 }
 
-/** A decision message as a card: what it is, when, a line of it, and its answer. A crew's report shows their faces and the result. */
+/** A waveform for a live signal: static bars from a hash of the id, so it never moves or changes between renders. */
+function waveBars(seed, n = 56) {
+  let h = 0;
+  for (const ch of String(seed)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  return Array.from({ length: n }, (_, i) => `<i style="height:${4 + Math.round(Math.abs(Math.sin(i * 0.7 + h % 7) * Math.cos(i * 0.23 + (h % 5))) * 14)}px"></i>`).join('');
+}
+
+/** A segmented gauge (the skin's gauges: 4px on, 1px off). */
+const gauge = (n, on, tone = '') => `<span class="gauge ${tone ? `gauge--${tone}` : ''}" aria-hidden="true">${Array.from({ length: n }, (_, i) => `<i class="${i < on ? 'is-on' : ''}"></i>`).join('')}</span>`;
+
+/** A call-in's progress from the crew out (core/away.js crewsOut): "Day 2 of 4", a segment a day. */
+function callProgress(m) {
+  const out = crewsOut(state).find((c) => c.jobId === m.payload?.jobId);
+  if (!out) return '';
+  const day = Math.max(1, Math.min(out.days, out.day + 1));
+  return `<p class="dsig__prog">Day ${day} of ${out.days} ${gauge(out.days, day, 'danger')}</p>`;
+}
+
+/**
+ * A decision as a card. The calm HUD (owner, 2026-11-24, mockup 5 in docs/mockups/2026-11-24-today-command.html): decoration
+ * only where attention is needed. An urgent one (a call-in, a blocking choice, a raid warning) is a signal: a red light,
+ * corner brackets, a waveform and, for a call, how far through the job the crew is, with Take the call on the card. The rest
+ * are plain rows: what it is, a line of it, and the answer on the right.
+ */
 function deskCard(m) {
   const back = m.type === 'report' && m.back?.away;
+  const urgent = m.blocking || m.kind === 'raid-warning';
+  if (urgent) {
+    const call = m.kind === 'callin' && !m.resolved && m.payload?.jobId;
+    const job = call ? crewsOut(state).find((c) => c.jobId === m.payload.jobId)?.name : null;
+    return `
+    <li class="dsig">
+      <p class="dsig__kick"><span class="led led--danger" aria-hidden="true"></span>${esc(call ? 'Call-in' : m.kind === 'raid-warning' ? 'Raid' : 'Decision')}${job ? ` · ${esc(job)}` : ''}</p>
+      <p class="dsig__title">${esc(m.subject)}</p>
+      <div class="dsig__wave" aria-hidden="true">${waveBars(m.id)}</div>
+      ${call ? callProgress(m) : m.body ? `<p class="dcard__line">${esc(m.body)}</p>` : ''}
+      <div class="dcard__answers">
+        ${call ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(m.payload.jobId)}">Take the call</button>
+        <button class="btn btn--ghost" data-action="open-message" data-id="${esc(m.id)}">Read it</button>`
+    : `<button class="btn btn--primary" data-action="open-message" data-id="${esc(m.id)}">${esc(answerLabel(m))}</button>`}
+      </div>
+    </li>`;
+  }
   const ops = back ? m.back.crewIds.map((id) => state.crew.find((o) => o.id === id) ?? state.memorial.find((o) => o.id === id)).filter(Boolean) : [];
   const result = m.timeline?.result ?? 'completed';
   const STAMP = { completed: (p) => `✓ ${money(p)}`, aborted: () => '↩ Walked away', setback: (p) => `✗ ${money(p)}`, loss: () => '✕ Someone lost' };
-  const urgent = m.blocking || m.kind === 'raid-warning';
-  const when = m.day === state.day ? 'Today' : calendar(m.day).weekday;
+  const title = back ? `${templateById(m.back.templateId)?.name ?? 'Job'} is back` : m.subject;
+  const line = back ? pickLine(PARTNER.back[result] ?? PARTNER.back.completed, `${m.id}-back`) : m.body;
   return `
-    <li class="dcard ${urgent ? 'is-urgent' : ''} ${back ? `is-back is-${esc(result)}` : ''}">
-      <div class="dcard__head">
-        ${ops.length ? `<span class="back__faces">${ops.map((op, i) => `<span class="back__face" style="--i:${i}">${face(op, 'sm')}</span>`).join('')}</span>` : ''}
-        <p class="dcard__title"><strong>${esc(back ? `${templateById(m.back.templateId)?.name ?? 'Job'} is back` : m.subject)}</strong>${back ? ` <span class="back__stamp">${esc((STAMP[result] ?? STAMP.completed)(m.back.pay))}</span>` : ''}</p>
-        <span class="dcard__when">${esc(when)}</span>
+    <li class="dcard ${back ? `is-back is-${esc(result)}` : ''}">
+      ${ops.length ? `<span class="back__faces">${ops.map((op, i) => `<span class="back__face" style="--i:${i}">${face(op, 'sm')}</span>`).join('')}</span>` : ''}
+      <div class="dcard__text">
+        <p class="dcard__title"><strong>${esc(title)}</strong>${back ? ` <span class="back__stamp">${esc((STAMP[result] ?? STAMP.completed)(m.back.pay))}</span>` : ''}</p>
+        ${line ? `<p class="dcard__line">${esc(line)}</p>` : ''}
       </div>
-      ${m.body && !back ? `<p class="dcard__line">${esc(m.body)}</p>` : back ? `<p class="dcard__line">${esc(pickLine(PARTNER.back[result] ?? PARTNER.back.completed, `${m.id}-back`))}</p>` : ''}
-      <div class="dcard__answers"><button class="btn ${urgent ? 'btn--primary' : ''}" data-action="open-message" data-id="${esc(m.id)}">${esc(answerLabel(m))}</button></div>
+      <button class="btn dcard__go" data-action="open-message" data-id="${esc(m.id)}">${esc(answerLabel(m))}</button>
     </li>`;
 }
 
@@ -417,25 +457,75 @@ function deskJobCard(j) {
   const ends = j.expiresDay === state.day ? 'Last day' : j.expiresDay === state.day + 1 ? 'Ends tomorrow' : 'New';
   return `
     <li class="dcard dcard--job ${j.expiresDay === state.day ? 'is-last' : ''}">
-      <div class="dcard__head">
+      <div class="dcard__text">
         <p class="dcard__title"><strong>${esc(v.tpl.name)}</strong> <span class="dcard__pay">${money(v.pay)}</span></p>
-        <span class="dcard__when">${esc(ends)}</span>
+        <p class="dcard__line">${esc(ends)} · ${esc(v.client?.name ?? 'Walk-in job')}${v.days > 1 ? ` · ${v.days} days` : ''}</p>
       </div>
-      <p class="dcard__line">${esc(v.client?.name ?? 'Walk-in job')}${v.days > 1 ? ` · ${v.days} days` : ''}</p>
-      <div class="dcard__answers"><button class="btn" data-action="open-job" data-id="${esc(j.id)}">Plan it</button></div>
+      <button class="btn dcard__go" data-action="open-job" data-id="${esc(j.id)}">Plan it</button>
     </li>`;
 }
 
-/** The crew today: who is out (the existing Out lines), who can't work and why, and how many are free. */
-function deskCrew(list) {
-  const b = mondayBrief(state);
-  const hurt = list.find((a) => a.kind === 'crew-out');
+/** One runner's state for the roster: null when free to work. */
+function rosterState(op) {
+  const a = availability(state, op);
+  const c = op.condition ?? {};
+  if (isAway(state, op)) return { tone: 'out', word: 'Out' };
+  if (c.injury === 'serious' || c.injury === 'critical') return { tone: 'warn', word: `Hurt ${c.injuryDays}d` };
+  if (!a.ok) return { tone: 'warn', word: a.reason === 'exhausted' ? 'Exhausted' : outReason(a.reason).replace(/ \(.*\)$/, '') };
+  if (a.reason === 'fatigued') return { tone: 'warn', word: 'Tired' };
+  if (a.reason === 'light injury') return { tone: 'warn', word: 'Hurt' };
+  return null;
+}
+
+/**
+ * The roster (calm HUD): the crews-out line (to City), then a face for each runner who isn't free (out, hurt with the days
+ * left, tired), each with a status light, and one tile for all the free ones, so a big crew is still one row or two.
+ */
+function deskCrew() {
+  const crew = state.crew.filter((op) => !op.freelance);
+  const busy = crew.map((op) => ({ op, st: rosterState(op) })).filter((x) => x.st);
+  const free = crew.length - busy.length;
   return `
-    <section class="panel deskcrew" aria-label="The crew today">
-      <h2>The crew today</h2>
+    <section class="panel deskcrew" aria-label="Roster">
+      <h2>Roster <span class="desk__read">${free} free / ${crew.length}</span></h2>
       ${renderOutLine()}
-      ${hurt ? `<button class="deskcrew__row" data-action="nav" data-id="crew"><span class="deskcrew__k is-warn">Can't work</span><span class="deskcrew__v">${esc(andList(hurt.why ?? hurt.names))}</span><span class="deskcrew__go">Crew ›</span></button>` : ''}
-      <button class="deskcrew__row" data-action="nav" data-id="crew"><span class="deskcrew__k">Free</span><span class="deskcrew__v">${b.roster.free} of ${b.roster.total}</span><span class="deskcrew__go">Crew ›</span></button>
+      <ul class="roster">
+        ${busy.map(({ op, st }) => `<li><button class="roster__op" data-action="op-link" data-id="${esc(op.id)}" aria-label="${esc(op.handle)}: ${esc(st.word)}">${face(op, 'sm')}<span class="roster__name">${esc(op.handle)}</span><span class="roster__st"><span class="led led--${st.tone}" aria-hidden="true"></span>${esc(st.word)}</span></button></li>`).join('')}
+        ${free ? `<li><button class="roster__op roster__free" data-action="nav" data-id="crew"><span class="roster__n">${busy.length ? '+' : ''}${free}</span><span class="roster__st">free</span></button></li>` : ''}
+      </ul>
+    </section>`;
+}
+
+/** The week as a track (calm HUD): today and the six days after, a diamond on a day with something on it (red a raid, yellow money or a
+ *  last day), a word under it; tap a day for its list. Under the track, the next thing that matters in full (the bills with their split). */
+const TRACK_WORD = { raid: 'raid', bills: 'bills', 'job-last': 'last day', 'lead-last': 'lead ends', board: 'freelancers', scout: 'scout', back: 'back', report: 'report', healed: 'healed', rested: 'rested', season: 'new season', reask: 'raise' };
+const TRACK_RANK = ['raid', 'bills', 'job-last', 'lead-last', 'season', 'back', 'report', 'healed', 'rested', 'reask', 'board', 'scout'];
+function deskWeek() {
+  // Coming up's words (upcomingText) read a job's last day as a group of names; here each day keeps its own items.
+  const items = upcoming(state).map((i) => (i.kind === 'job-last' && !i.names ? { ...i, names: [i.name] } : i));
+  const days = Array.from({ length: 7 }, (_, i) => state.day + i);
+  const top = (d) => items.filter((i) => i.day === d).sort((a, b) => TRACK_RANK.indexOf(a.kind) - TRACK_RANK.indexOf(b.kind));
+  const tone = (k) => (k === 'raid' ? 'danger' : ['bills', 'job-last', 'lead-last'].includes(k) ? 'warn' : '');
+  const pick = V.deskWeekDay && V.deskWeekDay > state.day && V.deskWeekDay < state.day + 7 ? V.deskWeekDay : null;
+  const KEY = ['raid', 'bills', 'job-last', 'lead-last', 'season'];
+  const key = items.filter((i) => KEY.includes(i.kind));
+  const nd = key.length ? Math.min(...key.map((i) => i.day)) : null;
+  const next = nd ? key.filter((i) => i.day === nd).sort((a, b) => KEY.indexOf(a.kind) - KEY.indexOf(b.kind))[0] : null;
+  return `
+    <section class="panel deskweek" aria-label="The week">
+      <h2>The week</h2>
+      <ol class="wtrack">
+        ${days.map((d) => {
+          const it = d === state.day ? [] : top(d);
+          const first = it[0];
+          return `<li><button class="wtrack__day ${d === state.day ? 'is-today' : ''} ${d === pick ? 'is-picked' : ''}" data-action="desk-week-day" data-id="${d}" ${d === state.day || !it.length ? 'disabled' : ''} aria-label="${esc(calendar(d).weekday)}${it.length ? `: ${esc(it.map(upcomingText).join('; '))}` : ''}">
+            <span class="wtrack__wd">${esc(calendar(d).weekday)}</span>
+            ${first ? `<span class="wtrack__m ${tone(first.kind) ? `is-${tone(first.kind)}` : ''}" aria-hidden="true"></span><span class="wtrack__w">${esc(TRACK_WORD[first.kind] ?? '')}${it.length > 1 ? ` +${it.length - 1}` : ''}</span>` : d === state.day ? '<span class="wtrack__w">today</span>' : ''}
+          </button></li>`;
+        }).join('')}
+      </ol>
+      ${pick ? `<ul class="wtrack__list">${top(pick).map((i) => `<li>${esc(upcomingText(i))}</li>`).join('')}</ul>`
+    : next ? `<p class="wtrack__next ${next.kind === 'raid' ? 'is-danger' : ''}"><strong>${esc(upcomingWhen(next.day))}</strong> ${esc(upcomingText(next))}</p>` : ''}
     </section>`;
 }
 
@@ -447,14 +537,14 @@ function deskNews() {
   const older = news.filter((m) => !keep.includes(m.day)).length;
   const dayName = (d) => (d === state.day ? 'Today' : d === state.day - 1 ? 'Yesterday' : `${calendar(d).weekday} · Day ${d}`);
   return `
-    <section class="panel desknews" aria-label="What happened">
-      <h2>What happened</h2>
-      ${renderWord(state)}
+    <section class="panel desknews" aria-label="Intercepts">
+      <h2>Intercepts</h2>
+      <div class="desknews__word">${renderWord(state)}</div>
       ${keep.length ? keep.map((d) => `
         <p class="desknews__day">${esc(dayName(d))}</p>
         <ul class="desknews__list">${news.filter((m) => m.day === d).map((m) => `
           <li><button class="desknews__line ${m.read ? '' : 'is-new'} ${m.id === V.openMessageId ? 'is-open' : ''}" data-action="open-message" data-id="${esc(m.id)}">
-            <span class="row__tag tag--${esc(m.type)}">${esc(m.type)}</span><span class="desknews__text">${esc(m.subject)}</span>
+            <span class="desknews__tag tag--${esc(m.type)}">${esc(m.type)}</span><span class="desknews__text">${esc(m.subject)}</span>
           </button></li>`).join('')}
         </ul>`).join('') : '<p class="muted small">Nothing yet.</p>'}
       ${older || V.deskAllNews ? `<button class="btn btn--ghost btn--block desknews__more" data-action="desk-news-all">${V.deskAllNews ? 'Only the last three days' : `Older news (${older})`}</button>` : ''}
@@ -477,7 +567,7 @@ export function renderDesk() {
   const reader = open ? `
         <section class="panel inbox__detail">
           <div class="reader__head">
-            <span class="reader__where">${open && isDecision(state, open) ? 'Needs you' : 'News'}</span>
+            <span class="reader__where">${esc(open.type ?? 'Message')}</span>
             <button class="reader__btn" data-action="msg-step" data-id="-1" aria-label="Newer message" ${at <= 0 ? 'disabled' : ''}>‹</button>
             <button class="reader__btn" data-action="msg-step" data-id="1" aria-label="Older message" ${at < 0 || at >= shown.length - 1 ? 'disabled' : ''}>›</button>
             <button class="reader__btn" data-action="msg-close" aria-label="Close message">✕</button>
@@ -493,7 +583,7 @@ export function renderDesk() {
           <button class="jossbub ${folded ? 'is-folded' : ''}" data-action="joss-fold" aria-expanded="${!folded}">
             <span class="jossbub__face">${jossIcon({ mood, size: 32 })}</span>
             <span class="jossbub__text">
-              <span class="jossbub__name">${esc(NAMES.partner)} <span class="jossbub__fold" aria-hidden="true">${esc(calendar(state.day).weekday)} · ${folded ? '▸' : '▾'}</span></span>
+              <span class="jossbub__name"><span class="led led--cyan" aria-hidden="true"></span>${esc(NAMES.partner)} · online <span class="jossbub__fold" aria-hidden="true">${esc(calendar(state.day).weekday)} · ${folded ? '▸' : '▾'}</span></span>
               <span class="jossbub__line">${esc(opener)} ${esc(wantYou(count))}</span>
             </span>
           </button>
@@ -512,8 +602,8 @@ export function renderDesk() {
         </section>
       </div>
       <div class="inbox__stack">
-        ${renderUpcoming('upcoming--strip', open)}
-        ${open ? reader : `${deskCrew(list)}${deskNews()}`}
+        ${deskWeek()}
+        ${open ? reader : `${deskCrew()}${deskNews()}`}
       </div>
     </div>`;
 }

@@ -18,7 +18,7 @@ import { autoStep } from '../core/autorun.js';
 import { fitGearArt } from './board.js';
 import { isWatching, syncWatch, justFinished, stopWatch, mountWatch } from './watch.js';
 import { saveGame, unreadableSave, backupDue, saveTrouble, getPref } from '../save/save.js';
-import { renderLeadName } from './tongs.js';
+import { renderLeadName, wordLines } from './tongs.js';
 import { tabBadges, tabOf, decisionCount } from './nav.js';
 import { onClick, onImportFile } from './actions.js';
 import { renderCity, renderLore } from './city.js';
@@ -30,6 +30,7 @@ import { renderPlan } from './plan.js';
 import { renderRaidCallSheet } from './raidcards.js';
 import { renderFounding, renderSettings } from './settings.js';
 import { esc, districtName, hallLabel, fillLine, pickLine, face, rootBack, cityName } from './shared.js';
+import { NAMES } from '../config/names.js';
 import { renderInbox, renderDesk } from './today.js';
 import { root, setRoot, state, setGame, backLabel, V } from './view.js';
 
@@ -97,6 +98,18 @@ function heatStat() {
  */
 export const deskOn = () => !getPref('today-classic');
 
+/**
+ * The street ticker (the desk's calm HUD, 2026-11-24): The Word as one line across the top of every tab, on tablets and
+ * computers only (styles.css hides it on phones, where The Word sits in Today's Intercepts). Street news only: never what a
+ * card on Today already says. Still, never scrolling.
+ */
+function renderTicker() {
+  if (!deskOn() || state.activeMission || state.founding) return '';
+  const lines = wordLines(state);
+  if (!lines.length) return '';
+  return `<p class="ticker" aria-label="Street talk"><span class="ticker__k">${esc(NAMES.city)} // street</span>${lines.map((l) => `<span class="ticker__l">${esc(l)}</span>`).join('<span class="ticker__dot" aria-hidden="true">·</span>')}</p>`;
+}
+
 // --- rendering ---------------------------------------------------------
 export function render() {
   // The colour theme (Save › Look, 2026-11-19): a device preference, drawn as a class on <html> (styles.css "Theme: red channel").
@@ -153,7 +166,7 @@ export function render() {
       <button class="nav__btn nav__btn--save ${V.screen === 'settings' ? 'is-active' : ''}" data-action="nav" data-id="settings" aria-pressed="${V.screen === 'settings'}"><span class="nav__ico">${navGlyph('settings')}</span><span class="nav__lbl">Save</span></button>
     </nav>
 
-    <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && V.screen === 'jobs' && V.plan ? 'main--split' : ''}">${saveBanner()}${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>
+    <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && V.screen === 'jobs' && V.plan ? 'main--split' : ''}">${renderTicker()}${saveBanner()}${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>
     ${dock ? `<div class="dock">${renderContinue(blocked, resting, unread, 'dock__continue')}</div>` : ''}
     ${cue ? renderDayCue(cue) : ''}
     ${leaving ? renderSendOff(leaving) : ''}

@@ -44,8 +44,11 @@ test('the desk is the default Today; its badge and Continue count what is waitin
   assert.equal(Number(html.match(/aria-label="(\d+) waiting on you"/)[1]), decisionCount(s), 'the badge counts decisions');
   assert.doesNotMatch(html, /\d+ unread/, 'Continue does not count unread on the desk');
   const call = s.inbox.find((m) => m.kind === 'callin' && !m.resolved);
-  assert.match(html, new RegExp(`data-action="open-message" data-id="${call.id}">Take the call<`), 'the call-in card answers with Take the call');
-  assert.match(html, /What happened/, 'the news log');
+  assert.match(html, new RegExp(`data-action="take-call" data-id="${call.payload.jobId}">Take the call<`), 'the call-in card takes the call itself');
+  assert.match(html, /Day \d of \d/, "the call shows how far through the job the crew is");
+  assert.match(html, /Intercepts/, 'the news log');
+  assert.match(html, /class="wtrack"/, 'the week as a track');
+  assert.match(html, /class="roster"/, 'the roster');
   assert.doesNotMatch(html, /class="weekbrief"/, 'no Week card on the desk');
   assert.equal((html.match(/class="outnow[ "]/g) ?? []).length, 1, 'the crews-out line, once, in the crew panel');
   app.click('open-message', call.id);

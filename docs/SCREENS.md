@@ -45,7 +45,8 @@ Section names are the headings in the code. "(x)" marks something that shows onl
 
 **Today as the desk** (`renderDesk`, 2026-11-24, the default; the classic inbox below is behind Save › Look › Today)
 - Left: Joss's bubble (the day's opener and "N things want you"; a tap folds it for the day), the raid lines, **Needs you** (Joss's alerts that are not messages: short of the bills, broke, a lead's last day; New in the stash; a card per decision (`ui/nav.js isDecision`) with its answer as a button that opens it), **On the board** (jobs new today or ending by tomorrow, Plan it; a pile to Jobs for the rest).
-- Right: Coming up (strip), **The crew today** (the Out lines, Can't work, Free), **What happened** (The Word, then news by day, three days, Older news). An open message takes the right column (phones: replaces the list, as before). No Week card. Badge and the Continue hint count decisions.
+- Drawn as the calm HUD (2026-11-24): an urgent decision is a signal card (a call-in shows "Day N of M" and Take the call on the card); the rest are plain rows. A still ticker of The Word across the top of every tab on tablets and computers.
+- Right: **The week** (a seven-day track; tap a day for its list; the next thing in full under it), **Roster** (the Out lines, then a face and status light for each runner who isn't free, one tile for the free), **Intercepts** (news by day, three days, Older news; The Word here on phones). An open message takes the right column (phones: replaces the list, as before). No Week card. Badge and the Continue hint count decisions.
 - Tablets (900 to 1199px wide) get the 64px icon rail while the desk is on.
 
 **Today** (`renderInbox`)
