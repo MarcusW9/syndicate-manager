@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Today on a tablet: mockups (2026-11-24)</title>
+<style>
+:root{--bg:#0a0c0f;--panel:#12151b;--panel-2:#161a21;--line:#2a303b;--text:#e9ecf1;--muted:#8a93a6;--accent:#ff3d5f;--accent-2:#3de8d8;--warn:#f2d541;--danger:#ff4a4a;--display:'Rajdhani','Barlow Condensed','Arial Narrow',system-ui,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:#050607;color:var(--text);font:15px/1.35 system-ui,-apple-system,sans-serif;padding:24px}
+h1.page{font:700 22px var(--display);letter-spacing:.08em;margin:0 0 6px}
+.note{color:var(--muted);max-width:1000px;margin:0 0 28px}
+.frame{width:1000px;height:690px;background:var(--bg);border:1px solid #333;display:grid;grid-template-rows:64px 1fr;overflow:hidden;position:relative;margin-bottom:10px}
+.cap{max-width:1000px;margin:0 0 40px;color:#c9ced8}.cap b{color:var(--accent-2);font-family:var(--display);letter-spacing:.1em}
+.top{display:flex;align-items:center;gap:20px;padding:0 16px;border-bottom:1px solid var(--line)}
+.when{font:700 17px var(--display);letter-spacing:.1em}.when small{display:block;font-size:10px;color:var(--muted);letter-spacing:.12em}
+.cash{font:600 15px var(--display);margin-left:auto}.cash i{font-style:normal;color:var(--muted);font-size:10px;letter-spacing:.12em;margin-right:6px}
+.heat{border:1px solid var(--warn);color:var(--warn);font:700 12px var(--display);letter-spacing:.14em;padding:8px 10px}
+.cont{margin-left:auto;background:var(--accent);color:#fff;font:700 15px var(--display);letter-spacing:.12em;padding:6px 16px;clip-path:polygon(0 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%)}
+.cont small{display:block;font-size:10px;font-weight:600}
+.body{display:grid;min-height:0}
+.rail{border-right:1px solid var(--line);display:flex;flex-direction:column;padding-top:8px}
+.rail a{display:flex;align-items:center;gap:8px;min-height:48px;padding:0 18px;font:600 14px var(--display);letter-spacing:.12em;color:var(--muted);position:relative}
+.rail a.on{color:var(--text);box-shadow:inset 3px 0 0 var(--accent)}
+.rail .save{margin-top:auto;border-top:1px solid var(--line)}
+.pill{background:var(--accent-2);color:#000;font:700 11px var(--display);padding:0 5px}.pill.g{background:#333;color:#ddd}
+.rail--ico a{flex-direction:column;justify-content:center;gap:2px;padding:4px 2px;font-size:9.5px;letter-spacing:.04em;min-height:56px}
+.rail--ico .ico{width:22px;height:22px;border:1.6px solid currentColor;clip-path:polygon(0 0,75% 0,100% 25%,100% 100%,0 100%)}
+.rail--ico .pill{position:absolute;top:4px;right:8px;font-size:9px}
+.main{padding:14px;display:grid;gap:12px;min-height:0;overflow:hidden;align-items:start}
+.panel{background:var(--panel);border:1px solid var(--line);padding:12px 14px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);position:relative}
+.panel::before{content:'';position:absolute;top:0;left:0;width:40px;height:2px;background:var(--accent-2)}
+h2{font:700 12px var(--display);letter-spacing:.16em;color:var(--accent-2);margin:0 0 8px}
+h3{font:700 20px var(--display);letter-spacing:.08em;margin:0 0 8px}
+.card{border:1px solid var(--line);border-left:3px solid var(--accent-2);padding:8px 10px;margin-bottom:8px;background:var(--panel-2);font-size:13px}
+.card.red{border-left-color:var(--danger)}.card.red b{color:var(--danger)}
+.card.yel{border:1px solid var(--warn);color:var(--warn);font:700 11px var(--display);letter-spacing:.1em;text-transform:uppercase}
+.card.cy{border:1px solid var(--accent-2)}
+.go{float:right;color:var(--accent-2);font:700 11px var(--display);letter-spacing:.14em}
+.joss{display:flex;gap:10px;align-items:center;margin-bottom:8px;font-size:13px}.joss .face{width:30px;height:30px;border:1.5px solid var(--accent-2);flex:none}
+.joss b{color:var(--accent-2);font:700 11px var(--display);letter-spacing:.16em;display:block}
+.chips{display:flex;gap:6px;margin:6px 0 8px}.chips span{flex:1;border:1px solid var(--line);text-align:center;font:700 11px var(--display);letter-spacing:.12em;padding:9px 0;color:var(--muted)}.chips .on{border-color:var(--accent-2);color:var(--accent-2);background:rgba(61,232,216,.08)}
+.row{display:grid;grid-template-columns:auto auto 1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-left:3px solid var(--accent-2);padding:7px 10px;margin-bottom:6px;font-size:13px;background:var(--panel-2)}
+.row .dot{width:6px;height:6px;background:var(--accent-2);transform:rotate(45deg)}
+.tag{border:1px solid var(--accent-2);color:var(--accent-2);font:700 10px var(--display);letter-spacing:.12em;padding:2px 6px}
+.tag.r{border-color:var(--danger);color:var(--danger)}.tag.p{border-color:#b48cff;color:#b48cff}
+.row p{margin:0;font-weight:600}.row p span{display:block;font-weight:400;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .d{color:var(--muted);font-size:11px;text-align:right}.row .d b{color:var(--text);display:block}
+.row.read{border-left-color:var(--line)}.row.read p{font-weight:400}
+.up{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;font-size:13px}.up b{display:block;font:700 12px var(--display);letter-spacing:.14em;color:var(--accent-2)}.up .t b{color:var(--accent)}.up i{color:var(--muted);font-style:normal}
+.wk{display:grid;grid-template-columns:repeat(4,1fr);font-size:11px;color:var(--muted);letter-spacing:.08em}.wk b{display:block;color:var(--text);font-size:15px}
+.word{border-left:2px solid var(--accent-2);padding-left:10px;margin-top:10px;font-size:13px}
+.status{display:flex;flex-direction:column;gap:0;font-size:13px}
+.status div{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line);min-height:44px}
+.status div:last-child{border-bottom:0}.status .k{font:700 10px var(--display);letter-spacing:.14em;width:62px;flex:none}
+.status .go{margin-left:auto}
+.alerts{display:flex;align-items:center;gap:10px;border:1px solid var(--danger);background:rgba(255,74,74,.07);padding:0 10px;min-height:44px;margin-bottom:8px;font-size:13px}
+.alerts .n{background:var(--danger);color:#000;font:700 11px var(--display);padding:1px 6px}
+.alerts .more{margin-left:auto;color:var(--muted);font:700 11px var(--display);letter-spacing:.12em}
+.scrim{position:absolute;inset:64px 0 0 0;background:rgba(0,0,0,.55)}
+.drawer{position:absolute;top:64px;bottom:0;left:0;width:210px;background:#0d1014;border-right:1px solid var(--accent-2);display:flex;flex-direction:column;padding-top:8px;box-shadow:8px 0 30px rgba(0,0,0,.6)}
+.drawer a{display:flex;align-items:center;gap:12px;min-height:50px;padding:0 18px;font:600 14px var(--display);letter-spacing:.12em;color:var(--muted)}
+.drawer a.on{color:var(--text);box-shadow:inset 3px 0 0 var(--accent)}.drawer .ico{width:20px;height:20px;border:1.6px solid currentColor;clip-path:polygon(0 0,75% 0,100% 25%,100% 100%,0 100%)}
+.drawer .save{margin-top:auto;border-top:1px solid var(--line)}
+.burger{font:700 18px var(--display);color:var(--muted);min-height:48px;display:grid;place-items:center;border-bottom:1px solid var(--line);margin:-8px 0 4px}
+.fold{color:var(--muted);font:700 10px var(--display);letter-spacing:.14em;margin:4px 0 8px}
+.ann{position:absolute;background:var(--warn);color:#000;font:700 11px var(--display);letter-spacing:.06em;padding:3px 7px;border-radius:2px}
+
+.chip{font:700 11px var(--display);letter-spacing:.12em;padding:8px 10px;border:1px solid}.chip.r{border-color:var(--danger);color:var(--danger);background:rgba(255,74,74,.08)}.chip.y{border-color:var(--warn);color:var(--warn)}
+.jlist{border:1px solid var(--line);border-left:3px solid var(--accent-2);background:var(--panel-2);padding:8px 10px;margin-bottom:8px;font-size:13px}
+.jlist .jh{display:flex;align-items:center;gap:10px;margin-bottom:6px}.jlist .face{width:30px;height:30px;border:1.5px solid var(--accent-2);flex:none}
+.jlist .jh b{color:var(--accent-2);font:700 11px var(--display);letter-spacing:.16em}.jlist .jh span{margin-left:auto;color:var(--muted);font:700 11px var(--display)}
+.jl{display:flex;gap:8px;align-items:center;min-height:36px;border-top:1px solid var(--line)}.jl .k{font:700 10px var(--display);letter-spacing:.14em;width:44px;flex:none}.jl .go{margin-left:auto}
+.btab{display:grid;grid-template-columns:repeat(5,1fr);border-top:1px solid var(--line);background:#0d1014}.btab a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:600 10px var(--display);letter-spacing:.1em;color:var(--muted);position:relative}.btab a.on{color:var(--text);box-shadow:inset 0 2px 0 var(--accent)}.btab .ico{width:20px;height:20px;border:1.6px solid currentColor;clip-path:polygon(0 0,75% 0,100% 25%,100% 100%,0 100%)}.btab .pill{position:absolute;top:4px;left:calc(50% + 10px);font-size:9px}
+.mrow{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;border-bottom:1px solid var(--line);padding:7px 2px;font-size:13px;min-height:44px}.mrow p{margin:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mrow .d{color:var(--muted);font-size:11px}.mrow.read p{font-weight:400;color:#b8bfcc}
+.sheet h4{font:700 11px var(--display);letter-spacing:.16em;color:var(--muted);margin:12px 0 6px}.sheet h4:first-of-type{margin-top:0}
+.act{border:1px solid var(--line);background:var(--panel-2);padding:9px 12px;margin-bottom:8px;font-size:13px;border-left:3px solid var(--accent-2)}.act.r{border-left-color:var(--danger)}
+.act .h{display:flex;gap:8px;align-items:baseline}.act .h b{font-size:14px}.act .h .when{margin-left:auto;color:var(--muted);font-size:11px}.act .s{color:var(--muted);margin:2px 0 8px}
+.btns{display:flex;gap:6px}.btn{font:700 11px var(--display);letter-spacing:.12em;padding:0 12px;min-height:34px;display:inline-grid;place-items:center;border:1px solid var(--accent-2);color:var(--accent-2)}.btn.p{background:var(--accent-2);color:#000}.btn.q{border-color:var(--line);color:var(--muted)}.btn.r{background:var(--danger);border-color:var(--danger);color:#000}
+.log{font-size:13px}.log .day{font:700 11px var(--display);letter-spacing:.16em;color:var(--accent-2);margin:10px 0 4px}.log .day:first-child{margin-top:0}.log div.l{display:flex;gap:8px;padding:5px 0;border-bottom:1px solid #1d222b;color:#c9ced8}.log div.l i{font-style:normal;color:var(--muted);width:56px;flex:none;font:700 10px var(--display);letter-spacing:.12em;padding-top:2px}
+.chat{display:flex;flex-direction:column;gap:8px;font-size:13px}.chat .dv{text-align:center;color:var(--muted);font:700 10px var(--display);letter-spacing:.16em;margin:2px 0}
+.bub{display:flex;gap:8px;align-items:flex-start;max-width:92%}.bub .face{width:26px;height:26px;border:1.5px solid var(--accent-2);flex:none}.bub .t{background:var(--panel-2);border:1px solid var(--line);padding:8px 10px;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%)}.bub.old{opacity:.5}
+.bub .att{margin-top:6px;border:1px solid var(--line);border-left:3px solid var(--accent-2);padding:6px 8px}.bub .att.r{border-left-color:var(--danger)}.bub .btns{margin-top:6px}
+.reply{display:flex;gap:6px;justify-content:flex-end}
+.col h2 .n{color:var(--muted);margin-left:6px}
+.kcard{border:1px solid var(--line);background:var(--panel-2);padding:8px 10px;margin-bottom:8px;font-size:13px;border-left:3px solid var(--accent-2)}.kcard.r{border-left-color:var(--danger)}.kcard.y{border-left-color:var(--warn)}.kcard b{display:block}.kcard span{color:var(--muted)}
+.pile{border:1px dashed var(--line);color:var(--muted);padding:10px;text-align:center;font:700 11px var(--display);letter-spacing:.14em}
+
+.jb{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}.jb .face{width:34px;height:34px;border:1.5px solid var(--accent-2);flex:none;margin-top:2px}
+.jb .t{flex:1;background:var(--panel-2);border:1px solid var(--line);padding:8px 12px;font-size:14px;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%)}
+.jb .t b{display:block;color:var(--accent-2);font:700 11px var(--display);letter-spacing:.16em;margin-bottom:2px}.jb .t b i{font-style:normal;color:var(--muted);float:right}
+.jb.old .t{opacity:.55;font-size:13px}.earlier{color:var(--muted);font:700 10px var(--display);letter-spacing:.14em;margin:0 0 6px 44px}
+.sec{font:700 11px var(--display);letter-spacing:.16em;color:var(--muted);margin:4px 0 8px}
+.phone{width:390px;height:844px;background:var(--bg);border:1px solid #333;display:grid;grid-template-rows:58px 1fr 56px;overflow:hidden;position:relative;margin-bottom:10px}
+.phone .top{padding:0 12px;gap:10px}.phone .when{font-size:15px}.phone .cont{display:none}
+.phone .pm{padding:10px;overflow:hidden;display:flex;flex-direction:column;gap:0}
+.phone .act .btn{flex:1}
+</style></head><body>
+<h1 class="page">TODAY ON A TABLET · MOCKUPS</h1>
+<p class="note">iPad on its side (1000×690, your screenshot's size). Same day in every frame: a raid tomorrow, two hurt, a crew back, two crews out, 21 to do. Yellow tags are notes for us, not part of the design.</p>
+<div id="out"></div>
+<script>
+const topbar=`<div class="top"><div class="when">TUE · WK 28<small>¥6,750 DUE SUN</small></div><div class="cash" style="margin-left:40px"><i>CASH</i>¥44,470</div><div class="heat">HEAT NIGHT MARKET 3</div><div class="cont">CONTINUE → WED<small>19 UNREAD · 4 JOBS OPEN</small></div></div>`;
+const tabs=[['TODAY','21',''],['CITY','',''],['TONG','',''],['CREW','1',''],['JOBS','4','g']];
+const rail=`<nav class="rail">${tabs.map(([t,n,c],i)=>`<a class="${i?'':'on'}">${t} ${n?`<span class="pill ${c}">${n}</span>`:''}</a>`).join('')}<a class="save">SAVE</a></nav>`;
+const icoRail=(burger)=>`<nav class="rail rail--ico">${burger?'<div class="burger">☰</div>':''}${tabs.map(([t,n,c],i)=>`<a class="${i?'':'on'}"><span class="ico"></span>${t}${n?`<span class="pill ${c}">${n}</span>`:''}</a>`).join('')}<a class="save"><span class="ico"></span>SAVE</a></nav>`;
+const msgs=[['JOB','','New job: Shutter Watch','Auntie Fung has work for the tong'],['JOB','','Ruth Okonkwo has a favour to ask','Ruth Okonkwo could put us in touch'],['RUMOUR','p','Street talk: broker feud','Two data brokers are feuding over'],['RAID','r','The police are coming to Old Town','Wednesday. Hold the hall or clear out'],['REPORT','','Closing Stack completed','They\'re back safe, money in'],['CREW','p','Pigeon is hurt','Out for 4 days'],['JOB','','Last call: Still Clocked In','The offer ends Sunday']];
+const list=(n,read=0)=>`<div class="chips"><span>ALL</span><span class="on">TO DO (21)</span></div>`+msgs.slice(0,n).map((m,i)=>`<div class="row ${i>=n-read?'read':''}"><span class="dot"></span><span class="tag ${m[1]}">${m[0]}</span><p>${m[2]}<span>${m[3]}…</span></p><span class="d"><b>Mon</b>Day 190</span></div>`).join('');
+const raid=`<div class="card red"><span class="go">THREATS ›</span><b>Raid tomorrow · Police raid · Old Town hall</b><br><span style="color:var(--muted)">Wed · plan: hold the hall</span></div>`;
+const joss=(t)=>`<div class="joss"><span class="face"></span><div><b>JOSS · ONLINE</b>${t}</div></div>`;
+const hurt=`<div class="card yel">Sensor (hurt) and Pigeon (hurt) can't work today. The rest of us can cover ›</div>`;
+const back=`<div class="card cy"><span class="go">REPORT</span><b>Closing Stack ✓ <span style="color:var(--accent-2)">¥1,100</span></b><br><span style="color:var(--muted)">They're back safe, money in.</span></div>`;
+const out=`<div class="card"><span class="go">CITY ›</span>● 2 crews out</div>`;
+const upcoming=`<section class="panel"><h2>COMING UP</h2><div class="up"><div class="t"><b>TOMORROW</b>Raid on the Old Town hall<br><i>+4 more</i></div><div><b>SUN</b>Last day for Still Clocked In<br><i>+1 more</i></div><div><b>MON</b>New freelancers and street talk</div></div></section>`;
+const week=`<section class="panel"><h2>WEEK 28</h2><div class="wk"><div>CASH<b>¥44,470</b></div><div>DUE SUN<b>¥6,750</b></div><div>FREE<b>1/9</b></div><div>JOBS<b>4</b></div></div><div class="word"><b style="color:var(--accent-2);font:700 11px var(--display);letter-spacing:.16em">THE WORD</b><br>Nobody has seen Hook Hand on a job in a while.</div></section>`;
+const status=`<section class="panel"><h2>THE CREW TODAY</h2><div class="status">
+<div><span class="k" style="color:var(--accent-2)">BACK</span><span><b>Closing Stack</b> ✓ ¥1,100</span><span class="go">REPORT</span></div>
+<div><span class="k" style="color:var(--accent-2)">OUT</span><span>2 crews out · no calls</span><span class="go">CITY ›</span></div>
+<div><span class="k" style="color:var(--warn)">HURT</span><span>Sensor, Pigeon · rest of us cover</span><span class="go">CREW ›</span></div></div></section>`;
+const ann=(x,y,t)=>`<span class="ann" style="left:${x}px;top:${y}px">${t}</span>`;
+const F=[
+ {name:'NOW',body:`<div class="body" style="grid-template-columns:165px 1fr">${rail}<div class="main" style="grid-template-columns:310px 1fr"><section class="panel"><h3>TODAY</h3>${raid}${joss('We\'re short-handed today. We\'ll fi…')}${hurt}${back}${out}${list(2)}</section><div style="display:grid;gap:12px">${upcoming}${week}</div></div></div>`+ann(240,600,'messages start here, 75% down')+ann(700,470,'empty')+ann(10,400,'165px of words'),
+  cap:'<b>NOW.</b> The 200px word rail leaves the message column only ~310px wide, so every card above the list wraps to two or three lines. Six blocks sit above the list. The right half is half empty.'},
+ {name:'A',body:`<div class="body" style="grid-template-columns:68px 1fr">${icoRail()}<div class="main" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)"><section class="panel"><h3>TODAY</h3>${raid}${joss('We\'re short-handed today. We\'ll find a way.')}${hurt}${back}${out}${list(3)}</section><div style="display:grid;gap:12px">${upcoming}${week}</div></div></div>`+ann(80,610,'one more row, and nothing wraps'),
+  cap:'<b>A · ICON RAIL ONLY.</b> The phone-on-its-side rail (64px, icon over word) on tablets too, so below ~1100px wide. The list column grows ~130px so the cards above it are one or two lines, not three. Cheapest change; helps, but the stack above the list is still six deep, so a busy day still buries the messages.'},
+ {name:'B',body:`<div class="body" style="grid-template-columns:68px 1fr">${icoRail()}<div class="main" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)"><section class="panel"><h3>TODAY</h3>${joss('We\'re short-handed today. We\'ll find a way.')}<div class="alerts"><span class="n">3</span><span><b style="color:var(--danger)">Raid tomorrow</b> · Old Town hall</span><span class="more">+2 ▾</span></div>${list(7,3)}</section><div style="display:grid;gap:12px">${status}${upcoming}</div></div></div>`+ann(300,212,'every alert in one line, tap to open')+ann(700,236,'status moves to the empty side'),
+  cap:'<b>B · TWO LANES (my pick).</b> Icon rail, and Today split by kind: the left is <i>things to answer</i> (Joss, one alert bar that holds the raid and any other warning and opens on a tap, then the messages); the right is <i>how things stand</i> (back, out, hurt as one compact panel, then Coming up, then the reader when a message is open). Messages start a third of the way down even on a heavy day. The yellow shouting banner becomes a calm HURT row.'},
+ {name:'C',body:`<div class="body" style="grid-template-columns:68px 1fr">${icoRail(1)}<div class="main" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)"><section class="panel"><h3>TODAY</h3>${joss('We\'re short-handed today.')}<div class="alerts"><span class="n">3</span><span><b style="color:var(--danger)">Raid tomorrow</b> · Old Town hall</span><span class="more">+2 ▾</span></div>${list(7,3)}</section><div style="display:grid;gap:12px">${status}${upcoming}</div></div></div><div class="scrim"></div><div class="drawer"><div class="burger" style="justify-content:start;padding-left:22px">✕</div>${tabs.map(([t,n,c],i)=>`<a class="${i?'':'on'}"><span class="ico"></span>${t} ${n?`<span class="pill ${c}">${n}</span>`:''}</a>`).join('')}<a class="save"><span class="ico"></span>SAVE</a></div>`+ann(230,100,'☰ opens the full rail over the page'),
+  cap:'<b>C · B, PLUS A RAIL THAT EXPANDS.</b> Your idea: the slim rail with a ☰ on top that slides the full word rail over the page (it does not push the page). Honest view: with only five tabs and labels under the icons, the expanded rail shows nothing new, so I would skip it unless the tab list grows. Shown so you can judge.'},
+
+ {name:'D',body:`<div class="body" style="grid-template-columns:68px 1fr">${icoRail()}<div class="main" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)"><section class="panel"><h3>TODAY</h3><div class="jlist"><div class="jh"><span class="face"></span><div><b>JOSS</b><br>Three things before you read the rest.</div><span>▴</span></div>
+<div class="jl"><span class="k" style="color:var(--danger)">WED</span><span><b style="color:var(--danger)">Police raid</b> on the Old Town hall</span><span class="go">PLAN ›</span></div>
+<div class="jl"><span class="k" style="color:var(--warn)">HURT</span><span>Sensor and Pigeon sit today out</span><span class="go">CREW ›</span></div>
+<div class="jl"><span class="k" style="color:var(--accent-2)">BACK</span><span>Closing Stack ✓ ¥1,100</span><span class="go">REPORT</span></div></div>${list(5,2)}</section><div style="display:grid;gap:12px">${upcoming}${week}</div></div></div>`+ann(300,96,'Joss holds the alerts; folds to one line'),
+  cap:'<b>D · JOSS READS THE ALERTS.</b> The raid, the hurt and the crew back are Joss\'s short list, folded to one line once read ("Joss: three things ▾"). Joss already speaks here, so the alerts become her voice instead of a stack of coloured banners. Crews out lives in the City badge or Coming up.'},
+ {name:'E',noTop:1,body:`<div class="top"><div class="when">TUE · WK 28<small>¥6,750 DUE SUN</small></div><div class="cash" style="margin-left:24px"><i>CASH</i>¥44,470</div><div class="heat">HEAT 3</div><span class="chip r">⚠ RAID WED</span><span class="chip y">2 HURT</span><div class="cont">CONTINUE → WED<small>19 UNREAD · 4 JOBS OPEN</small></div></div><div class="body" style="grid-template-columns:68px 1fr">${icoRail()}<div class="main" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr)"><section class="panel"><h3>TODAY</h3>${joss('We\'re short-handed today. We\'ll find a way.')}${list(7,3)}</section><div style="display:grid;gap:12px">${status}${upcoming}</div></div></div>`+ann(420,4,'alerts live in the top bar, on every tab'),
+  cap:'<b>E · ALERTS IN THE TOP BAR.</b> A raid or a hurt runner is a chip beside Heat; tap it to open. It shows on every tab, so you see the raid while picking a crew on Jobs. Today\'s left side is only messages. Cost: the top bar is full on a phone, so there it would be one chip ("⚠ 2").'},
+ {name:'F',body:`<div class="body" style="grid-template-rows:1fr 56px;min-height:0"><div class="main" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)"><section class="panel"><h3>TODAY</h3>${joss('We\'re short-handed today. We\'ll find a way.')}<div class="alerts"><span class="n">3</span><span><b style="color:var(--danger)">Raid tomorrow</b> · Old Town hall</span><span class="more">+2 ▾</span></div>${list(6,2)}</section><div style="display:grid;gap:12px">${status}${upcoming}</div></div><nav class="btab">${tabs.map(([t,n,c],i)=>`<a class="${i?'':'on'}"><span class="ico"></span>${t}${n?`<span class="pill ${c}">${n}</span>`:''}</a>`).join('')}</nav></div>`+ann(420,606,'the phone\'s tab bar'),
+  cap:'<b>F · PHONE TAB BAR ON TABLETS.</b> No rail: the bar along the bottom, like the phone and most iPad apps. Full width for the page; one fewer message than B because the bar costs height on a tablet on its side. Save moves to the ☰ in the top bar, as on the phone.'},
+ {name:'G',body:`<div class="body" style="grid-template-columns:68px 1fr">${icoRail()}<div class="main" style="grid-template-columns:330px 1fr"><section class="panel"><h3>MESSAGES <span style="color:var(--muted);font-size:13px">21 TO DO</span></h3>${msgs.concat(msgs.slice(0,3)).map((m,i)=>`<div class="mrow ${i>5?'read':''}"><span class="tag ${m[1]}">${m[0]}</span><p>${m[2]}</p><span class="d">Mon</span></div>`).join('')}</section><section class="panel sheet"><h3>TUESDAY</h3>${joss('We\'re short-handed today. We\'ll find a way.')}<h4>NEEDS YOU</h4>${raid}<h4>THE CREW</h4><div class="status"><div><span class="k" style="color:var(--accent-2)">BACK</span><span><b>Closing Stack</b> ✓ ¥1,100</span><span class="go">REPORT</span></div><div><span class="k" style="color:var(--accent-2)">OUT</span><span>2 crews out · no calls</span><span class="go">CITY ›</span></div><div><span class="k" style="color:var(--warn)">HURT</span><span>Sensor, Pigeon</span><span class="go">CREW ›</span></div></div><h4>COMING UP</h4><div class="up"><div class="t"><b>TOMORROW</b>Raid, Old Town</div><div><b>SUN</b>Still Clocked In ends</div><div><b>MON</b>New freelancers</div></div></section></div></div>`+ann(80,640,'list only, nothing above it')+ann(700,74,'tap a message: it replaces this sheet'),
+  cap:'<b>G · MAIL SPLIT.</b> Left: the messages and nothing else, short rows. Right: a Tuesday sheet (Joss, what needs you, the crew, coming up) that a tapped message replaces, with ✕ to come back. The clearest for reading many messages; the day\'s state is one place, not scattered.'},
+ {name:'H',body:`<div class="body" style="grid-template-columns:68px 1fr">${icoRail()}<div class="main" style="grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)"><section class="panel"><h3>NEEDS YOU <span style="color:var(--muted);font-size:13px">5</span></h3>
+<div class="act r"><div class="h"><b>Police raid on the Old Town hall</b><span class="when">TOMORROW</span></div><div class="s">They come Wednesday. Hold it or clear out.</div><div class="btns"><span class="btn r">PLAN THE DEFENCE</span><span class="btn q">CLEAR OUT</span></div></div>
+<div class="act"><div class="h"><b>Shutter Watch</b><span class="when">ENDS MON</span></div><div class="s">Auntie Fung · ¥2,400 · 2 days · steady</div><div class="btns"><span class="btn p">PLAN IT</span><span class="btn q">PASS</span></div></div>
+<div class="act"><div class="h"><b>Ruth Okonkwo has a favour to ask</b><span class="when">ENDS MON</span></div><div class="s">She could put us in touch with the dock unions.</div><div class="btns"><span class="btn">HEAR HER OUT</span><span class="btn q">NOT NOW</span></div></div>
+<div class="act"><div class="h"><b>Closing Stack is back</b><span class="when">TODAY</span></div><div class="s">✓ ¥1,100 · everyone home · one find for the stash</div><div class="btns"><span class="btn">READ THE REPORT</span></div></div>
+<div class="pile">+1 MORE · STILL CLOCKED IN ENDS SUN</div></section><div style="display:grid;gap:12px">${upcoming}<section class="panel"><h2>WHAT HAPPENED</h2><div class="log"><div class="day">TODAY</div><div class="l"><i>CREW</i>Sensor and Pigeon hurt; the rest cover.</div><div class="l"><i>WORD</i>Two data brokers are feuding over a client list.</div><div class="l"><i>OUT</i>Hook Hand's crew cased the Basin yards.</div><div class="day">MONDAY</div><div class="l"><i>WEEK</i>Week 28: ¥44,470, ¥6,750 due Sunday.</div><div class="l"><i>WORD</i>Nobody has seen Hook Hand on a job in a while.</div></div></section></div></div></div>`+ann(300,72,'no inbox: decisions, with their buttons')+ann(760,452,'news is a log, never "unread"'),
+  cap:'<b>H · NO MAILBOX: DECISIONS AND A LOG.</b> From first principles a message is either a decision or news. Decisions are cards with their answers on them (plan, pass, hear her out), so most need no "open, read, close". News is a day-by-day log that never counts as unread, so the 21 becomes 5. The report opens as now. The Continue button would read "5 waiting".'},
+ {name:'I',body:`<div class="body" style="grid-template-columns:68px 1fr">${icoRail()}<div class="main" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)"><section class="panel"><h3>JOSS</h3><div class="chat">
+<div class="bub old"><span class="face"></span><div class="t">Street talk: two data brokers are feuding. Might be work in it.</div></div>
+<div class="dv">TUESDAY · WK 28</div>
+<div class="bub"><span class="face"></span><div class="t">Closing Stack's back. Everyone home, ¥1,100 in.<div class="btns"><span class="btn">THE REPORT</span></div></div></div>
+<div class="bub"><span class="face"></span><div class="t">Police hit the Old Town hall tomorrow. Sensor and Pigeon are hurt, so we're thin.<div class="att r"><b style="color:var(--danger)">Raid · Wed</b> · Old Town hall</div><div class="btns"><span class="btn r">PLAN THE DEFENCE</span><span class="btn q">CLEAR OUT</span></div></div></div>
+<div class="bub"><span class="face"></span><div class="t">Auntie Fung wants us for Shutter Watch. ¥2,400, two days.<div class="btns"><span class="btn p">LOOK AT IT</span><span class="btn q">PASS</span></div></div></div>
+<div class="reply"><span class="btn q">WHAT ELSE? (2)</span></div></div></section><div style="display:grid;gap:12px">${status}${upcoming}</div></div></div>`+ann(330,72,'Today is a conversation with Joss'),
+  cap:'<b>I · A CONVERSATION WITH JOSS.</b> Today is Joss texting you the day, a few lines at a time, with the buttons in the bubbles; "What else? (2)" brings the rest. It reads like a crew boss\'s phone, keeps the voice front and centre, and works the same on a phone. Risk: a heavy day becomes a long scroll, and finding an old job means scrolling up (Jobs still lists them).'},
+ {name:'J',body:`<div class="body" style="grid-template-columns:68px 1fr">${icoRail()}<div class="main" style="grid-template-columns:repeat(3,minmax(0,1fr))"><section class="panel col"><h2>NEEDS YOU<span class="n">5</span></h2><div class="kcard r"><b>Raid tomorrow</b><span>Old Town hall · hold or clear</span></div><div class="kcard"><b>Shutter Watch</b><span>Auntie Fung · ends Mon</span></div><div class="kcard"><b>Ruth's favour</b><span>ends Mon</span></div><div class="kcard"><b>Closing Stack report</b><span>¥1,100</span></div><div class="kcard"><b>Still Clocked In</b><span>ends Sun</span></div></section><section class="panel col"><h2>THE CREW</h2><div class="kcard"><b>Back · Closing Stack</b><span>everyone home</span></div><div class="kcard"><b>Out · 2 crews</b><span>Basin yards day 2 · Docks day 1</span></div><div class="kcard y"><b>Hurt · Sensor, Pigeon</b><span>4 days · 2 days</span></div><div class="kcard"><b>Free · 1 of 9</b><span>Static</span></div>${joss('We\'re short-handed today.')}</section><section class="panel col"><h2>THIS WEEK</h2><div class="kcard r"><b>Wed</b><span>Raid, Old Town</span></div><div class="kcard"><b>Sun</b><span>Bills ¥6,750 · Still Clocked In ends</span></div><div class="kcard"><b>Mon</b><span>Freelancers, street talk</span></div><div class="pile">NEWS · 16 ›</div></section></div></div>`+ann(80,640,'three questions, one column each'),
+  cap:'<b>J · A BOARD OF THREE QUESTIONS.</b> What needs me · how is the crew · what is coming. Each a column of short cards; news goes into one pile. The most "manager game" of them and the easiest to scan in a glance; the narrowest columns, so it only works from tablet width up. A phone would show the three as swipeable pages.'},
+
+
+ {name:'K',noTop:1,body:`<div class="top"><div class="when">TUE · WK 28<small>¥6,750 DUE SUN</small></div><div class="cash" style="margin-left:40px"><i>CASH</i>¥44,470</div><div class="heat">HEAT NIGHT MARKET 3</div><div class="cont">CONTINUE → WED<small>5 WAITING · 4 JOBS OPEN</small></div></div><div class="body" style="grid-template-columns:68px 1fr"><nav class="rail rail--ico">${tabs.map(([t,n,c],i)=>`<a class="${i?'':'on'}"><span class="ico"></span>${t}${n?`<span class="pill ${c}">${i?n:5}</span>`:''}</a>`).join('')}<a class="save"><span class="ico"></span>SAVE</a></nav><div class="main" style="grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)"><section class="panel">
+<p class="earlier">▴ EARLIER FROM JOSS (2)</p>
+<div class="jb"><span class="face"></span><div class="t"><b>JOSS <i>TUE · ▾</i></b>Short-handed today: Sensor and Pigeon are hurt, and the police hit Old Town tomorrow. Five things want you.</div></div>
+<div class="sec">NEEDS YOU · 5</div>
+<div class="act r"><div class="h"><b>Police raid on the Old Town hall</b><span class="when">TOMORROW</span></div><div class="s">They come Wednesday. Hold it or clear out.</div><div class="btns"><span class="btn r">PLAN THE DEFENCE</span><span class="btn q">CLEAR OUT</span></div></div>
+<div class="act"><div class="h"><b>Shutter Watch</b><span class="when">ENDS MON</span></div><div class="s">Auntie Fung · ¥2,400 · 2 days · steady</div><div class="btns"><span class="btn p">PLAN IT</span><span class="btn q">PASS</span></div></div>
+<div class="act"><div class="h"><b>Ruth Okonkwo has a favour to ask</b><span class="when">ENDS MON</span></div><div class="s">She could put us in touch with the dock unions.</div><div class="btns"><span class="btn">HEAR HER OUT</span><span class="btn q">NOT NOW</span></div></div>
+<div class="act"><div class="h"><b>Closing Stack is back</b><span class="when">TODAY</span></div><div class="s">✓ ¥1,100 · everyone home · one find for the stash</div><div class="btns"><span class="btn">READ THE REPORT</span></div></div>
+<div class="pile">+1 MORE · STILL CLOCKED IN ENDS SUN</div></section>
+<div style="display:grid;gap:12px">${upcoming}<section class="panel"><h2>THE CREW TODAY</h2><div class="status">
+<div><span class="k" style="color:var(--accent-2)">OUT</span><span>2 crews · no calls</span><span class="go">CITY ›</span></div>
+<div><span class="k" style="color:var(--warn)">HURT</span><span>Sensor 4d · Pigeon 2d</span><span class="go">CREW ›</span></div>
+<div><span class="k" style="color:var(--text)">FREE</span><span>1 of 9 · Static</span><span class="go">CREW ›</span></div></div></section>
+<section class="panel"><h2>WHAT HAPPENED</h2><div class="log"><div class="day">TODAY</div><div class="l"><i>WORD</i>Two data brokers are feuding over a client list.</div><div class="l"><i>OUT</i>Hook Hand's crew cased the Basin yards.</div><div class="day">MONDAY</div><div class="l"><i>WORD</i>Nobody has seen Hook Hand on a job in a while.</div></div></section></div></div></div>`+ann(470,4,'21 unread becomes 5 waiting')+ann(330,96,'Joss opens the day, in a chat bubble')+ann(760,380,'Free moves here; Week card gone'),
+  cap:'<b>K · THE COMBINATION (TABLET).</b> Slim rail. Joss opens the day in a chat bubble that sums it up and folds on a tap; older Joss lines sit above it ("Earlier from Joss"). Under it, only what needs you, each with its answer on the card. On the right: Coming up, the crew (out, hurt, free), and the news log, where The Word now lives. No Week card: cash and the bill are in the top bar; "short of Sunday" would arrive as a Needs-you card when it is true.'},
+
+];
+document.getElementById('out').innerHTML=F.map(f=>`<div class="frame" id="f${f.name}">${f.noTop?'':topbar}${f.body}</div><p class="cap">${f.cap}</p>`).join('');
+
+document.getElementById('out').insertAdjacentHTML('beforeend',`<div class="phone" id="fKP"><div class="top"><div class="when">TUE · WK 28<small>¥6,750 DUE SUN</small></div><div class="cash"><i>CASH</i>¥44,470</div><div class="heat" style="padding:6px 8px">HEAT 3</div></div>
+<div class="pm"><p class="earlier" style="margin-left:0">▴ EARLIER FROM JOSS (2)</p>
+<div class="jb"><span class="face"></span><div class="t"><b>JOSS <i>TUE · ▾</i></b>Short-handed today: Sensor and Pigeon are hurt, and the police hit Old Town tomorrow. Five things want you.</div></div>
+<div class="sec">NEEDS YOU · 5</div>
+<div class="act r"><div class="h"><b>Police raid, Old Town hall</b><span class="when">TOMORROW</span></div><div class="s">They come Wednesday. Hold it or clear out.</div><div class="btns"><span class="btn r">PLAN THE DEFENCE</span><span class="btn q">CLEAR OUT</span></div></div>
+<div class="act"><div class="h"><b>Shutter Watch</b><span class="when">ENDS MON</span></div><div class="s">Auntie Fung · ¥2,400 · 2 days · steady</div><div class="btns"><span class="btn p">PLAN IT</span><span class="btn q">PASS</span></div></div>
+<div class="act"><div class="h"><b>Ruth Okonkwo's favour</b><span class="when">ENDS MON</span></div><div class="s">She could put us in touch with the dock unions.</div><div class="btns"><span class="btn">HEAR HER OUT</span><span class="btn q">NOT NOW</span></div></div>
+<div class="act"><div class="h"><b>Closing Stack is back</b><span class="when">TODAY</span></div><div class="s">✓ ¥1,100 · everyone home</div><div class="btns"><span class="btn">READ THE REPORT</span></div></div>
+<div class="pile" style="margin-bottom:8px">+1 MORE</div>
+<div class="status" style="border:1px solid var(--line);padding:0 10px;background:var(--panel)"><div><span class="k" style="color:var(--accent-2)">OUT</span><span>2 crews</span><span class="go">CITY ›</span></div></div>
+</div>
+<nav class="btab">${tabs.map(([t,n,c],i)=>`<a class="${i?'':'on'}"><span class="ico"></span>${t}${n?`<span class="pill ${c}">${i?n:5}</span>`:''}</a>`).join('')}</nav>
+<span class="ann" style="left:200px;top:760px">crew, coming up, news: scroll down</span></div>
+<p class="cap"><b>K · ON A PHONE.</b> The same order in one column: Joss, Needs you, then (on scroll) the crew, Coming up and the news log. Continue stays in its dock above the tab bar, as now (left out here).</p>`);
+</script></body></html>

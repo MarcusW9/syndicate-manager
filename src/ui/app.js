@@ -18,8 +18,8 @@ import { autoStep } from '../core/autorun.js';
 import { fitGearArt } from './board.js';
 import { isWatching, syncWatch, justFinished, stopWatch, mountWatch } from './watch.js';
 import { saveGame, unreadableSave, backupDue, saveTrouble, getPref } from '../save/save.js';
-import { renderLeadName } from './tongs.js';
-import { tabBadges, tabOf } from './nav.js';
+import { renderLeadName, wordLines } from './tongs.js';
+import { tabBadges, tabOf, decisionCount } from './nav.js';
 import { onClick, onImportFile } from './actions.js';
 import { renderCity, renderLore } from './city.js';
 import { renderRecruit, renderOperative, renderCrew } from './crew.js';
@@ -30,7 +30,8 @@ import { renderPlan } from './plan.js';
 import { renderRaidCallSheet } from './raidcards.js';
 import { renderFounding, renderSettings } from './settings.js';
 import { esc, districtName, hallLabel, fillLine, pickLine, face, rootBack, cityName } from './shared.js';
-import { renderInbox } from './today.js';
+import { NAMES } from '../config/names.js';
+import { renderInbox, renderDesk } from './today.js';
 import { root, setRoot, state, setGame, backLabel, V } from './view.js';
 
 export function mountApp(el, initialState) {
@@ -91,10 +92,30 @@ function heatStat() {
     <span class="heatchip__l">Heat</span> ${esc(districtName(hot.district).replace(/^The /, ''))} <b>${state.heat}</b></button>`;
 }
 
+/**
+ * Today's layout, a device preference (Save › Look, 2026-11-24): the desk (decisions with their answers, Joss's
+ * line, the crew, the news log) unless the player turns the classic inbox back on. Never in the save.
+ */
+export const deskOn = () => !getPref('today-classic');
+
+/**
+ * The street ticker (the desk's calm HUD, 2026-11-24): The Word as one line across the top of every tab, on tablets and
+ * computers only (styles.css hides it on phones, where The Word sits in Today's Intercepts). Street news only: never what a
+ * card on Today already says. Still, never scrolling.
+ */
+function renderTicker() {
+  if (!deskOn() || state.activeMission || state.founding) return '';
+  const lines = wordLines(state);
+  if (!lines.length) return '';
+  return `<p class="ticker" aria-label="Street talk"><span class="ticker__k">${esc(NAMES.city)} // street</span>${lines.map((l) => `<span class="ticker__l">${esc(l)}</span>`).join('<span class="ticker__dot" aria-hidden="true">·</span>')}</p>`;
+}
+
 // --- rendering ---------------------------------------------------------
 export function render() {
   // The colour theme (Save › Look, 2026-11-19): a device preference, drawn as a class on <html> (styles.css "Theme: red channel").
   document.documentElement?.classList.toggle('theme-red', getPref('theme-red'));
+  // Today's layout (2026-11-24): the desk unless the classic inbox is picked in Save › Look. The desk also slims the rail on tablets.
+  document.documentElement?.classList.toggle('desk', deskOn());
   // A running job's watch screen updates in place, so its animations and timer carry on (ui/watch.js).
   const am = state.activeMission;
   // ...unless saving has just started or stopped failing: then the whole page is drawn, so the banner shows or goes.
@@ -108,7 +129,7 @@ export function render() {
   const blocked = isBlocked(state);
   const resting = Date.now() < V.continueRestUntil;
   const unread = state.inbox.filter((m) => !m.read).length;
-  const badges = tabBadges(state);
+  const badges = tabBadges(state, { desk: deskOn() });
   const cue = V.dayCue;
   V.dayCue = null;
   const leaving = V.sendOffCue;
@@ -145,7 +166,7 @@ export function render() {
       <button class="nav__btn nav__btn--save ${V.screen === 'settings' ? 'is-active' : ''}" data-action="nav" data-id="settings" aria-pressed="${V.screen === 'settings'}"><span class="nav__ico">${navGlyph('settings')}</span><span class="nav__lbl">Save</span></button>
     </nav>
 
-    <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && V.screen === 'jobs' && V.plan ? 'main--split' : ''}">${saveBanner()}${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>
+    <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && V.screen === 'jobs' && V.plan ? 'main--split' : ''}">${renderTicker()}${saveBanner()}${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>
     ${dock ? `<div class="dock">${renderContinue(blocked, resting, unread, 'dock__continue')}</div>` : ''}
     ${cue ? renderDayCue(cue) : ''}
     ${leaving ? renderSendOff(leaving) : ''}
@@ -235,8 +256,9 @@ function raidUnplanned() {
 function renderContinue(blocked, resting, unread, where) {
   const label = state.activeMission ? 'On a job' : state.founding ? 'Pick your crew' : blocked ? 'Decision needed'
     : `Continue → ${calendar(state.day + 1).weekday}`;
+  const decisions = deskOn() ? decisionCount(state) : 0;
   const waiting = [
-    unread ? `${unread} unread` : '',
+    deskOn() ? (decisions ? `${decisions} waiting` : '') : unread ? `${unread} unread` : '',
     state.jobs.length ? `${state.jobs.length} job${state.jobs.length === 1 ? '' : 's'} open` : '',
   ].filter(Boolean).join(' · ');
   const warn = blocked ? '' : raidUnplanned();
@@ -306,7 +328,7 @@ function navButton(id, label, badge = null) {
 
 function renderScreen() {
   if (state.founding && V.screen !== 'settings') return renderFounding(); // nothing else until the founders are picked
-  if (V.screen === 'inbox') return rootBack() + renderInbox();
+  if (V.screen === 'inbox') return rootBack() + (deskOn() ? renderDesk() : renderInbox());
   // A hall's page and its build screen are on their home tab (ui/nav.js HOMES): Tong › Halls.
   if (V.screen === 'tong') {
     if (V.buildView?.screen && hallIn(state, V.buildView.district) && !wideHall()) return renderHallBuild({ esc, money, cityName, backLabel: backLabel(), art: hallArtOn() }, state, V.buildView);

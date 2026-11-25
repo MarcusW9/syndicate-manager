@@ -27,9 +27,12 @@ export function wordText(entry) {
   return wordLine({ ...entry, home: inText(entry.home), tier: tierName(entry.tier ?? '').toLowerCase() });
 }
 
+/** The Word as plain lines of talk (the desk's ticker, 2026-11-24). */
+export const wordLines = (state) => rivalView(state).word.map(wordText).filter(Boolean);
+
 /** The Word for Monday's briefing: up to three lines of talk. '' when there's none. */
 export function renderWord(state) {
-  const lines = rivalView(state).word.map(wordText).filter(Boolean);
+  const lines = wordLines(state);
   if (!lines.length) return '';
   return `<div class="theword" aria-label="The Word"><p class="theword__title">The Word</p>${lines.map((l) => `<p class="theword__line">${esc(l)}</p>`).join('')}</div>`;
 }
