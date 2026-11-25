@@ -31,12 +31,14 @@ test('a year of play keeps the save under budget and never trims a decision stil
   const sizes = [];
   for (const seed of SEEDS) {
     const seen = new Map(); // id -> the last copy seen of a message that waited on the player
+    const reports = new Map(); // id -> day of every job report the year wrote
     let worst = 0;
     const { state } = playWeeks(52, seed, undefined, {
       onDay: (s) => {
         const ids = new Set(s.inbox.map((m) => m.id));
         for (const [id, m] of seen) if (waiting(m)) assert.ok(ids.has(id), `seed ${seed}, day ${s.day}: "${m.subject}" was trimmed while it waited`);
         for (const m of s.inbox) if (waiting(m) || seen.has(m.id)) seen.set(m.id, m);
+        for (const m of s.inbox) if (m.type === 'report') reports.set(m.id, m.day);
         worst = Math.max(worst, s.inbox.length);
       },
     });
@@ -44,9 +46,12 @@ test('a year of play keeps the save under budget and never trims a decision stil
     sizes.push(size);
     assert.ok(size < SAVE_CEILING, `seed ${seed}: the save is ${size} characters after 52 weeks (ceiling ${SAVE_CEILING})`);
     assert.ok(worst <= INBOX_KEEP.max, `seed ${seed}: at most ${INBOX_KEEP.max} messages (saw ${worst})`);
-    // This week's reports are all still there for the Sunday summary.
+    // This week's reports are all still there for the Sunday summary. (2026-11-25: every report written in the last
+    // week is checked, not "at least one exists": a year whose last job ended exactly seven days before the end has
+    // none to keep, and that is the sim's luck, not a trim. The year still has to have played jobs.)
     const weekAgo = state.day - 7;
-    assert.ok(state.inbox.some((m) => m.type === 'report' && m.day > weekAgo), `seed ${seed}: recent reports kept`);
+    assert.ok(reports.size > 0, `seed ${seed}: the year played jobs`);
+    for (const [id, day] of reports) if (day > weekAgo) assert.ok(state.inbox.some((m) => m.id === id), `seed ${seed}: this week's report ${id} (day ${day}) kept`);
     assert.ok(state.inbox.every((m) => isActionable(state, m) || state.day - m.day < INBOX_KEEP.unreadWeeks * 7), `seed ${seed}: old read messages trimmed`);
   }
   const avg = Math.round(sizes.reduce((a, b) => a + b, 0) / sizes.length);
