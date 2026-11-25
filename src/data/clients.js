@@ -18,7 +18,7 @@ export const CLIENTS = [
     district: 'oldTown',
     affiliation: 'the Brass Anchor Society',
     desc: 'Runs three herbal tea shops in Old Town and a quiet fencing business behind them. A senior elder of the Brass Anchor Society. Pays in cash, remembers everything.',
-    jobs: ['clinic', 'herbal_run', 'courier', 'protection', 'kidnap', 'favourite', 'second_hand_heart', 'last_sitting', 'a_steady_hand', 'cold_chain', 'queue_duty', 'shutter_watch', 'paper_collection', 'clean_sheets', 'dry_shelf'],
+    jobs: ['clinic', 'herbal_run', 'courier', 'protection', 'kidnap', 'favourite', 'second_hand_heart', 'last_sitting', 'a_steady_hand', 'cold_chain', 'queue_duty', 'shutter_watch', 'paper_collection', 'clean_sheets', 'dry_shelf', 'the_test_rota'],
   },
   {
     id: 'szeto',
@@ -26,7 +26,7 @@ export const CLIENTS = [
     district: 'heights',
     affiliation: null,
     desc: 'Property developer in Glass Heights. Wants his rivals\' secrets and doesn\'t ask how you get them. Old tenements near his sites have a habit of catching fire.',
-    jobs: ['eviction', 'data_pull', 'penthouse', 'casino', 'borrowed_glory', 'access_window', 'relay_cover'],
+    jobs: ['eviction', 'data_pull', 'penthouse', 'casino', 'borrowed_glory', 'access_window', 'relay_cover', 'half_a_repair'],
   },
   {
     id: 'ferryman',
@@ -68,7 +68,7 @@ export const CLIENTS = [
     district: 'heights',
     affiliation: 'the Underterrace maintenance cooperative', // deals with Veridian-Apex's estate contractors; doesn't work for them
     desc: 'Tse Yuk-lan, a former maintenance forewoman who still keeps the cooperative\'s keys at the Underterrace. Contractor disputes, equipment recovery, missing records, workers caught between employers: the infrastructure beneath corporate comfort.',
-    jobs: ['still_clocked_in', 'the_demonstration_passed', 'the_last_call_out'],
+    jobs: ['still_clocked_in', 'the_demonstration_passed', 'the_last_call_out', 'relay_courier', 'the_wrong_hands'],
   },
   // Smaller clients who work inside institutions (WORLD.md "Clients across the lines"), promoted to the board with
   // their first jobs (owner, 2026-11-23). Their trust is their own, not their employer's.
@@ -78,7 +78,7 @@ export const CLIENTS = [
     district: 'heights',
     affiliation: 'Morrow & Venn', // a marine claims surveyor for the firm; her trust is not the firm's
     desc: 'Marine claims surveyor for Morrow & Venn. Spoiled freight, damaged machinery and arguments over who was responsible when. She pays for evidence, not a preferred conclusion, and asks whether anyone was hurt before what the cargo was worth.',
-    jobs: ['salt_in_the_seals'],
+    jobs: ['salt_in_the_seals', 'before_the_inventory'],
   },
   {
     id: 'kwan',
@@ -86,6 +86,6 @@ export const CLIENTS = [
     district: 'docks',
     affiliation: 'Aether-Harbour Logistics', // subcontractor accounts, the ordinary freight side; not Ruth Okonkwo's arm
     desc: 'Subcontractor-accounts clerk at Aether-Harbour Logistics, between the company and the small firms that keep its freight moving. Stopped payments, missing delivery records, hauliers who want to be paid. Carries a cheap calculator despite three company devices.',
-    jobs: ['signed_for_the_shift'],
+    jobs: ['signed_for_the_shift', 'loading_slot'],
   },
 ];
