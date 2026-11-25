@@ -2480,6 +2480,9 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .fs-float.is-hit { fill: var(--danger); } .fs-float.is-down { fill: var(--accent); } .fs-float.is-absorbed { fill: var(--warn); }
 @keyframes fs-float { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-8px); opacity: 0; } }
 .watch__caption { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%); max-width: calc(100% - 24px); padding: 4px 10px; font: 700 0.82rem var(--display); letter-spacing: 0.06em; color: var(--text); background: rgba(11, 13, 17, 0.9); border: 1px solid var(--line); border-left: 2px solid var(--warn); clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); pointer-events: none; }
+.watch__caption[data-tier="clutch"] { bottom: auto; top: 14px; z-index: 3; width: max-content; padding: 6px 14px; font-size: 0.95rem; letter-spacing: 0.1em; text-transform: uppercase; text-align: center; color: #fff3b0; background: rgba(24, 17, 0, 0.94); border: 1px solid var(--warn); border-left-width: 4px; box-shadow: 0 0 18px rgba(255, 190, 40, 0.35); text-shadow: 0 0 8px rgba(255, 190, 40, 0.6); animation: watch-clutch-in 0.4s ease-out; }
+@keyframes watch-clutch-in { 0% { opacity: 0; transform: translateX(-50%) scale(1.25); } 100% { opacity: 1; transform: translateX(-50%) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .watch__caption[data-tier="clutch"] { animation: none; } }
 .watch__caption[data-tier="special"] { border-left-color: var(--accent); color: var(--warn); }
 .fs-pace { display: grid; grid-template-columns: repeat(3, 1fr); margin: 0 0 6px; }
 .fs-pace__chip { min-height: 44px; background: var(--panel-2); color: var(--muted); border: 1px solid var(--line); font: 700 0.8rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
@@ -3231,3 +3234,136 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .routeplan__day { color: var(--accent-2); font: 700 0.75rem/1.6 var(--display); letter-spacing: 0.1em; text-transform: uppercase; }
 .routeplan__list li.is-job { color: var(--text); font-weight: 600; }
 .spoilsline { margin: 6px 0; padding: 4px 10px; border-left: 2px solid var(--tier-blue); }
+
+/* ---------------------------------------------------------------------------------------------------------
+   Today as the desk (2026-11-24, docs/mockups/2026-11-24-today-tablet.html frame K). The classic inbox stays
+   behind Save › Look ("today-classic"); html.desk is set when the desk is on.
+   Left: Joss's bubble, Needs you (decision cards with their answer), On the board. Right: Coming up, the crew
+   today, What happened (the news log). A message opened takes the right column, as the reader did.
+   --------------------------------------------------------------------------------------------------------- */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.jossbub { display: flex; gap: 10px; align-items: flex-start; width: 100%; min-height: var(--tap); margin: 0 0 12px; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.jossbub__face { flex: none; line-height: 0; margin-top: 2px; }
+.jossbub__text { flex: 1; min-width: 0; padding: 8px 12px; border: 1px solid var(--line); background: var(--panel-2, var(--panel)); clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%); }
+.jossbub__name { display: flex; font-family: var(--display, inherit); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-2); }
+.jossbub__fold { margin-left: auto; color: var(--muted); letter-spacing: 0.1em; }
+.jossbub__line { display: block; margin-top: 2px; }
+.jossbub.is-folded .jossbub__line { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--muted); }
+.desk__h { margin: 14px 0 8px; font-size: 0.8rem; color: var(--muted); }
+.desk__h::after { display: none; }
+.desk .desk__h:first-of-type { margin-top: 4px; }
+.desk__clear { margin: 0 0 8px; }
+.dcards { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 8px; }
+.dcard { padding: 10px 12px; border: 1px solid var(--line); border-left: 3px solid var(--accent-2); background: var(--panel-2, var(--panel)); }
+.dcard.is-urgent, .dcard.is-last { border-left-color: var(--danger); }
+.dcard.is-back.is-setback, .dcard.is-back.is-loss { border-left-color: var(--warn); }
+.dcard__head { display: flex; align-items: center; gap: 10px; }
+.dcard__title { flex: 1; min-width: 0; margin: 0; }
+.dcard__when { flex: none; align-self: flex-start; font-family: var(--display, inherit); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+.dcard.is-last .dcard__when, .dcard.is-urgent .dcard__when { color: var(--danger); }
+.dcard__pay { color: var(--accent-2); font-weight: 600; }
+.dcard__line { margin: 2px 0 0; color: var(--muted); font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.dcard__answers { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.dcard__answers .btn { min-height: var(--tap); }
+@media (max-width: 639px) { .dcard__answers .btn { flex: 1; } }
+.deskpile { width: 100%; min-height: var(--tap); border: 1px dashed var(--line); background: none; color: var(--muted); font-family: var(--display, inherit); font-weight: 700; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer; }
+.deskcrew .outnow { margin: 0 0 8px; }
+.deskcrew__row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: var(--tap); padding: 6px 0; border: 0; border-top: 1px solid var(--line); background: none; color: var(--text); font: inherit; font-size: 0.92rem; text-align: left; cursor: pointer; }
+.deskcrew__k { flex: 0 0 84px; font-family: var(--display, inherit); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.deskcrew__k.is-warn { color: var(--warn); }
+.deskcrew__v { flex: 1; min-width: 0; }
+.deskcrew__go { flex: none; color: var(--accent-2); font-family: var(--display, inherit); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; }
+.desknews .theword { margin: 0 0 10px; }
+.desknews__day { margin: 12px 0 4px; font-family: var(--display, inherit); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-2); }
+.desknews__list { list-style: none; margin: 0; padding: 0; }
+.desknews__line { display: flex; align-items: center; gap: 10px; width: 100%; min-height: var(--tap); padding: 4px 0; border: 0; border-bottom: 1px solid var(--line); background: none; color: #c9ced8; font: inherit; font-size: 0.9rem; text-align: left; cursor: pointer; }
+.desknews__line .row__tag { flex: none; }
+.desknews__text { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.desknews__line.is-new { color: var(--text); font-weight: 600; }
+.desknews__line.is-open { background: rgba(61, 232, 216, 0.06); }
+.desknews__more { margin-top: 8px; }
+@media (min-width: 900px), (min-width: 640px) and (max-height: 520px) {
+  .inbox--desk { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
+  /* With no message open the right column is three panels that scroll with the page; open, it is the sticky reader as before. */
+  .inbox--desk:not(.has-open) .inbox__stack { position: static; max-height: none; grid-template-rows: none; }
+}
+/* The slim rail on tablets (the owner, 2026-11-24: "the same sidebar as on phone, smaller"): the 64px icon rail the phone on its side
+   already has, from 900 to 1199px wide, while the desk is on. The classic inbox keeps the 200px word rail. */
+@media (min-width: 900px) and (max-width: 1199px) and (min-height: 520.1px) {
+  html.desk #app { grid-template-columns: 64px 1fr; }
+  html.desk .nav__btn { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 2px; min-height: 56px; text-align: center; letter-spacing: 0.04em; font-size: 0.62rem; }
+  html.desk .nav__ico { display: block; line-height: 0; }
+  html.desk .nav__ico .icon { width: 24px; height: 24px; }
+  html.desk .nav__btn.is-active::before { content: none; }
+  html.desk .nav__btn.is-active { box-shadow: inset 3px 0 0 var(--accent); }
+  html.desk .nav__btn .pill { position: absolute; top: 4px; right: 6px; padding: 0 4px; min-width: 16px; font-size: 0.6rem; line-height: 1.5; }
+  html.desk .nav__btn--save { font-size: 0.62rem; }
+  html.desk .main { padding: 16px; }
+}
+.deskcrew h2, .desknews h2 { margin-top: 0; }
+/* On the desk Joss's alerts read as sentences, not the shouted capitals of the classic inbox (the owner's screenshot, 2026-11-24). */
+.desk .alert { text-transform: none; letter-spacing: 0; font-size: 0.95rem; }
+
+/* The desk as the calm HUD (2026-11-24, the owner's pick: mockup 5, docs/mockups/2026-11-24-today-command.html). One rule:
+   decoration only where attention is needed. An urgent card is a signal (light, brackets, waveform, the call's day progress);
+   the rest are plain rows with the answer on the right. The week is a track, the crew a roster of faces with status lights,
+   the news "Intercepts" in a terminal face, and The Word a still ticker across the top of every tab on tablets and computers. */
+.led { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: none; background: #3a404c; }
+.led--cyan, .led--out { background: var(--accent-2); box-shadow: 0 0 6px var(--accent-2); }
+.led--warn { background: var(--warn); box-shadow: 0 0 6px var(--warn); }
+.led--danger { background: var(--danger); box-shadow: 0 0 6px var(--danger); animation: led-breathe 2.4s ease-in-out infinite; }
+@keyframes led-breathe { 50% { opacity: 0.45; } }
+.gauge { display: inline-flex; gap: 1px; vertical-align: middle; }
+.gauge i { display: block; width: 4px; height: 10px; background: var(--line); }
+.gauge i.is-on { background: var(--accent-2); }
+.gauge--danger i.is-on { background: var(--danger); }
+.jossbub__name { align-items: center; gap: 6px; }
+.dsig { position: relative; padding: 10px 12px; border: 1px solid var(--line); border-left: 3px solid var(--danger); background: linear-gradient(90deg, rgba(255, 61, 95, 0.07), transparent 60%), var(--panel-2, var(--panel)); }
+.dsig::before, .dsig::after { content: ''; position: absolute; width: 14px; height: 14px; opacity: 0.8; pointer-events: none; }
+.dsig::before { top: 4px; right: 4px; border-top: 1.5px solid var(--danger); border-right: 1.5px solid var(--danger); }
+.dsig::after { bottom: 4px; left: 4px; border-bottom: 1.5px solid var(--danger); border-left: 1.5px solid var(--danger); }
+.dsig__kick { display: flex; align-items: center; gap: 8px; margin: 0 0 2px; font-family: var(--display, inherit); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--danger); }
+.dsig__title { margin: 0; font-weight: 700; font-size: 1.02rem; }
+.dsig__wave { display: flex; align-items: center; gap: 2px; height: 22px; margin: 4px 0 2px; overflow: hidden; }
+.dsig__wave i { flex: none; width: 3px; background: var(--danger); opacity: 0.75; }
+.dsig__prog { display: flex; align-items: center; gap: 8px; margin: 2px 0 0; font-family: var(--display, inherit); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+.dcards .dcard { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-left-color: #2f3a46; }
+.dcards .dcard.is-last { border-left-color: var(--warn); }
+.dcard__text { flex: 1; min-width: 0; }
+.dcard__go { flex: none; min-height: var(--tap); }
+.dcard .back__faces { flex: none; }
+@media (max-width: 639px) { .dcards .dcard { flex-wrap: wrap; } .dcard__go { flex: 1 1 100%; } }
+.desk__read { margin-left: auto; order: 3; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 0.72rem; font-weight: 400; letter-spacing: 0.04em; color: var(--muted); }
+.deskcrew h2, .deskweek h2, .desknews h2 { margin-top: 0; }
+.wtrack { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px; }
+.wtrack__day { width: 100%; min-height: var(--tap); padding: 4px 0 2px; border: 0; border-top: 2px solid var(--line); background: none; color: var(--muted); font: inherit; text-align: center; cursor: pointer; display: grid; justify-items: center; align-content: start; gap: 3px; }
+.wtrack__day:disabled { cursor: default; opacity: 1; }
+.wtrack__day.is-today { border-top-color: var(--accent-2); color: var(--text); }
+.wtrack__day.is-picked { border-top-color: var(--accent-2); background: rgba(61, 232, 216, 0.06); }
+.wtrack__wd { font-family: var(--display, inherit); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; }
+.wtrack__m { width: 9px; height: 9px; transform: rotate(45deg); background: var(--accent-2); }
+.wtrack__m.is-danger { background: var(--danger); }
+.wtrack__m.is-warn { background: var(--warn); }
+.wtrack__w { font-size: 0.68rem; line-height: 1.15; color: var(--muted); }
+.wtrack__next { display: flex; gap: 8px; align-items: baseline; margin: 8px 0 0; padding-top: 8px; border-top: 1px solid var(--line); font-size: 0.9rem; }
+.wtrack__next strong { flex: none; font-family: var(--display, inherit); font-size: 0.75rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--warn); }
+.wtrack__next.is-danger strong { color: var(--danger); }
+.wtrack__list { margin: 8px 0 0; padding: 8px 0 0 18px; border-top: 1px solid var(--line); font-size: 0.9rem; }
+.roster { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); gap: 6px; }
+.roster__op { width: 100%; min-height: 78px; padding: 6px 4px; border: 1px solid var(--line); background: #0e1116; color: var(--text); font: inherit; cursor: pointer; display: grid; justify-items: center; align-content: center; gap: 3px; }
+.roster__name { font-family: var(--display, inherit); font-weight: 700; font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.roster__st { display: flex; align-items: center; gap: 4px; font-family: var(--display, inherit); font-weight: 700; font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.roster__free { border-style: dashed; }
+.roster__n { font-family: var(--display, inherit); font-weight: 700; font-size: 1.1rem; color: #5fe0a5; }
+.desknews__line { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 0.8rem; border-bottom-style: dashed; }
+.desknews__tag { flex: 0 0 64px; text-transform: uppercase; font-size: 0.72rem; }
+.desknews__line.is-new { font-weight: 700; }
+.desknews__day { font-size: 0.7rem; }
+.ticker { display: none; }
+/* Tablets and computers only: a phone on its side has no height to spare, and The Word is in Intercepts there. */
+@media (min-width: 900px) and (min-height: 520.1px) {
+  .ticker { display: flex; gap: 14px; align-items: center; margin: -8px 0 12px; padding: 6px 12px; border: 1px solid var(--line); background: #0c0f13; font: 600 0.72rem ui-monospace, 'SF Mono', Menlo, Consolas, monospace; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); white-space: nowrap; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, #000 90%, transparent); mask-image: linear-gradient(90deg, #000 90%, transparent); }
+  .ticker__k { color: var(--accent-2); }
+  html.desk .desknews__word { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .led--danger { animation: none; } }

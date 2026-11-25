@@ -65,10 +65,24 @@ export function needsYou(state, m) {
 /** The runners with a level-up waiting for a pick (core/levelup.js; replaced Joss's open offers, 2026-11-20). Picked on the runner's page. */
 export const levelUpsWaiting = (state) => (state.crew ?? []).filter(levelUpOpen);
 
-/** Tab id → { count, word } for the pill on its button; tabs with no entry show none. Crew counts the runners with an offer waiting. */
-export function tabBadges(state) {
+/**
+ * The desk (Today's new layout, 2026-11-24, behind the classic inbox's flag in Save › Look): a message is a
+ * decision when it still has to be answered, or when it is a job's report from today or yesterday not yet read. Everything else
+ * is news: shown in the day's log, never counted. The desk's badge counts decisions only.
+ */
+export function isDecision(state, m) {
+  const waiting = m.resolved === false || (m.blocking && !m.resolved) || (NEEDS_THE_PLAYER.has(m.kind) && isActionable(state, m));
+  return waiting || (m.type === 'report' && !m.read && m.day >= state.day - 1); // an older unread report is news by now
+}
+export const decisionCount = (state) => state.inbox.filter((m) => isDecision(state, m)).length;
+
+/**
+ * Tab id → { count, word } for the pill on its button; tabs with no entry show none. Crew counts the runners with an offer waiting.
+ * `desk`: Today is the desk, so its pill counts decisions, not unread messages.
+ */
+export function tabBadges(state, { desk = false } = {}) {
   return {
-    inbox: { count: attentionCount(state), word: 'waiting on you' },
+    inbox: { count: desk ? decisionCount(state) : attentionCount(state), word: 'waiting on you' },
     crew: { count: levelUpsWaiting(state).length, word: 'with a level-up waiting' },
     jobs: { count: state.jobs.length, word: 'open' },
   };

@@ -43,6 +43,12 @@ Navigation state (`screen`, `cityTab`, the open page ids) is module state in `ui
 
 Section names are the headings in the code. "(x)" marks something that shows only sometimes.
 
+**Today as the desk** (`renderDesk`, 2026-11-24, the default; the classic inbox below is behind Save › Look › Today)
+- Left: Joss's bubble (the day's opener and "N things want you"; a tap folds it for the day), the raid lines, **Needs you** (Joss's alerts that are not messages: short of the bills, broke, a lead's last day; New in the stash; a card per decision (`ui/nav.js isDecision`) with its answer as a button that opens it), **On the board** (jobs new today or ending by tomorrow, Plan it; a pile to Jobs for the rest).
+- Drawn as the calm HUD (2026-11-24): an urgent decision is a signal card (a call-in shows "Day N of M" and Take the call on the card); the rest are plain rows. A still ticker of The Word across the top of every tab on tablets and computers.
+- Right: **The week** (a seven-day track; tap a day for its list; the next thing in full under it), **Roster** (the Out lines, then a face and status light for each runner who isn't free, one tile for the free), **Intercepts** (news by day, three days, Older news; The Word here on phones). An open message takes the right column (phones: replaces the list, as before). No Week card. Badge and the Continue hint count decisions.
+- Tablets (900 to 1199px wide) get the 64px icon rail while the desk is on.
+
 **Today** (`renderInbox`)
 - Inbox column, messages first: briefing (`renderBriefing`; Joss's line folds to one line on a tap, for the day), the next-up line (`renderNextUp`, phones only: the soonest raid, bills or last day; a tap scrolls to Coming up), back cards (crews home), **New in the stash** (2026-11-24, `ui/gear.js newGearLine`: the newest unseen drop, who it would help most, Give to · Armoury · ✕; never on the badge), Out line (links to City › Map), the All / To do filter (To do = what the badge counts), then message rows (tag, subject, preview, day).
 - Stack (`.inbox__stack`, sticky under the top bar from 900px; on a phone on its side, 2026-11-24, Coming up hides while a message is open and the stack only sticks then): Coming up (`renderUpcoming`, a strip of cells, a day each, "+N more" behind a tap; the open message's day lights up), then the reader. On a phone it is Coming up after the list, then the brief on Mondays.

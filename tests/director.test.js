@@ -131,3 +131,19 @@ test('spotlight wording is placeholder keys that read as text', () => {
   assert.ok(beatText({ key: 'director.streak', slots: { who: 'Jax', n: 3 } }).includes('Jax'));
   assert.equal(beatText({ key: null }), '');
 });
+
+test('clutch finish: a fire or vector kill that wins it with the crew on the ropes', () => {
+  const ended = { result: 'won' };
+  const tick = L('burnOut', { kind: 'tick', enemy: 3, dropped: true });
+  const rough = mkB({ runners: [runner('a', { down: true }), runner('b'), runner('c')] });
+  const out = direct(rough, result({ lines: [tick], defeated: [{ by: 'b', enemy: 3, how: 'burn' }], ended }), null);
+  assert.deepEqual(out.beats.map((x) => [x.tier, x.key, x.focus]), [['spotlight', 'director.clutchBurn', ['b']]]);
+  assert.match(beatText(out.beats[0]), /B/);
+  const vec = direct(rough, result({ lines: [tick], defeated: [{ by: 'b', enemy: 3, how: 'vector' }], ended }), null);
+  assert.equal(vec.beats[0].key, 'director.clutchVector');
+  assert.equal(playable([{ tier: 'spotlight', key: 'director.clutchBurn', holdMs: 1 }], 'resolve')[0].tier, 'spotlight', 'the budget never cuts it');
+  const fine = mkB();
+  assert.equal(direct(fine, result({ lines: [tick], defeated: [{ by: 'b', enemy: 3, how: 'burn' }], ended }), null).beats.every((x) => x.key !== 'director.clutchBurn'), true, 'a comfortable win is no clutch');
+  assert.equal(direct(rough, result({ lines: [tick], defeated: [{ by: 'b', enemy: 3, how: 'burn' }], ended: null }), null).beats.every((x) => x.key !== 'director.clutchBurn'), true, 'the fight must be won');
+  assert.equal(direct(rough, result({ defeated: [{ by: 'b', enemy: 3, how: 'attack' }], ended }), null).beats.every((x) => x.key !== 'director.clutchBurn'), true, 'a gunshot is not this clutch');
+});
