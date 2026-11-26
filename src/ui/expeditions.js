@@ -5,36 +5,12 @@
 import { GOALS, GOAL_ORDER, EXPEDITION, EXPEDITION_DISTRICTS } from '../data/expeditions.js';
 import { expeditionsOut, expeditionOdds, canSend } from '../core/expeditions.js';
 import { availability } from '../core/crew.js';
-import { calendar } from '../core/time.js';
 import { statIcon } from './icons.js';
 import { esc, infoButton, infoText, face, statName, districtName, statusChip, riskBadge } from './shared.js';
 import { state, backLabel, V } from './view.js';
-import { logDetails, whereButton } from './today.js';
-import { crewLinks } from './messages.js';
+import { outRows, tripRow } from './outrows.js';
 
 const ops = (ids) => ids.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
-
-/** One expedition out: goal, district, day, faces, its latest line and the log; Pull them out (or the call waiting). */
-export function expeditionCard(x, { where = false } = {}) {
-  const last = x.log.at(-1);
-  return `
-        <li class="crewsout__job is-exp ${x.waiting ? 'is-call' : ''}">
-          <div class="crewsout__top">
-            <span class="crewsout__light" aria-hidden="true"></span>
-            <p class="crewsout__head"><strong>${esc(x.name)}</strong> <span class="muted small">${x.day ? `day ${x.day} of ${x.days}` : 'setting out'} · ${esc(districtName(x.district))} · back ${esc(calendar(x.endDay).weekday)}</span></p>
-            <span class="crewsout__faces">${ops(x.crewIds).map((o) => face(o, 'sm')).join('')}</span>
-          </div>
-          <div class="crewsout__text">
-            ${last ? `<p class="small">Day ${last.day}: ${crewLinks(last.text)}</p>` : '<p class="small muted">They set out today. The first line comes in tomorrow.</p>'}
-            ${logDetails(x.log)}
-          </div>
-          <div class="crewsout__foot">
-            ${x.waiting ? `<button class="btn btn--primary" data-action="open-message" data-id="exp-call-${esc(x.id)}">They're calling you</button>`
-    : `<button class="btn btn--ghost btn--small" data-action="exp-pull" data-id="${esc(x.id)}">Pull them out</button>`}
-            ${where ? whereButton(x.district) : ''}
-          </div>
-        </li>`;
-}
 
 /** Jobs › Expeditions: who is out, then the goals. */
 export function renderExpeditions() {
@@ -43,7 +19,7 @@ export function renderExpeditions() {
       <h2>Expeditions</h2>
       <div class="infoline"><p class="muted small">Our own errands: send a crew after something the tong wants.</p>${infoButton('expeditions', 'About expeditions')}</div>
       ${infoText('expeditions', `A crew goes out for a few days after one thing: a weapon, cash or a recruit. Nobody pays for it and it earns no fame: what they bring back is the point. They send a line home every day. If a deal goes wrong they call you: watch the fight, let them fight it, or pull out. You can pull them out any day; everyone comes home and keeps what they found. Up to ${EXPEDITION.maxCrew} go, to any open district.`)}
-      ${out.length ? `<ul class="crewsout" aria-label="Out on an expedition">${out.map((x) => expeditionCard(x)).join('')}</ul>` : ''}
+      ${outRows(out.map(tripRow), 'Out on an expedition')}
       <ul class="list list--cols sidelist">
         ${GOAL_ORDER.map((id) => {
           const g = GOALS[id];

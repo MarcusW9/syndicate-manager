@@ -57,7 +57,8 @@ try {
     await p.screenshot({ path: `${out}/02-${tag}-weapon-plan.png`, fullPage: full });
     await load(p, two);
     await toTrips(p);
-    await vis(p, '.crewsout__job.is-exp .advlog > summary').click();
+    await vis(p, '.outrow summary').click(); await p.waitForTimeout(200); // crews out as rows that open (2026-11-26, ui/outrows.js)
+    await vis(p, '.outrow .advlog > summary').click();
     await p.waitForTimeout(200);
     await p.screenshot({ path: `${out}/03-${tag}-two-out-log.png`, fullPage: full });
     await load(p, calling);

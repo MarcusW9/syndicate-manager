@@ -57,9 +57,10 @@ try {
     await load(p, out3);
     await toCity(p);
     await vis(p, '.ops').screenshot({ path: `${out}/01-${tag}-crew-out-day3.png` });
-    await p.evaluate(() => [...document.querySelectorAll('.crewsout__job.is-side')].find((e) => e.offsetParent)?.scrollIntoView({ block: 'center' }));
-    await vis(p, '.crewsout__job.is-side').screenshot({ path: `${out}/01b-${tag}-side-task-day1.png` });
-    await vis(p, '.crewsout__job:not(.is-side) .advlog > summary').click();
+    await p.evaluate(() => [...document.querySelectorAll('.outrow.is-side')].find((e) => e.offsetParent)?.scrollIntoView({ block: 'center' }));
+    await vis(p, '.outrow.is-side').screenshot({ path: `${out}/01b-${tag}-side-task-day1.png` });
+    await vis(p, '.outrow.is-job summary').click(); await p.waitForTimeout(200); // rows that open (2026-11-26)
+    await vis(p, '.outrow.is-job .advlog > summary').click();
     await p.waitForTimeout(200);
     await vis(p, '.ops').screenshot({ path: `${out}/02-${tag}-log-open.png` });
     await load(p, back.state);

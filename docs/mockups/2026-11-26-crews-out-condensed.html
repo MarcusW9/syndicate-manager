@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Crews Out Condensed</title>
+<!-- Mockup round 7, 2026-11-26. Owner: the full cards take a lot of space on a phone; a more condensed version is
+     needed. Three takes for City › Map's Out now on a phone (390x844), same four crews as round 6: rows that open one
+     at a time; a swipe row of full cards; a two-across tile grid that opens a card in a sheet. From tablet width the
+     full cards stay (round 6, frame 3). Street-terminal tokens from docs/UI-SKIN.md. Not wired to the game. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c0f; --panel:#12151b; --panel-2:#161a21; --line:#2a303b;
+  --text:#e9ecf1; --muted:#8a93a6; --dim:#5d6577; --accent:#ff3d5f; --accent-2:#3de8d8; --warn:#f2d541; --good:#5fe0a5; --cut:10px;
+  --disp:'Rajdhani',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#050608;color:var(--text);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:16px max(16px,env(safe-area-inset-left)) 40px}
+.wrap{max-width:1400px;margin:0 auto}
+h1{font:700 22px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin:4px 0}
+.lede{color:var(--muted);max-width:900px;margin:0 0 6px}
+.frames{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start;margin-top:16px}
+.frames > section{min-width:0;max-width:100%}
+.look{font:700 13px var(--disp);letter-spacing:.16em;color:var(--accent-2);text-transform:uppercase;margin:0 0 6px}
+.why{color:var(--muted);font-size:13px;margin:0 0 10px;max-width:390px}
+
+/* a phone screen */
+.screen{width:390px;max-width:100%;background:var(--bg);border:1px solid var(--line);position:relative;overflow:hidden;
+  background-image:linear-gradient(rgba(61,232,216,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(61,232,216,.025) 1px,transparent 1px);background-size:32px 32px}
+.screen.wide{width:820px;max-width:100%}
+.topbar{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);background:#0d1014}
+.topbar .day{font:700 17px var(--disp);letter-spacing:.08em}
+.topbar .pips{display:flex;gap:3px;margin-top:4px}.topbar .pips i{width:12px;height:5px;background:#2a303b}.topbar .pips i.on{background:var(--accent-2)}
+.topbar .cash{margin-left:auto;text-align:right;font:700 16px var(--disp)}
+.topbar .cash small{display:block;font-size:11px;color:var(--good)}
+.subtabs{display:flex;gap:18px;padding:8px 14px;border-bottom:1px solid var(--line);font:700 13px var(--disp);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.subtabs .on{color:var(--accent-2);box-shadow:inset 0 -2px 0 var(--accent-2);padding-bottom:4px}
+.body{padding:12px 14px 90px}
+.mapstub{height:70px;border:1px solid var(--line);background:linear-gradient(180deg,#141821,#0f1218);position:relative;margin-bottom:14px}
+.mapstub span{position:absolute;font:700 10px var(--disp);letter-spacing:.12em;color:var(--muted);border:1px solid var(--line);padding:1px 5px;background:#0d1014}
+.mapstub .dot{width:8px;height:8px;border-radius:50%;background:var(--accent-2);position:absolute;border:0;padding:0}
+.sect{display:flex;align-items:center;gap:10px;font:700 14px var(--disp);letter-spacing:.16em;text-transform:uppercase;color:var(--accent-2);margin:14px 0 10px}
+.sect::after{content:"";flex:1;height:1px;background:var(--line)}
+.sect .n{color:var(--muted)}
+.filters{display:flex;gap:6px;margin:-2px 0 10px;flex-wrap:wrap}
+.filters span{font:600 11px var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);padding:0 10px;min-height:32px;display:grid;place-items:center}
+.filters span.on{color:var(--accent-2);border-color:var(--accent-2)}
+.stack{display:grid;gap:10px}
+.stack.two{grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.continue{position:absolute;left:12px;right:12px;bottom:52px;background:var(--accent);color:#fff;font:700 16px var(--disp);letter-spacing:.14em;text-align:center;padding:12px;clip-path:polygon(0 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%)}
+.tabs{position:absolute;left:0;right:0;bottom:0;display:flex;justify-content:space-around;border-top:1px solid var(--line);background:#0d1014;padding:12px 0;font:600 12px var(--disp);letter-spacing:.12em;color:var(--muted)}
+.tabs .on{color:var(--text)}
+.tonight{border:1px solid var(--line);padding:10px 12px;display:flex;align-items:center;gap:10px;background:var(--panel)}
+.tonight b{font:700 12px var(--disp);letter-spacing:.14em;color:var(--muted)}
+.tonight .go{margin-left:auto;font:700 12px var(--disp);letter-spacing:.12em;color:var(--accent-2)}
+
+/* the card (A2) */
+.card{position:relative;background:linear-gradient(var(--panel-2),var(--panel));border:1px solid var(--line);
+  clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%);padding:11px 13px}
+.card::before{content:"";position:absolute;top:-1px;left:13px;width:36px;height:2px;background:var(--accent-2)}
+.card.calling{border-color:var(--accent)} .card.calling::before{background:var(--accent)}
+.head{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.name{font:700 16px var(--disp);letter-spacing:.06em;text-transform:uppercase}
+.kindtag{font:700 10px var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);padding:0 5px}
+.meta{font-size:12px;color:var(--muted)}
+.facerow{display:flex;align-items:flex-end;gap:8px;margin:8px 0 2px}
+.facerow .act{margin-left:auto;align-self:center}
+.fw{text-align:center;position:relative}
+.face{width:46px;height:50px;border-radius:2px}
+.f1{background:linear-gradient(160deg,#2d3a52 0 40%,#3de8d8 40% 55%,#1b2340 55%)}
+.f2{background:linear-gradient(160deg,#4a2a20 0 40%,#ff9a5a 40% 55%,#1b2340 55%)}
+.f3{background:linear-gradient(160deg,#3a2d52 0 40%,#b48cff 40% 55%,#1b2340 55%)}
+.f4{background:linear-gradient(160deg,#2d4a3a 0 40%,#5fe0a5 40% 55%,#1b2340 55%)}
+.f5{background:linear-gradient(160deg,#52482d 0 40%,#f2d541 40% 55%,#1b2340 55%)}
+.f6{background:linear-gradient(160deg,#52302d 0 40%,#ff3d5f 40% 55%,#1b2340 55%)}
+.fname{font:700 11px var(--disp);letter-spacing:.06em;margin-top:2px}
+.hurt{position:absolute;top:-4px;right:-4px;font:700 9px var(--disp);letter-spacing:.08em;background:#ff9a5a;color:var(--bg);padding:0 3px}
+.mini{width:72px;height:50px;border:1px solid var(--line);background:#0d1016;position:relative;align-self:flex-start}
+.mini::before{content:"";position:absolute;left:10px;top:12px;width:40px;height:20px;border:1px solid #4a5466;border-top:0;border-right:0}
+.mini::after{content:"";position:absolute;left:48px;top:30px;width:6px;height:6px;border-radius:50%;background:var(--accent-2)}
+.track{display:grid;gap:2px;height:8px;margin:10px 0 8px}
+.track i{position:relative;background:#232a35}
+.track i.done{background:#4a5466}
+.track i.today{background:var(--accent-2)}
+.track i.call{background:var(--accent)}
+.track i.lead::after,.track i.watch::after{content:"";position:absolute;left:50%;top:50%;width:7px;height:7px;transform:translate(-50%,-50%) rotate(45deg);background:var(--text);box-shadow:0 0 0 2px var(--panel)}
+.track i.watch::after{background:var(--panel);border:2px solid var(--accent-2);width:9px;height:9px}
+.track i.watch.on::after{background:var(--accent-2)}
+.trackline{display:flex;justify-content:space-between;font:600 11px var(--disp);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.trackline b{color:var(--accent-2);font-weight:700}
+.t{font-size:14px;color:#c9cfda;margin:5px 0 0}
+.quiet{font-size:13px;color:var(--dim);font-style:italic;margin:5px 0 0}
+.who{text-decoration:underline dotted var(--accent-2);text-underline-offset:3px}
+.btn{display:inline-grid;place-items:center;min-height:44px;padding:0 12px;font:700 12px var(--disp);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+.btn.call{background:var(--accent);color:#fff;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.btn.watch{border:1px solid var(--accent-2);color:var(--accent-2)}
+.btn.watch.set{background:rgba(61,232,216,.12)}
+.btn.watch.now{background:var(--accent-2);color:var(--bg)}
+.past{display:flex;align-items:center;min-height:44px;margin-top:6px;border-top:1px solid rgba(42,48,59,.7);font:600 12px var(--disp);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.past::after{content:"+";margin-left:auto;font-size:16px}
+
+/* Today's crew panel */
+.panel{position:relative;background:linear-gradient(var(--panel-2),var(--panel));border:1px solid var(--line);clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%);padding:14px}
+.panel::before{content:"";position:absolute;top:-1px;left:14px;width:36px;height:2px;background:var(--accent-2)}
+.phead{font:700 14px var(--disp);letter-spacing:.16em;color:var(--accent-2);text-transform:uppercase;margin:0 0 10px}
+.outrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(42,48,59,.7);min-height:52px}
+.outrow .fs{display:flex}
+.outrow .fs .face{width:32px;height:36px;border:2px solid var(--panel)}
+.outrow .fs .face + .face{margin-left:-8px}
+.outrow .nm{font:700 14px var(--disp);letter-spacing:.06em;text-transform:uppercase}
+.outrow .mini-track{display:grid;gap:2px;height:5px;margin-top:5px}
+.outrow .mini-track i{background:#232a35}.outrow .mini-track i.done{background:#4a5466}.outrow .mini-track i.today{background:var(--accent-2)}.outrow .mini-track i.call{background:var(--accent)}
+.outrow .st{font:700 11px var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:right}
+.outrow .st.c{color:var(--accent)} .outrow .st.w{color:var(--accent-2)}
+.prow{display:flex;justify-content:space-between;padding:10px 0 0;font-size:14px}
+.prow b{font:700 11px var(--disp);letter-spacing:.14em;color:var(--warn)}
+.prow a{font:700 12px var(--disp);letter-spacing:.12em;color:var(--accent-2)}
+.allout{display:block;text-align:right;font:700 12px var(--disp);letter-spacing:.12em;color:var(--accent-2);padding-top:8px}
+
+.notes{margin-top:26px;color:var(--muted);font-size:13px;max-width:980px}
+.notes li{margin:5px 0}
+
+.screen{height:844px}
+.row{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:8px 10px;border:1px solid var(--line);background:var(--panel);min-height:56px}
+.row.calling{border-color:var(--accent)}
+.row .fs{display:flex}
+.row .fs .face{width:34px;height:38px;border:2px solid var(--panel)}
+.row .fs .face + .face{margin-left:-9px}
+.row .nm{font:700 14px var(--disp);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .sub{font-size:11px;color:var(--muted)}
+.row .mt{display:grid;gap:2px;height:5px;margin-top:5px}
+.row .mt i{background:#232a35}.row .mt i.done{background:#4a5466}.row .mt i.today{background:var(--accent-2)}.row .mt i.call{background:var(--accent)}
+.row .st{font:700 11px var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:right}
+.row .st.c{color:var(--accent)}.row .st.w{color:var(--accent-2)}
+.row .chev{color:var(--muted);margin-left:6px}
+.rows{display:grid;gap:6px}
+.open{border:1px solid var(--accent-2)}
+/* carousel */
+.car{display:flex;gap:10px;overflow:hidden;margin-right:-14px}
+.car .card{flex:0 0 86%}
+.dots{display:flex;gap:6px;justify-content:center;margin-top:8px}
+.dots i{width:18px;height:3px;background:#2a303b}.dots i.on{background:var(--accent-2)}
+.dots i.c{background:var(--accent)}
+/* tiles */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tile{border:1px solid var(--line);background:var(--panel);padding:8px;min-height:44px;clip-path:polygon(0 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%)}
+.tile.calling{border-color:var(--accent)}
+.tile .fs{display:flex;margin-bottom:6px}
+.tile .fs .face{width:30px;height:33px;border:2px solid var(--panel)}
+.tile .fs .face + .face{margin-left:-8px}
+.tile .nm{font:700 13px var(--disp);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .mt{display:grid;gap:2px;height:4px;margin:5px 0 4px}
+.tile .mt i{background:#232a35}.tile .mt i.done{background:#4a5466}.tile .mt i.today{background:var(--accent-2)}.tile .mt i.call{background:var(--accent)}
+.tile .st{font:700 10px var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.tile .st.c{color:var(--accent)}.tile .st.w{color:var(--accent-2)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--panel-2);border-top:1px solid var(--accent-2);padding:10px 14px 20px;box-shadow:0 -20px 40px rgba(0,0,0,.6);z-index:5}
+.grab{width:40px;height:4px;background:#3a4250;margin:0 auto 8px}
+.dim{position:absolute;inset:0;background:rgba(5,6,8,.55);z-index:4}
+
+.act2{display:inline-flex;align-items:center;min-height:44px;padding:0 2px 0 10px;font:700 12px var(--disp);letter-spacing:.12em;text-transform:uppercase;color:var(--accent-2);white-space:nowrap}
+.act2.c{color:var(--accent)}
+.act2::after{content:"›";margin-left:5px;font-size:15px}
+.rowc{border:1px solid var(--line);background:var(--panel);border-left:3px solid var(--line)}
+.rowc.calling{border-left-color:var(--accent);border-color:rgba(255,61,95,.5);border-left-color:var(--accent)}
+.rowc.watchable{border-left-color:var(--accent-2)}
+.rowc .r{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:6px 8px 6px 10px;min-height:56px}
+.rowc .fs{display:flex}
+.rowc .fs .face{width:34px;height:38px;border:2px solid var(--panel)}
+.rowc .fs .face + .face{margin-left:-9px}
+.rowc .nm{font:700 14px var(--disp);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rowc .sub{font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rowc .mt{display:grid;gap:2px;height:5px;margin-top:5px}
+.rowc .mt i{background:#232a35;position:relative}.rowc .mt i.done{background:#4a5466}.rowc .mt i.today{background:var(--accent-2)}.rowc .mt i.call{background:var(--accent)}
+.rowc .mt i.w::after{content:"";position:absolute;right:-1px;top:-3px;width:6px;height:6px;border:1.5px solid var(--accent-2);transform:rotate(45deg);background:var(--panel)}
+.rowc .st{font:600 11px var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:right;white-space:nowrap}
+.rowc .more{padding:0 10px 10px 10px;border-top:1px solid rgba(42,48,59,.7)}
+.rowc .bigfaces{display:flex;gap:8px;margin:10px 0 4px}
+.rowc .bigfaces .face{width:46px;height:50px}
+.rowc .tline{display:flex;justify-content:space-between;font:600 11px var(--disp);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+.rowc .tline b{color:var(--accent-2)}
+.rowc .open-ind{font:700 14px var(--disp);color:var(--muted);padding-left:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Out now, condensed for phone</h1>
+  <p class="lede"><b>Revised after the owner's note on the buttons:</b> a call or a watch can appear on several crews at once, so each card's action is a small link, not a filled button. The first two frames are the revision; the three looks after them are the first pass, kept for comparison.</p>
+  <p class="lede">Round 6's full cards stack about 700px tall for four crews. Three ways to fit them on a phone. In each, a crew calling you is never hidden: it stays open, first, in red. From tablet width the full cards stay as they are.</p>
+  <div class="frames">
+    <section><p class="look">A, revised · all closed</p><p class="why">Every crew is one row, including the one calling. The action is a small link at the row's right ("Take call ›", "Watch day 6 ›"), 44px to tap but not a filled button; colour sits on the row's left edge (red calling, cyan something to watch). Continue is the only filled button on the page. Four crews in about 250px.</p><div class="screen"><div class="topbar"><div><div class="day">Tue · Wk 2 · S1</div><div class="pips"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="cash">¥12,700<small>▲ ¥1,050</small></div></div>
+        <div class="subtabs"><span class="on">Map</span><span>Districts</span><span>Tongs</span></div><div class="body"><div class="mapstub"><span style="left:14px;top:10px">Old Town</span><span style="left:150px;top:40px">Night Market</span><span style="left:280px;top:14px">Docks</span><i class="dot" style="left:250px;top:34px"></i><i class="dot" style="left:120px;top:20px;background:var(--accent)"></i></div><div class="sect">Out now <span class="n">· 4</span></div><div class="rows"><div class="rowc calling"><div class="r"><span class="fs"><span class="face f3"></span></span><div style="min-width:0"><div class="nm">Cash</div><div class="sub">Trip · Docks · day 2 of 4</div><div class="mt" style="grid-template-columns:repeat(4,1fr)"><i class="done"></i><i class="call"></i><i class=""></i><i class=""></i></div></div><span class="act2 c">Take call</span></div></div><div class="rowc watchable"><div class="r"><span class="fs"><span class="face f1"></span><span class="face f2"></span></span><div style="min-width:0"><div class="nm">A weapon</div><div class="sub">Trip · Night Market · day 5 of 6</div><div class="mt" style="grid-template-columns:repeat(6,1fr)"><i class="done"></i><i class="done"></i><i class="done"></i><i class="call"></i><i class="today"></i><i class="w"></i></div></div><span class="act2">Watch day 6</span></div></div><div class="rowc "><div class="r"><span class="fs"><span class="face f6"></span><span class="face f5"></span></span><div style="min-width:0"><div class="nm">Container 409</div><div class="sub">Job · Docks · day 2 of 3</div><div class="mt" style="grid-template-columns:repeat(3,1fr)"><i class="done"></i><i class="today"></i><i class=""></i></div></div><span class="st">Back Wed</span></div></div><div class="rowc "><div class="r"><span class="fs"><span class="face f4"></span></span><div style="min-width:0"><div class="nm">Fix a stall's wiring</div><div class="sub">Side · Night Market · day 1 of 2</div><div class="mt" style="grid-template-columns:repeat(2,1fr)"><i class="today"></i><i class=""></i></div></div><span class="st">Back Thu</span></div></div></div><div class="sect">Tonight</div><div class="tonight"><b>OLD TOWN</b><span>1 job on the board</span><span class="go">PLAN ›</span></div></div><div class="continue">CONTINUE → WED</div>
+        <div class="tabs"><span>TODAY</span><span class="on">CITY</span><span>TONG</span><span>CREW</span><span>JOBS</span></div></div></section>
+    <section><p class="look">A, revised · one opened</p><p class="why">Tap a row (not its link) and it opens in place: big faces with names, back day, the leads count, today's line, Past days. The row stays its header, so the name isn't said twice. One open at a time.</p><div class="screen"><div class="topbar"><div><div class="day">Tue · Wk 2 · S1</div><div class="pips"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="cash">¥12,700<small>▲ ¥1,050</small></div></div>
+        <div class="subtabs"><span class="on">Map</span><span>Districts</span><span>Tongs</span></div><div class="body"><div class="mapstub"><span style="left:14px;top:10px">Old Town</span><span style="left:150px;top:40px">Night Market</span><span style="left:280px;top:14px">Docks</span><i class="dot" style="left:250px;top:34px"></i><i class="dot" style="left:120px;top:20px;background:var(--accent)"></i></div><div class="sect">Out now <span class="n">· 4</span></div><div class="rows"><div class="rowc calling"><div class="r"><span class="fs"><span class="face f3"></span></span><div style="min-width:0"><div class="nm">Cash</div><div class="sub">Trip · Docks · day 2 of 4</div><div class="mt" style="grid-template-columns:repeat(4,1fr)"><i class="done"></i><i class="call"></i><i class=""></i><i class=""></i></div></div><span class="act2 c">Take call</span></div></div><div class="rowc watchable" style="border-color:var(--accent-2)"><div class="r"><span class="fs"><span class="face f1"></span><span class="face f2"></span></span><div style="min-width:0"><div class="nm">A weapon</div><div class="sub">Trip · Night Market · day 5 of 6</div><div class="mt" style="grid-template-columns:repeat(6,1fr)"><i class="done"></i><i class="done"></i><i class="done"></i><i class="call"></i><i class="today"></i><i class="w"></i></div></div><span class="act2">Watch day 6</span></div><div class="more"><div class="bigfaces"><div class="fw"><div class="face f1"></div><div class="fname">Vector</div></div><div class="fw"><div class="face f2"></div><div class="fname">Lychee</div><span class="hurt">LIGHT</span></div></div>
+<div class="tline"><span>Back Sat</span><span>Leads <b>2 of 3</b></span></div>
+<p class="t"><span class="who">Lychee</span> outwaited the seller and got the meeting.</p><div class="past">Past days (4)</div></div></div><div class="rowc "><div class="r"><span class="fs"><span class="face f6"></span><span class="face f5"></span></span><div style="min-width:0"><div class="nm">Container 409</div><div class="sub">Job · Docks · day 2 of 3</div><div class="mt" style="grid-template-columns:repeat(3,1fr)"><i class="done"></i><i class="today"></i><i class=""></i></div></div><span class="st">Back Wed</span></div></div><div class="rowc "><div class="r"><span class="fs"><span class="face f4"></span></span><div style="min-width:0"><div class="nm">Fix a stall's wiring</div><div class="sub">Side · Night Market · day 1 of 2</div><div class="mt" style="grid-template-columns:repeat(2,1fr)"><i class="today"></i><i class=""></i></div></div><span class="st">Back Thu</span></div></div></div><div class="sect">Tonight</div><div class="tonight"><b>OLD TOWN</b><span>1 job on the board</span><span class="go">PLAN ›</span></div></div><div class="continue">CONTINUE → WED</div>
+        <div class="tabs"><span>TODAY</span><span class="on">CITY</span><span>TONG</span><span>CREW</span><span>JOBS</span></div></div></section>
+    <section><p class="look">A · Rows that open</p><p class="why">One 56px row per crew: faces, name, a thin track, one word of status. A calling crew is open as a full card. Tap any row to open its card in place (one open at a time; here the weapon hunt). Four crews closed take about 250px.</p><div class="screen"><div class="topbar"><div><div class="day">Tue · Wk 2 · S1</div><div class="pips"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="cash">¥12,700<small>▲ ¥1,050</small></div></div>
+        <div class="subtabs"><span class="on">Map</span><span>Districts</span><span>Tongs</span></div><div class="body"><div class="mapstub"><span style="left:14px;top:10px">Old Town</span><span style="left:150px;top:40px">Night Market</span><span style="left:280px;top:14px">Docks</span><i class="dot" style="left:250px;top:34px"></i><i class="dot" style="left:120px;top:20px;background:var(--accent)"></i></div><div class="sect">Out now <span class="n">· 4</span></div><div class="rows"><article class="card calling">
+              <div class="head"><span class="name">Cash</span><span class="kindtag">Trip</span><span class="meta">Docks · back Thu</span></div>
+              <div class="facerow"><div class="fw"><div class="face f3"></div><div class="fname">Mirror</div></div><span class="btn call act">They're calling</span></div>
+              <div class="track" style="grid-template-columns:repeat(4,1fr)"><i class="done"></i><i class="call"></i><i></i><i></i></div>
+              <div class="trackline"><span>Day 2 of 4</span><span>Money <b>0 of 1</b></span></div>
+              <p class="t">The buyer's cousin wants a word, and two more cousins came to listen.</p>
+            </article><div class="row open "><span class="fs"><span class="face f1"></span><span class="face f2"></span></span><div style="min-width:0"><div class="nm">A weapon</div><div class="sub">Trip · Night Market · back Sat</div><div class="mt" style="grid-template-columns:repeat(6,1fr)"><i class="done"></i><i class="done"></i><i class="done"></i><i class="call"></i><i class="today"></i><i class=""></i></div></div><span class="st w">Watch day 6<span class="chev">−</span></span></div><article class="card" style="margin-top:-7px;border-top:0">
+              <div class="head"><span class="name">A weapon</span><span class="kindtag">Trip</span><span class="meta">Night Market · back Sat</span></div>
+              <div class="facerow"><div class="fw"><div class="face f1"></div><div class="fname">Vector</div></div><div class="fw"><div class="face f2"></div><div class="fname">Lychee</div><span class="hurt">LIGHT</span></div><span class="btn watch act">Watch day 6</span></div>
+              <div class="track" style="grid-template-columns:repeat(6,1fr)"><i class="done"></i><i class="done"></i><i class="done lead"></i><i class="call"></i><i class="today lead"></i><i class="watch"></i></div>
+              <div class="trackline"><span>Day 5 of 6</span><span>Leads <b>2 of 3</b></span></div>
+              <p class="t"><span class="who">Lychee</span> outwaited the seller and got the meeting.</p>
+              <div class="past">Past days (4)</div>
+            </article><div class="row "><span class="fs"><span class="face f6"></span><span class="face f5"></span></span><div style="min-width:0"><div class="nm">Container 409</div><div class="sub">Job · Docks · back Wed</div><div class="mt" style="grid-template-columns:repeat(3,1fr)"><i class="done"></i><i class="today"></i><i class=""></i></div></div><span class="st ">Back Wed<span class="chev">+</span></span></div><div class="row "><span class="fs"><span class="face f4"></span></span><div style="min-width:0"><div class="nm">Fix a stall's wiring</div><div class="sub">Side · Night Market · back Thu</div><div class="mt" style="grid-template-columns:repeat(2,1fr)"><i class="today"></i><i class=""></i></div></div><span class="st ">Back Thu<span class="chev">+</span></span></div></div><div class="sect">Tonight</div><div class="tonight"><b>OLD TOWN</b><span>1 job on the board</span><span class="go">PLAN ›</span></div></div><div class="continue">CONTINUE → WED</div>
+        <div class="tabs"><span>TODAY</span><span class="on">CITY</span><span>TONG</span><span>CREW</span><span>JOBS</span></div></div></section>
+    <section><p class="look">B · Swipe the cards</p><p class="why">The full card, one at a time, swiped sideways with the next peeking in. The calling crew first; the dash under it is red. Always the height of one card, however many are out; but you only see one crew's faces without swiping.</p><div class="screen"><div class="topbar"><div><div class="day">Tue · Wk 2 · S1</div><div class="pips"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="cash">¥12,700<small>▲ ¥1,050</small></div></div>
+        <div class="subtabs"><span class="on">Map</span><span>Districts</span><span>Tongs</span></div><div class="body"><div class="mapstub"><span style="left:14px;top:10px">Old Town</span><span style="left:150px;top:40px">Night Market</span><span style="left:280px;top:14px">Docks</span><i class="dot" style="left:250px;top:34px"></i><i class="dot" style="left:120px;top:20px;background:var(--accent)"></i></div><div class="sect">Out now <span class="n">· 4</span></div><div class="car"><article class="card calling">
+              <div class="head"><span class="name">Cash</span><span class="kindtag">Trip</span><span class="meta">Docks · back Thu</span></div>
+              <div class="facerow"><div class="fw"><div class="face f3"></div><div class="fname">Mirror</div></div><span class="btn call act">They're calling</span></div>
+              <div class="track" style="grid-template-columns:repeat(4,1fr)"><i class="done"></i><i class="call"></i><i></i><i></i></div>
+              <div class="trackline"><span>Day 2 of 4</span><span>Money <b>0 of 1</b></span></div>
+              <p class="t">The buyer's cousin wants a word, and two more cousins came to listen.</p>
+            </article><article class="card">
+              <div class="head"><span class="name">A weapon</span><span class="kindtag">Trip</span><span class="meta">Night Market · back Sat</span></div>
+              <div class="facerow"><div class="fw"><div class="face f1"></div><div class="fname">Vector</div></div><div class="fw"><div class="face f2"></div><div class="fname">Lychee</div><span class="hurt">LIGHT</span></div><span class="btn watch act">Watch day 6</span></div>
+              <div class="track" style="grid-template-columns:repeat(6,1fr)"><i class="done"></i><i class="done"></i><i class="done lead"></i><i class="call"></i><i class="today lead"></i><i class="watch"></i></div>
+              <div class="trackline"><span>Day 5 of 6</span><span>Leads <b>2 of 3</b></span></div>
+              <p class="t"><span class="who">Lychee</span> outwaited the seller and got the meeting.</p>
+              <div class="past">Past days (4)</div>
+            </article></div><div class="dots"><i class="c on"></i><i></i><i></i><i></i></div><div class="sect">Tonight</div><div class="tonight"><b>OLD TOWN</b><span>1 job on the board</span><span class="go">PLAN ›</span></div></div><div class="continue">CONTINUE → WED</div>
+        <div class="tabs"><span>TODAY</span><span class="on">CITY</span><span>TONG</span><span>CREW</span><span>JOBS</span></div></div></section>
+    <section><p class="look">C · Tiles, card in a sheet</p><p class="why">A two-across grid of small tiles: faces, name, track, status. Four crews in about 180px. Tap a tile and its full card slides up from the bottom (shown open over the page on the right). The most compact; the sheet keeps the map in view behind.</p><div class="screen"><div class="topbar"><div><div class="day">Tue · Wk 2 · S1</div><div class="pips"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="cash">¥12,700<small>▲ ¥1,050</small></div></div>
+        <div class="subtabs"><span class="on">Map</span><span>Districts</span><span>Tongs</span></div><div class="body"><div class="mapstub"><span style="left:14px;top:10px">Old Town</span><span style="left:150px;top:40px">Night Market</span><span style="left:280px;top:14px">Docks</span><i class="dot" style="left:250px;top:34px"></i><i class="dot" style="left:120px;top:20px;background:var(--accent)"></i></div><div class="sect">Out now <span class="n">· 4</span></div><div class="tiles"><div class="tile calling"><span class="fs"><span class="face f3"></span></span><div class="nm">Cash</div><div class="mt" style="grid-template-columns:repeat(4,1fr)"><i class="done"></i><i class="call"></i><i class=""></i><i class=""></i></div><div class="st c">Calling</div></div><div class="tile "><span class="fs"><span class="face f1"></span><span class="face f2"></span></span><div class="nm">A weapon</div><div class="mt" style="grid-template-columns:repeat(6,1fr)"><i class="done"></i><i class="done"></i><i class="done"></i><i class="call"></i><i class="today"></i><i class=""></i></div><div class="st w">Watch day 6</div></div><div class="tile "><span class="fs"><span class="face f6"></span><span class="face f5"></span></span><div class="nm">Container 409</div><div class="mt" style="grid-template-columns:repeat(3,1fr)"><i class="done"></i><i class="today"></i><i class=""></i></div><div class="st ">Back Wed</div></div><div class="tile "><span class="fs"><span class="face f4"></span></span><div class="nm">Fix a stall's wiring</div><div class="mt" style="grid-template-columns:repeat(2,1fr)"><i class="today"></i><i class=""></i></div><div class="st ">Back Thu</div></div></div><div class="sect">Tonight</div><div class="tonight"><b>OLD TOWN</b><span>1 job on the board</span><span class="go">PLAN ›</span></div></div><div class="continue">CONTINUE → WED</div>
+        <div class="tabs"><span>TODAY</span><span class="on">CITY</span><span>TONG</span><span>CREW</span><span>JOBS</span></div></div></section>
+    <section><p class="look">C · Tile tapped</p><p class="why">The weapon hunt's card in the sheet, with Watch, the past days and the faces at full size. Swipe down or tap outside to close.</p><div class="screen"><div class="topbar"><div><div class="day">Tue · Wk 2 · S1</div><div class="pips"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div></div><div class="cash">¥12,700<small>▲ ¥1,050</small></div></div>
+        <div class="subtabs"><span class="on">Map</span><span>Districts</span><span>Tongs</span></div><div class="body"><div class="mapstub"><span style="left:14px;top:10px">Old Town</span><span style="left:150px;top:40px">Night Market</span><span style="left:280px;top:14px">Docks</span><i class="dot" style="left:250px;top:34px"></i><i class="dot" style="left:120px;top:20px;background:var(--accent)"></i></div><div class="sect">Out now <span class="n">· 4</span></div><div class="tiles"><div class="tile calling"><span class="fs"><span class="face f3"></span></span><div class="nm">Cash</div><div class="mt" style="grid-template-columns:repeat(4,1fr)"><i class="done"></i><i class="call"></i><i class=""></i><i class=""></i></div><div class="st c">Calling</div></div><div class="tile "><span class="fs"><span class="face f1"></span><span class="face f2"></span></span><div class="nm">A weapon</div><div class="mt" style="grid-template-columns:repeat(6,1fr)"><i class="done"></i><i class="done"></i><i class="done"></i><i class="call"></i><i class="today"></i><i class=""></i></div><div class="st w">Watch day 6</div></div><div class="tile "><span class="fs"><span class="face f6"></span><span class="face f5"></span></span><div class="nm">Container 409</div><div class="mt" style="grid-template-columns:repeat(3,1fr)"><i class="done"></i><i class="today"></i><i class=""></i></div><div class="st ">Back Wed</div></div><div class="tile "><span class="fs"><span class="face f4"></span></span><div class="nm">Fix a stall's wiring</div><div class="mt" style="grid-template-columns:repeat(2,1fr)"><i class="today"></i><i class=""></i></div><div class="st ">Back Thu</div></div></div><div class="sect">Tonight</div><div class="tonight"><b>OLD TOWN</b><span>1 job on the board</span><span class="go">PLAN ›</span></div></div><div class="continue">CONTINUE → WED</div>
+        <div class="tabs"><span>TODAY</span><span class="on">CITY</span><span>TONG</span><span>CREW</span><span>JOBS</span></div><div class="dim"></div><div class="sheet"><div class="grab"></div><article class="card">
+              <div class="head"><span class="name">A weapon</span><span class="kindtag">Trip</span><span class="meta">Night Market · back Sat</span></div>
+              <div class="facerow"><div class="fw"><div class="face f1"></div><div class="fname">Vector</div></div><div class="fw"><div class="face f2"></div><div class="fname">Lychee</div><span class="hurt">LIGHT</span></div><span class="btn watch act">Watch day 6</span></div>
+              <div class="track" style="grid-template-columns:repeat(6,1fr)"><i class="done"></i><i class="done"></i><i class="done lead"></i><i class="call"></i><i class="today lead"></i><i class="watch"></i></div>
+              <div class="trackline"><span>Day 5 of 6</span><span>Leads <b>2 of 3</b></span></div>
+              <p class="t"><span class="who">Lychee</span> outwaited the seller and got the meeting.</p>
+              <div class="past">Past days (4)</div>
+            </article></div></div></section>
+  </div>
+  <ul class="notes">
+    <li><b>A calling crew is never folded away</b> in any of the three: it is open (A), first (B), or red (C), and the call is also in Today's Needs you.</li>
+    <li><b>Buttons:</b> filled buttons repeated per crew compete with each other and with Continue. In the revision every per-crew action is a light link with the colour on the row edge; the full call screen (one at a time) keeps its big Take the call, as Today's Needs you does.</li>
+    <li><b>My pick: A, revised.</b> It shows every crew's faces at once, reads top to bottom like the rest of the game, and opens in place with no new pattern. C is tighter but adds a sheet the game doesn't use elsewhere; B hides all but one crew.</li>
+    <li>Rows and tiles are 44px or taller to tap. Faces are placeholders for the game's portraits.</li>
+  </ul>
+</div>
+</body>
+</html>
