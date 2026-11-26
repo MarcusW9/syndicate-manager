@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Days Out Log Mockup</title>
+<!-- Mockup, 2026-11-26: "The days out" on a trip report reads as one block of text. Six looks that separate the days.
+     Same seven entries in each (a weapon hunt in the Night Market, Vector and Lychee). Each entry in the game carries
+     a tone (plain, good, warn, bad), the stat rolled, and a flag on the turn day (core/expeditions.js write); today's
+     report (ui/messages.js renderDaysOut, styles.css .advlog__days) draws none of them. Street-terminal tokens from
+     docs/UI-SKIN.md. Not wired to the game. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c0f; --panel:#12151b; --panel-2:#161a21; --line:#2a303b;
+  --text:#e9ecf1; --muted:#8a93a6; --accent:#ff3d5f; --accent-2:#3de8d8;
+  --warn:#f2d541; --danger:#ff4a4a; --good:#5fe0a5; --cut:10px;
+  --disp:'Rajdhani',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background-image:linear-gradient(rgba(61,232,216,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(61,232,216,.025) 1px,transparent 1px);
+  background-size:32px 32px;padding:16px max(16px,env(safe-area-inset-left)) 40px}
+.wrap{max-width:1400px;margin:0 auto}
+h1{font:700 22px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin:4px 0}
+.lede{color:var(--muted);max-width:820px;margin:0 0 20px}
+.grid{display:grid;gap:22px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));align-items:start}
+.look{font:700 13px var(--disp);letter-spacing:.16em;color:var(--accent-2);text-transform:uppercase;margin:0 0 6px}
+.why{color:var(--muted);font-size:13px;margin:0 0 10px;min-height:72px}
+.panel{position:relative;background:linear-gradient(var(--panel-2),var(--panel));border:1px solid var(--line);
+  clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%);padding:16px}
+.panel::before{content:"";position:absolute;top:-1px;left:16px;width:36px;height:2px;background:var(--accent-2)}
+.head{font:700 13px var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.who{text-decoration:underline dotted var(--accent-2);text-underline-offset:3px}
+.d{font:700 11px/1 var(--disp);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+ol{list-style:none;margin:0;padding:0}
+.t{font-size:14px;color:#c9cfda}
+.tag{font:700 10.5px/1 var(--disp);letter-spacing:.12em;text-transform:uppercase;padding:2px 5px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.tag.good{color:var(--good);border-color:rgba(95,224,165,.5)}
+.tag.warn{color:var(--warn);border-color:rgba(242,213,65,.5)}
+.tag.turn{color:var(--bg);background:var(--accent-2);border-color:var(--accent-2)}
+
+/* 0: today */
+.l0{border-left:2px solid var(--line);padding-left:10px;display:grid;gap:6px}
+.l0 .d{margin-right:4px}
+
+/* 1: spaced, day on its own line, hairline between */
+.l1 li{padding:10px 0;border-bottom:1px solid rgba(42,48,59,.7)}
+.l1 li:first-child{padding-top:2px}
+.l1 li:last-child{border-bottom:0}
+.l1 .d{display:block;margin-bottom:4px;color:var(--accent-2)}
+.l1 .d.same{color:var(--muted)}
+
+/* 2: rail with tone dots */
+.l2{position:relative;padding-left:22px}
+.l2::before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.l2 li{position:relative;padding:0 0 14px}
+.l2 li:last-child{padding-bottom:0}
+.l2 li::before{content:"";position:absolute;left:-21px;top:3px;width:10px;height:10px;background:var(--panel);border:2px solid var(--muted);transform:rotate(45deg)}
+.l2 li.good::before{border-color:var(--good)}
+.l2 li.warn::before{border-color:var(--warn)}
+.l2 li.turn::before{background:var(--accent-2);border-color:var(--accent-2)}
+.l2 li.cont::before{width:6px;height:6px;left:-19px;top:5px}
+.l2 .d{display:block;margin-bottom:3px}
+.l2 li.good .d{color:var(--good)} .l2 li.warn .d{color:var(--warn)} .l2 li.turn .d{color:var(--accent-2)}
+
+/* 3: day gutter */
+.l3 li{display:grid;grid-template-columns:40px 1fr;gap:10px;padding:8px 0;border-top:1px solid rgba(42,48,59,.7)}
+.l3 li:first-child{border-top:0;padding-top:0}
+.l3 .num{font:700 24px/1 var(--disp);color:var(--muted);text-align:center;padding-top:2px}
+.l3 .num small{display:block;font:700 9px/1 var(--disp);letter-spacing:.14em;margin-top:2px}
+.l3 li.cont{border-top:0;padding-top:0}
+.l3 li.cont .num{visibility:hidden}
+.l3 li.good .num{color:var(--good)} .l3 li.warn .num{color:var(--warn)} .l3 li.turn .num{color:var(--accent-2)}
+
+/* 4: day tiles with a tone edge */
+.l4{display:grid;gap:6px}
+.l4 li{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--muted);padding:8px 10px;
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%)}
+.l4 li.good{border-left-color:var(--good)} .l4 li.warn{border-left-color:var(--warn)} .l4 li.turn{border-left-color:var(--accent-2)}
+.l4 .top{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.l4 .top .tag:first-of-type{margin-left:auto}
+
+/* 5: by day, quiet days folded, the moments raised */
+.l5 li{padding:8px 0;border-bottom:1px solid rgba(42,48,59,.7)}
+.l5 li:last-child{border-bottom:0}
+.l5 .top{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+.l5 .top .d{color:var(--text);font-size:12px}
+.l5 .top .line{flex:1;height:1px;background:var(--line)}
+.l5 li.key .t{color:var(--text);font-size:15px}
+.l5 li.key{background:linear-gradient(90deg,rgba(61,232,216,.07),transparent 70%);padding-left:8px;margin-left:-8px;border-left:2px solid var(--accent-2)}
+.l5 details summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;gap:8px;font:600 12px var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.l5 details summary::-webkit-details-marker{display:none}
+.l5 details summary::after{content:"+";margin-left:auto}
+.l5 details[open] summary::after{content:"\2212"}
+.l5 details .t{display:block;padding:0 0 8px}
+
+.notes{margin-top:26px;color:var(--muted);font-size:13px;max-width:920px}
+.notes li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>The days out: six looks</h1>
+  <p class="lede">The log on a trip report, which today reads as one block of text. Same seven entries in each look. The game already knows each day's tone (plain, good, warn), the stat rolled and the turn day; only looks 2 to 5 use them. Phone width first.</p>
+
+  <div class="grid">
+
+    <section>
+      <p class="look">0 · Today, for comparison</p>
+      <p class="why">One rule down the left, the day label inline in small grey caps, 6px between days. The labels disappear into the text.</p>
+      <div class="panel"><p class="head">The days out</p>
+        <ol class="l0">
+          <li class="t"><span class="d">Day 1</span> Over a shared table, <span class="who">Vector</span> mentioned we were looking for a rifle called the Scaled Typhoon. Kwong Wai-shun wrote a seller's name on the receipt.</li>
+          <li class="t"><span class="d">Day 2</span> Two stalls said they'd never heard of it. One of them was lying.</li>
+          <li class="t"><span class="d">Day 3</span> A repairer was laid up after an implant flare-up. <span class="who">Vector</span> kept the visit short and came away with a name.</li>
+          <li class="t"><span class="d">Day 4</span> Kwong Wai-shun had passed on a story heard from someone else. <span class="who">Vector</span> followed it back to the advert we already had.</li>
+          <li class="t"><span class="d">Day 5</span> The seller tried to make <span class="who">Lychee</span> wait all afternoon. <span class="who">Lychee</span> waited longer and got the meeting.</li>
+          <li class="t"><span class="d">Day 6</span> The Scaled Typhoon was real, working and close enough to take home. Now it was a question of price or nerve.</li>
+          <li class="t"><span class="d">Day 6</span> The Scaled Typhoon made it back smelling of machine oil. <span class="who">Lychee</span> has carried it round the safehouse all evening.</li>
+        </ol></div>
+    </section>
+
+    <section>
+      <p class="look">1 · Spaced, day on its own line</p>
+      <p class="why">The smallest fix: the day label in cyan on its own line, more air, a hairline between days. A second entry on the same day drops its label colour. No new meaning, just room.</p>
+      <div class="panel"><p class="head">The days out</p>
+        <ol class="l1">
+          <li><span class="d">Day 1</span><span class="t">Over a shared table, <span class="who">Vector</span> mentioned we were looking for a rifle called the Scaled Typhoon. Kwong Wai-shun wrote a seller's name on the receipt.</span></li>
+          <li><span class="d">Day 2</span><span class="t">Two stalls said they'd never heard of it. One of them was lying.</span></li>
+          <li><span class="d">Day 3</span><span class="t">A repairer was laid up after an implant flare-up. <span class="who">Vector</span> kept the visit short and came away with a name.</span></li>
+          <li><span class="d">Day 4</span><span class="t">Kwong Wai-shun had passed on a story heard from someone else. <span class="who">Vector</span> followed it back to the advert we already had.</span></li>
+          <li><span class="d">Day 5</span><span class="t">The seller tried to make <span class="who">Lychee</span> wait all afternoon. <span class="who">Lychee</span> waited longer and got the meeting.</span></li>
+          <li><span class="d">Day 6</span><span class="t">The Scaled Typhoon was real, working and close enough to take home. Now it was a question of price or nerve.</span></li>
+          <li><span class="d same">Day 6 · evening</span><span class="t">The Scaled Typhoon made it back smelling of machine oil. <span class="who">Lychee</span> has carried it round the safehouse all evening.</span></li>
+        </ol></div>
+    </section>
+
+    <section>
+      <p class="look">2 · A rail with a marker per day</p>
+      <p class="why">A timeline: a diamond on the rail for each day, coloured by how the day went (green good, yellow against them, grey quiet), a solid cyan diamond on the turn. You can read the trip's shape from the rail alone.</p>
+      <div class="panel"><p class="head">The days out</p>
+        <ol class="l2">
+          <li><span class="d">Day 1</span><span class="t">Over a shared table, <span class="who">Vector</span> mentioned we were looking for a rifle called the Scaled Typhoon. Kwong Wai-shun wrote a seller's name on the receipt.</span></li>
+          <li class="warn"><span class="d">Day 2</span><span class="t">Two stalls said they'd never heard of it. One of them was lying.</span></li>
+          <li class="good"><span class="d">Day 3</span><span class="t">A repairer was laid up after an implant flare-up. <span class="who">Vector</span> kept the visit short and came away with a name.</span></li>
+          <li><span class="d">Day 4</span><span class="t">Kwong Wai-shun had passed on a story heard from someone else. <span class="who">Vector</span> followed it back to the advert we already had.</span></li>
+          <li class="good"><span class="d">Day 5</span><span class="t">The seller tried to make <span class="who">Lychee</span> wait all afternoon. <span class="who">Lychee</span> waited longer and got the meeting.</span></li>
+          <li class="turn"><span class="d">Day 6 · the turn</span><span class="t">The Scaled Typhoon was real, working and close enough to take home. Now it was a question of price or nerve.</span></li>
+          <li class="good cont"><span class="d">Day 6 · home</span><span class="t">The Scaled Typhoon made it back smelling of machine oil. <span class="who">Lychee</span> has carried it round the safehouse all evening.</span></li>
+        </ol></div>
+    </section>
+
+    <section>
+      <p class="look">3 · A day gutter</p>
+      <p class="why">A big day number in its own column (Rajdhani, coloured by tone) and the text beside it, a hairline between days. Like a ship's log. Scans fastest by day; a second entry on the same day sits under the first with no number.</p>
+      <div class="panel"><p class="head">The days out</p>
+        <ol class="l3">
+          <li><span class="num">1<small>DAY</small></span><span class="t">Over a shared table, <span class="who">Vector</span> mentioned we were looking for a rifle called the Scaled Typhoon. Kwong Wai-shun wrote a seller's name on the receipt.</span></li>
+          <li class="warn"><span class="num">2<small>DAY</small></span><span class="t">Two stalls said they'd never heard of it. One of them was lying.</span></li>
+          <li class="good"><span class="num">3<small>DAY</small></span><span class="t">A repairer was laid up after an implant flare-up. <span class="who">Vector</span> kept the visit short and came away with a name.</span></li>
+          <li><span class="num">4<small>DAY</small></span><span class="t">Kwong Wai-shun had passed on a story heard from someone else. <span class="who">Vector</span> followed it back to the advert we already had.</span></li>
+          <li class="good"><span class="num">5<small>DAY</small></span><span class="t">The seller tried to make <span class="who">Lychee</span> wait all afternoon. <span class="who">Lychee</span> waited longer and got the meeting.</span></li>
+          <li class="turn"><span class="num">6<small>DAY</small></span><span class="t">The Scaled Typhoon was real, working and close enough to take home. Now it was a question of price or nerve.</span></li>
+          <li class="good cont"><span class="num">6</span><span class="t">The Scaled Typhoon made it back smelling of machine oil. <span class="who">Lychee</span> has carried it round the safehouse all evening.</span></li>
+        </ol></div>
+    </section>
+
+    <section>
+      <p class="look">4 · Day tiles with tags</p>
+      <p class="why">Each day a small cut-corner tile with a tone edge, and tags for what the day was about (the stat rolled, a find, the turn). Most separated and most informative; also the longest, and the tags add reading.</p>
+      <div class="panel"><p class="head">The days out</p>
+        <ol class="l4">
+          <li><div class="top"><span class="d">Day 1</span><span class="tag">Social</span></div><span class="t">Over a shared table, <span class="who">Vector</span> mentioned we were looking for a rifle called the Scaled Typhoon. Kwong Wai-shun wrote a seller's name on the receipt.</span></li>
+          <li class="warn"><div class="top"><span class="d">Day 2</span><span class="tag warn">Stealth · missed</span></div><span class="t">Two stalls said they'd never heard of it. One of them was lying.</span></li>
+          <li class="good"><div class="top"><span class="d">Day 3</span><span class="tag good">Social · a lead</span></div><span class="t">A repairer was laid up after an implant flare-up. <span class="who">Vector</span> kept the visit short and came away with a name.</span></li>
+          <li><div class="top"><span class="d">Day 4</span><span class="tag">Tech · dead end</span></div><span class="t">Kwong Wai-shun had passed on a story heard from someone else. <span class="who">Vector</span> followed it back to the advert we already had.</span></li>
+          <li class="good"><div class="top"><span class="d">Day 5</span><span class="tag good">Stealth · a lead</span></div><span class="t">The seller tried to make <span class="who">Lychee</span> wait all afternoon. <span class="who">Lychee</span> waited longer and got the meeting.</span></li>
+          <li class="turn"><div class="top"><span class="d">Day 6</span><span class="tag turn">The turn</span></div><span class="t">The Scaled Typhoon was real, working and close enough to take home. Now it was a question of price or nerve.</span></li>
+          <li class="good"><div class="top"><span class="d">Day 6</span><span class="tag good">Home</span></div><span class="t">The Scaled Typhoon made it back smelling of machine oil. <span class="who">Lychee</span> has carried it round the safehouse all evening.</span></li>
+        </ol></div>
+    </section>
+
+    <section>
+      <p class="look">5 · Quiet days folded, moments raised</p>
+      <p class="why">Each day under its own heading rule. Days where something moved (a lead, the turn, home) are lifted with a cyan edge and larger text; quiet or dead-end days fold to a one-line tap. Shortest to read; you lose nothing, but you tap to see it.</p>
+      <div class="panel"><p class="head">The days out</p>
+        <ol class="l5">
+          <li><div class="top"><span class="d">Day 1</span><span class="line"></span></div><span class="t">Over a shared table, <span class="who">Vector</span> mentioned we were looking for a rifle called the Scaled Typhoon. Kwong Wai-shun wrote a seller's name on the receipt.</span></li>
+          <li><details><summary><span class="d">Day 2</span> · a quiet day</summary><span class="t">Two stalls said they'd never heard of it. One of them was lying.</span></details></li>
+          <li class="key"><div class="top"><span class="d">Day 3</span><span class="line"></span></div><span class="t">A repairer was laid up after an implant flare-up. <span class="who">Vector</span> kept the visit short and came away with a name.</span></li>
+          <li><details><summary><span class="d">Day 4</span> · a dead end</summary><span class="t">Kwong Wai-shun had passed on a story heard from someone else. <span class="who">Vector</span> followed it back to the advert we already had.</span></details></li>
+          <li class="key"><div class="top"><span class="d">Day 5</span><span class="line"></span></div><span class="t">The seller tried to make <span class="who">Lychee</span> wait all afternoon. <span class="who">Lychee</span> waited longer and got the meeting.</span></li>
+          <li class="key"><div class="top"><span class="d">Day 6 · the turn</span><span class="line"></span></div><span class="t">The Scaled Typhoon was real, working and close enough to take home. Now it was a question of price or nerve.</span></li>
+          <li class="key"><div class="top"><span class="d">Day 6 · home</span><span class="line"></span></div><span class="t">The Scaled Typhoon made it back smelling of machine oil. <span class="who">Lychee</span> has carried it round the safehouse all evening.</span></li>
+        </ol></div>
+    </section>
+  </div>
+
+  <ul class="notes">
+    <li><b>All six read from what the log already stores.</b> Every entry has a tone; progress days also keep the stat rolled, and the turn and a fight are flagged (<code>core/expeditions.js</code> <code>write</code>); looks 0, 1 and 3 need only the day number. Look 4's "missed", "a lead", "dead end" would need the day's kind kept as well (one more field).</li>
+    <li><b>The same list is folded under a crew's card while they're out</b> (Today and City's Out now, <code>.advlog</code>), so the chosen look would show there too, where it must stay short.</li>
+    <li>Day 2's text is made up for the mockup; the rest is from a real capture (seed from <code>scripts/capture-expeditions.mjs</code>).</li>
+    <li>Folded rows in look 5 are 44px tall to tap.</li>
+  </ul>
+</div>
+</body>
+</html>
