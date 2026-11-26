@@ -22,6 +22,7 @@ Then add a row to the top of the table below and commit the folder with the chan
 
 | Date | Version | Commit | What's new on screen | Folder |
 | --- | --- | --- | --- | --- |
+| 2026-11-26 | Outside tiles | (this change) | On the squad board (`09`), Outside's empty slots are short tiles on the inside team's columns (mockup 1); a filled Outside card lines up with the inside cards, its slot name under it; the gear squares are as before. |  [2026-11-26-outside-tiles](2026-11-26-outside-tiles/) |
 | 2026-11-26 | Outside slots | (this change) | On the squad board (`09`), Outside's Overwatch, Wheels and Standby are slots like the inside team's, with Overwatch greyed and Armoury →; the gear squares are back as before (the same day's "+ Gear" bar is undone). | [2026-11-26-outside-slots](2026-11-26-outside-slots/) |
 | 2026-11-26 | Squad board tidy | (this change) | On the squad board (`09`), a runner carrying nothing has one "+ Gear" bar; Wheels and Standby lead Outside and Overwatch without kit is a line with Armoury →; no approach watermark on the phone board. | [2026-11-26-squad-board-tidy](2026-11-26-squad-board-tidy/) |
 | 2026-11-26 | First-run polish | (this change) | Today's first fitting Plan it is red and Continue an outline while work waits (`03`); sending a crew comes back to Today; the report's Alert line explains itself (`17`); the top bar's ▲/▼ is a dotted button for Cash today. |  [2026-11-26-first-run-polish](2026-11-26-first-run-polish/) |

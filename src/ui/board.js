@@ -16,7 +16,7 @@ import { bestLine } from '../core/squad.js';
 import { effectiveStat, maxCrew } from '../core/crew.js';
 import { riskLabel } from '../core/risk.js';
 import { getawayRead } from '../core/piloting.js';
-import { statValue, statGlyph } from './icons.js';
+import { statValue, statGlyph, gearGlyph, traitGlyph } from './icons.js';
 
 /** Slots on the board: the inside team (recommended, plus one spare card until the most), then overwatch. */
 export function insideSlots(plan, tpl) {
@@ -212,10 +212,20 @@ export function renderBoard(ui, { plan, tpl, people, crewSize, approachName = ''
               { slot: 'wheels', op: wh, card: wheelsCard, name: 'Wheels', hint: 'takes the piloting rolls' },
               { slot: 'standby', op: sb, card: standbyCard, name: 'Standby', hint: 'called in when it goes wrong' },
             ];
-            // Outside uses the same slots as the inside team (owner, 2026-11-26): a card when someone is on it, a dashed
-            // slot like "+ Extra" when empty. Overwatch without a rifle or drone is a slot too, greyed, with the way to the armoury.
-            const offSlot = `<div class="pcol pcol--empty is-off"><b>Overwatch</b><small>needs a rifle or a drone</small><button class="slotchip__link" data-action="open-armoury" data-tab="shop">Armoury →</button></div>`;
-            return `<div class="pcols pcols--outside">${slots.map((x) => (!x.op && x.off ? offSlot : x.card)).join('')}</div>`;
+            // Outside's empty slots are short tiles (the owner's pick, mockup 1 in docs/mockups/2026-11-26-squad-board.html):
+            // an icon, the role and two words on what it does; someone on it is a full card, as inside. Overwatch without a
+            // rifle or drone is a dotted tile with the way to the armoury.
+            const ICON = { over: gearGlyph('rifle'), wheels: statGlyph('piloting'), standby: traitGlyph('siren') };
+            const WORDS = { over: 'saves people', wheels: 'the driving', standby: 'on call' };
+            const tile = (x) => (x.off
+              ? `<div class="otile is-off"><span class="otile__ic">${ICON.over}</span><span><b>Overwatch</b><small>needs a rifle · <button class="otile__link" data-action="open-armoury" data-tab="shop">Armoury →</button></small></span></div>`
+              : `<button class="otile" data-action="pick-slot" data-id="${x.slot}" aria-label="${esc(x.name)}: empty, optional. ${esc(x.hint)}. Tap to assign."><span class="otile__ic">${ICON[x.slot]}</span><span><b>+ ${esc(x.name)}</b><small>${esc(WORDS[x.slot])}</small></span></button>`);
+            // The inside team's grid, so cards line up; a filled card says which slot it is. With anyone outside the empty tiles
+            // stretch to the card's height, as "+ Extra" does inside (owner, 2026-11-26: a lone card among short tiles looked off).
+            const filled = slots.filter((x) => x.op);
+            // The slot's name goes under the card, so the card's top lines up with the tiles beside it (owner, 2026-11-26).
+            const named = (x) => `<div class="oslot">${x.card}<span class="oslot__name">${esc(x.name)}</span></div>`;
+            return `<div class="pcols otiles ${filled.length ? 'has-card' : ''}">${slots.map((x) => (x.op ? named(x) : tile(x))).join('')}</div>`;
           })()}
         </div>
       </div></div>`;
