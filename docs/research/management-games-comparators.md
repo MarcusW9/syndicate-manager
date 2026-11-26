@@ -1,6 +1,6 @@
 # Management-game comparators: what players asked for, and where they bounced
 
-Started 2026-11-26. Sources: an r/rpg_gamers thread asking for RPGs where you build up and run a guild or company, and Steam reviews of King of Dragon Pass (KoDP), Majesty Gold HD and Fallout Shelter, all shared by the owner.
+Started 2026-11-26. Sources: an r/rpg_gamers thread asking for RPGs where you build up and run a guild or company, and Steam reviews of King of Dragon Pass (KoDP), Majesty Gold HD and Fallout Shelter, and the Steam update notes of Guild Management Simulator (0.7.4 to 0.8.5), all shared by the owner.
 
 ## 1. The Reddit thread: games named as comparators
 
@@ -15,7 +15,7 @@ Not all of these are close. Grouped by what they teach.
 | Dispatch | Superhero-team management: assign people to jobs, writing carries it. Closest in tone to a crew-and-jobs game. |
 | King of Dragon Pass | Text-first, event-driven tribe management with no tactical layer. See section 2. |
 | Kenshi | Pure sandbox. Not a useful model. |
-| Guildmaster Simulator | A small indie in the same space, in playtest. Worth watching as a competitor. |
+| Guildmaster Simulator | A small indie in the same space, in playtest (Steam app 5270710). Not the same game as Guild Management Simulator in section 5. |
 
 Takeaways from the thread:
 - Players ask for an organization that grows (a base, a roster, new options), not just a party.
@@ -82,7 +82,28 @@ A free-to-play vault builder (mobile first, also on PC): you assign dwellers to 
 
 **Lesson:** the pull is caring for people and sending them out, in short sessions. The weak spots are repetition and a fight layer nobody wants to watch.
 
-## 5. How this applies to Syndicate Manager
+## 5. Guild Management Simulator (Steam update notes, Aug to Nov 2026)
+
+Our nearest competitor: a solo-developer guild manager in Early Access since 2026-08-27 (Steam app 5009000; PC and Android). You recruit members, gear them, send named teams on timed expeditions (encounters, dungeons, raids, Mythic+ keys) and read the reports. Real-time timers, MMO-raid flavour (tank, healer, DPS). Read from its patch notes, not from play, so this is what its developer found worth fixing, not what players said.
+
+**What it added, and what that tells us**
+- **Careers and a Hall of Records** (0.8.5): each member keeps missions, injuries and milestones; cosmetic epithets (Firstblood, Battle Scarred); retire veterans and remember them. We already have this (runner's Career tab, Crew › Wall with the fallen, the Hall of Legends and Gone elsewhere). Shows the idea is wanted.
+- **Build identity** (0.7.5): "left tree or bust" was the obvious answer, so every path got a real job after three nodes, with caps on stacking effects. Same problem as `abilities-and-builds.md`: each choice needs a niche, not a bigger number.
+- **Early payroll protection** (0.7.5): members under level 5 draw no wages, so "new guilds can safely learn the opening loop without returning to immediate debt and desertion." Their answer to KoDP's death spiral; compare with our broke bands (section 6, point 3).
+- **Auto-repeat** (0.8.0): repeat a mission after a clean win; it stops on failure, injury, a missing member or no supplies, and says why. Rewards reduced, with the penalty shown. Repeats report as quiet toasts, not a full report. Close to our hands-off runs; the "stops safely and says why" and "reduced, and shown" parts are worth matching.
+- **Failure can't be farmed** (0.7.5, 0.8.0): consolation drops capped so losing high-end content was no longer the fastest way to level.
+- **One forecast** (0.8.0): mission cards and party setup now use the same combat forecast logic, and forecasts stopped counting deployed members. Our planning read should keep using the same rules as the job itself.
+- **Reputation tiers** (Unknown to Legendary) that unlock high-stakes events; we have rank and fame.
+- **Explain the numbers** (0.7.4, 0.7.5, 0.8.5): many entries add text saying what a stat, star or tag actually does. Their players were lost without it.
+- **Safety on costly actions**: confirmations, bulk sell shows the full list first, refined gear protected from rerolls. We already confirm sells and hall buys.
+- **A 5-step getting-started guide** (0.8.5), added late.
+- **Seasonal and dated events** (a Halloween event with its own currency; a three-week "Contest" raid with intel off and a first-week banner). Real-world dates; see point 9 below on why we stay on in-game time.
+- **Save trouble, repeatedly**: three of the last seven posts are save hotfixes (half-written expedition data blocking loads, missing provision lists, autosave failing on a new collection item, recovery export failing). Our saves have tests, migrations and an unreadable-save fallback; the lesson is that state for crews out (`awayJobs`, expeditions) is where it breaks.
+- **Exploits from timing** (0.7.4 and a patch): rapid clicks queuing duplicate expeditions, a recruit board rerolling and charging every second. Real-time play brings these; day ticks mostly avoid them.
+
+**Lesson:** the same game shape found the same problems we did: dominant builds, early debt, opaque stats, hands-off runs that need clear stop rules, and fragile save data for crews out.
+
+## 6. How this applies to Syndicate Manager
 
 1. **Show risk, do not hide it.** The planning read (`core/squad.js`, `core/risk.js`) and the rule that deaths follow a risk the player was shown answer the "hidden information" complaint. Keep one clear read per decision; do not pile up small ones.
 2. **Visible progression in an endless game.** The sharpest negative review is "no clear progression" plus rivals the player can never really dent. We already have markers (rank and standing in words on the Tong tab, halls, the Anchor's Book), and rival tongs rise, strain and fold in the background (`docs/RIVAL-TONGS.md`). The player cannot attack a rival directly; their levers are signing, buyouts and poaching. Worth checking in a playtest: does the player feel their own moves changed a rival's fortunes, or only watch the weather?
@@ -98,8 +119,13 @@ A free-to-play vault builder (mobile first, also on PC): you assign dwellers to 
 11. **Fights must be worth watching, or skippable.** Fallout Shelter's combat is its most criticised part. The watchable-combat work (`docs/BATTLES.md`) is the answer; hands-off fights should always offer a short report instead.
 12. **No paid shortcuts.** Not a plan here, but the reviews are unanimous: paid loot in a single-player game reads as a trap.
 
-## 6. Open checks
+13. **Save data for crews out is the weak spot.** GMS broke saves three times on half-written or missing expedition data. Our migrations already default missing `awayJobs` (`save.js`, from v17), but the save tests (`tests/saves.test.js`, `savefail.test.js`) do not load a save with crews out. They should include a save with jobs away, expeditions out and a pending call-in, and one with those fields missing.
+14. **Hands-off stop rules, said out loud.** Our hands-off crews already never push on. Each report should say why it stopped or pulled out, in one line, the way GMS's tray note does.
+15. **Explain what numbers do, on tap.** GMS kept adding text explaining its stats. Our iOS rule (tap to reveal, no hover) fits; check every stat and tag on the runner's page opens a plain line.
+
+## 7. Open checks
 
 - When cash goes below zero, does the screen show a way out? (The sims already measure how often it happens.)
 - In a playtest: does the player feel their signings, buyouts and poaching changed a rival tong's fortunes?
 - Returning after a long break: does the first screen tell the player enough to pick the run back up?
+- Do the save tests cover a save with crews away, expeditions out and a call-in waiting, and one with those fields missing?
