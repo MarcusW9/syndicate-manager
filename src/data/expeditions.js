@@ -39,7 +39,7 @@ export const EXPEDITION = {
   cashPerPersonDay: 200, // the sum a cash run brings home when met (half on a partial); below a side task's 250 a day, as the finds add to it
   callChance: 0.5, // a rough turn breaks into a fight that calls you in, this share of the time
   threat: 2, // the fight's threat (district adds as on posts)
-  xpPerDay: 1, // growth in each day's stat, per person
+  xpPerDay: 8, // growth in each day's stat, per person (owner, 2026-11-26: was 1, which raised nothing in 10 trips; scripts/sim-trip-growth.mjs)
   fatiguePerDay: 5,
   prizeTiers: { custom: 0.7, premium: 0.3 }, // a weapon hunt's prize
   prizeTypes: { pistol: 0.7, rifle: 0.3 },
