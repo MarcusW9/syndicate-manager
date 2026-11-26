@@ -4,10 +4,32 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
-import { faceOf, portrait, cultureOf, stateOf } from '../src/ui/art.js';
+import { faceOf, portrait, cultureOf, stateOf, jossIcon } from '../src/ui/art.js';
 
 const crew = () => createNewGame({ seed: 50, startCrew: 'fresh' }).crew;
 const withoutIds = (svg) => svg.replace(/pf\d+/g, 'pf');
+
+test('Joss uses the lantern for all four badge moods, without the portrait glow', () => {
+  const moods = ['neutral', 'happy', 'worried', 'smug'];
+  const badges = moods.map((mood) => jossIcon({ mood, size: 32 }));
+  assert.equal(new Set(badges).size, moods.length);
+  for (const [i, badge] of badges.entries()) {
+    assert.equal(badge, jossIcon({ variant: 'lantern', mood: moods[i], size: 32 }));
+    assert.match(badge, /width="32" height="32" aria-hidden="true"/);
+    assert.doesNotMatch(badge, /radialGradient/);
+  }
+});
+
+test('large lantern portraits reference their own glow and paper gradients', () => {
+  const first = jossIcon({ size: 104 });
+  const second = jossIcon({ size: 104 });
+  const ids = [...first.matchAll(/<radialGradient id="([^"]+)"/g)].map((match) => match[1]);
+  assert.equal(ids.length, 2);
+  for (const id of ids) {
+    assert.ok(first.includes(`fill="url(#${id})"`));
+    assert.ok(!second.includes(`id="${id}"`));
+  }
+});
 
 test('a face never changes between renders or games', () => {
   const [a] = crew();

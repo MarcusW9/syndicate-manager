@@ -1,0 +1,56 @@
+name: CI
+
+# Checks every pull request before it can reach main (pull requests only, so a push to an open PR runs once).
+# The deploy (deploy.yml) re-runs the tests on main before it publishes.
+# Make "CI / tests" and "CI / build and smoke" required checks on main (Settings > Branches).
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A new push to the same PR cancels the run already going.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - name: Every job passes its content rules
+        run: node scripts/check-job.mjs --all
+      - name: Full test suite (the design promises)
+        run: npm test
+
+  build:
+    name: build and smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+      - name: The built game loads with no errors
+        run: npm run smoke
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+          retention-days: 7

@@ -11,15 +11,15 @@ import { PARTNER } from '../data/partner.js';
 import { animateMap } from './citymap.js';
 import { renderHallBuild } from './hallbuild.js';
 import { isBlocked, calendar, seasonStartDay } from '../core/time.js';
-import { money } from '../core/money.js';
+import { money, cashLines } from '../core/money.js';
 import { runBattle } from '../core/mission.js';
 import { takeFightChange } from './fightscreen.js';
 import { autoStep } from '../core/autorun.js';
 import { fitGearArt } from './board.js';
 import { isWatching, syncWatch, justFinished, stopWatch, mountWatch } from './watch.js';
 import { saveGame, unreadableSave, backupDue, saveTrouble, getPref } from '../save/save.js';
-import { renderLeadName } from './tongs.js';
-import { tabBadges, tabOf } from './nav.js';
+import { renderLeadName, wordLines } from './tongs.js';
+import { tabBadges, tabOf, decisionCount } from './nav.js';
 import { onClick, onImportFile } from './actions.js';
 import { renderCity, renderLore } from './city.js';
 import { renderRecruit, renderOperative, renderCrew } from './crew.js';
@@ -30,7 +30,8 @@ import { renderPlan } from './plan.js';
 import { renderRaidCallSheet } from './raidcards.js';
 import { renderFounding, renderSettings } from './settings.js';
 import { esc, districtName, hallLabel, fillLine, pickLine, face, rootBack, cityName } from './shared.js';
-import { renderInbox } from './today.js';
+import { NAMES } from '../config/names.js';
+import { renderInbox, renderDesk, workWaiting } from './today.js';
 import { root, setRoot, state, setGame, backLabel, V } from './view.js';
 
 export function mountApp(el, initialState) {
@@ -54,6 +55,7 @@ export function mountApp(el, initialState) {
       else if (e.key === 'Tab' || e.key === 'Escape') { e.preventDefault(); V.crewFilterOpen = false; V.focusNext = { action: 'crew-filter-open' }; render(); }
       return;
     }
+    if (e.key === 'Escape' && V.cashOpen) { V.cashOpen = false; V.focusNext = { action: 'cash-today' }; render(); return; }
     if (e.key === 'Escape' && V.crewFilterOpen) { V.crewFilterOpen = false; V.focusNext = { action: 'crew-filter-open' }; render(); return; }
     if (e.key === 'Escape' && V.pickSlot) { V.focusNext = { action: 'pick-slot', id: V.pickSlot }; V.pickSlot = null; render(); }
     else if (e.key === 'Escape' && V.screen === 'city' && V.cityTab === 'map' && V.cityDistrict && !state.activeMission) { V.cityDistrict = null; render(); }
@@ -91,10 +93,30 @@ function heatStat() {
     <span class="heatchip__l">Heat</span> ${esc(districtName(hot.district).replace(/^The /, ''))} <b>${state.heat}</b></button>`;
 }
 
+/**
+ * Today's layout, a device preference (Save › Look, 2026-11-24): the desk (decisions with their answers, Joss's
+ * line, the crew, the news log) unless the player turns the classic inbox back on. Never in the save.
+ */
+export const deskOn = () => !getPref('today-classic');
+
+/**
+ * The street ticker (the desk's calm HUD, 2026-11-24): The Word as one line across the top of every tab, on tablets and
+ * computers only (styles.css hides it on phones, where The Word sits in Today's Intercepts). Street news only: never what a
+ * card on Today already says. Still, never scrolling.
+ */
+function renderTicker() {
+  if (!deskOn() || state.activeMission || state.founding) return '';
+  const lines = wordLines(state);
+  if (!lines.length) return '';
+  return `<p class="ticker" aria-label="Street talk"><span class="ticker__k">${esc(NAMES.city)} // street</span>${lines.map((l) => `<span class="ticker__l">${esc(l)}</span>`).join('<span class="ticker__dot" aria-hidden="true">·</span>')}</p>`;
+}
+
 // --- rendering ---------------------------------------------------------
 export function render() {
   // The colour theme (Save › Look, 2026-11-19): a device preference, drawn as a class on <html> (styles.css "Theme: red channel").
   document.documentElement?.classList.toggle('theme-red', getPref('theme-red'));
+  // Today's layout (2026-11-24): the desk unless the classic inbox is picked in Save › Look. The desk also slims the rail on tablets.
+  document.documentElement?.classList.toggle('desk', deskOn());
   // A running job's watch screen updates in place, so its animations and timer carry on (ui/watch.js).
   const am = state.activeMission;
   // ...unless saving has just started or stopped failing: then the whole page is drawn, so the banner shows or goes.
@@ -108,7 +130,7 @@ export function render() {
   const blocked = isBlocked(state);
   const resting = Date.now() < V.continueRestUntil;
   const unread = state.inbox.filter((m) => !m.read).length;
-  const badges = tabBadges(state);
+  const badges = tabBadges(state, { desk: deskOn() });
   const cue = V.dayCue;
   V.dayCue = null;
   const leaving = V.sendOffCue;
@@ -145,12 +167,13 @@ export function render() {
       <button class="nav__btn nav__btn--save ${V.screen === 'settings' ? 'is-active' : ''}" data-action="nav" data-id="settings" aria-pressed="${V.screen === 'settings'}"><span class="nav__ico">${navGlyph('settings')}</span><span class="nav__lbl">Save</span></button>
     </nav>
 
-    <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && V.screen === 'jobs' && V.plan ? 'main--split' : ''}">${saveBanner()}${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>
+    <main class="main ${wide ? 'main--wide' : ''} ${!state.activeMission && V.screen === 'jobs' && V.plan ? 'main--split' : ''}">${renderTicker()}${saveBanner()}${state.activeMission ? renderMission() : `${keptBanner()}${renderScreen()}`}</main>
     ${dock ? `<div class="dock">${renderContinue(blocked, resting, unread, 'dock__continue')}</div>` : ''}
     ${cue ? renderDayCue(cue) : ''}
     ${leaving ? renderSendOff(leaving) : ''}
     ${renderBuzz()}
     ${renderRaidCallSheet()}
+    ${cashSheet()}
   `;
   if (am) mountWatch(root.querySelector('.watch'), state, { ui: watchUi, finishing, onAuto: () => setState(autoStep(state)), onFightNext: () => setState(runBattle(state, takeFightChange(state.activeMission))) });
   warmBoard(); // Joss's board reads, in the background, so the Jobs tab opens fast
@@ -219,11 +242,31 @@ function renderWhen() {
     </div>`;
 }
 
-/** Today's cash change, e.g. "▲¥1,050". Nothing on a day the cash hasn't moved. */
+/** Today's cash change, e.g. "▲¥1,050": a tap opens what made it up (cashSheet). Nothing on a day the cash hasn't moved. */
 function cashDelta() {
   const d = state.cash - (state.dayStartCash ?? state.cash);
   if (!d) return '';
-  return ` <span class="delta ${d < 0 ? 'is-down' : ''}" aria-label="${d < 0 ? 'down' : 'up'} ${money(Math.abs(d))} today">${d < 0 ? '▼' : '▲'}${money(Math.abs(d))}</span>`;
+  return ` <button class="delta delta--btn ${d < 0 ? 'is-down' : ''}" data-action="cash-today" aria-expanded="${V.cashOpen}" aria-label="${d < 0 ? 'Down' : 'Up'} ${money(Math.abs(d))} today: what made it up">${d < 0 ? '▼' : '▲'}${money(Math.abs(d))}</button>`;
+}
+
+/** The day's cash, line by line (core/money.js cashLines), so the top bar's number can always be checked (2026-11-26). */
+function cashSheet() {
+  if (!V.cashOpen) return '';
+  const lines = cashLines(state);
+  const d = state.cash - (state.dayStartCash ?? state.cash);
+  const signed = (n) => `${n < 0 ? '−' : '+'}${money(Math.abs(n))}`;
+  return `
+    <div class="scrim" data-action="close-cash"></div>
+    <div class="sheet cashsheet" role="dialog" aria-modal="true" aria-label="Cash today">
+      <div class="sheet__head">
+        <h2 class="sheet__title">Cash today</h2>
+        <button class="btn btn--ghost sheet__x" data-action="close-cash" aria-label="Close">✕</button>
+      </div>
+      <p class="muted small">Started the day on ${money(state.dayStartCash ?? state.cash)}.</p>
+      ${lines.length ? `<ul class="cashsheet__list">${lines.map((l) => `<li class="${l.amount < 0 ? 'is-down' : 'is-up'}"><span>${esc(l.what)}</span><b>${signed(l.amount)}</b></li>`).join('')}</ul>` : '<p class="muted">Nothing moved today.</p>'}
+      <p class="cashsheet__total"><span>Today</span><b>${signed(d)}</b></p>
+      <p class="cashsheet__total"><span>Cash now</span><b>${money(state.cash)}</b></p>
+    </div>`;
 }
 
 /** Continue names the next day and lists what's still waiting; it never asks for a second tap. */
@@ -235,14 +278,17 @@ function raidUnplanned() {
 function renderContinue(blocked, resting, unread, where) {
   const label = state.activeMission ? 'On a job' : state.founding ? 'Pick your crew' : blocked ? 'Decision needed'
     : `Continue → ${calendar(state.day + 1).weekday}`;
+  const decisions = deskOn() ? decisionCount(state) : 0;
   const waiting = [
-    unread ? `${unread} unread` : '',
+    deskOn() ? (decisions ? `${decisions} waiting` : '') : unread ? `${unread} unread` : '',
     state.jobs.length ? `${state.jobs.length} job${state.jobs.length === 1 ? '' : 's'} open` : '',
   ].filter(Boolean).join(' · ');
   const warn = blocked ? '' : raidUnplanned();
   const hint = warn ? `<span class="continue__hint is-warn">${esc(warn)}</span>`
     : !blocked && waiting ? `<span class="continue__hint">${esc(waiting)}</span>` : '';
-  return `<button class="btn btn--primary continue ${where} ${resting && !blocked ? 'is-resting' : ''}" data-action="continue" ${blocked || resting ? 'disabled' : ''}>
+  // Work waiting (someone free, a job that fits): Continue steps back so Plan it leads (2026-11-26). Still one tap.
+  const quiet = !blocked && !resting && !state.activeMission && !state.founding && workWaiting();
+  return `<button class="btn ${quiet ? 'continue--quiet' : 'btn--primary'} continue ${where} ${resting && !blocked ? 'is-resting' : ''}" data-action="continue" ${blocked || resting ? 'disabled' : ''}>
       <span class="continue__label">${esc(label)}</span>${hint}
     </button>`;
 }
@@ -306,7 +352,7 @@ function navButton(id, label, badge = null) {
 
 function renderScreen() {
   if (state.founding && V.screen !== 'settings') return renderFounding(); // nothing else until the founders are picked
-  if (V.screen === 'inbox') return rootBack() + renderInbox();
+  if (V.screen === 'inbox') return rootBack() + (deskOn() ? renderDesk() : renderInbox());
   // A hall's page and its build screen are on their home tab (ui/nav.js HOMES): Tong › Halls.
   if (V.screen === 'tong') {
     if (V.buildView?.screen && hallIn(state, V.buildView.district) && !wideHall()) return renderHallBuild({ esc, money, cityName, backLabel: backLabel(), art: hallArtOn() }, state, V.buildView);

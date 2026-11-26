@@ -5,6 +5,7 @@ import { jossIcon } from './art.js';
 import { money } from '../core/money.js';
 import { unreadableSave, listSlots, getActiveSlot, loadBackup, SLOT_COUNT, backupDue, getPref } from '../save/save.js';
 import { FOUNDERS_TO_PICK } from '../core/recruits.js';
+import { ratedStat } from '../core/crew.js';
 import { esc, statName } from './shared.js';
 import { polaroid } from './board.js';
 import { TONG_NAME_MAX } from '../core/tongname.js';
@@ -23,7 +24,8 @@ export function renderFounding() {
   const n = picked.length;
   const wages = cands.filter((c) => picked.includes(c.id)).reduce((sum, c) => sum + c.wage, 0);
   const names = picked.map((id) => cands.find((c) => c.id === id).handle);
-  const best = (r) => Object.entries(r.stats).sort((a, b) => b[1] - a[1]).slice(0, 3);
+  // The rated numbers, traits counted (core/crew.js ratedStat, the same the Crew tab shows), so a pick reads the same after it is made (2026-11-26).
+  const best = (r) => Object.keys(r.stats).map((k) => [k, ratedStat(r, k)]).sort((a, b) => b[1] - a[1]).slice(0, 3);
   return `
     <section class="panel founding">
       <h1>Who's in?</h1>
@@ -57,11 +59,23 @@ export function renderFounding() {
           </button></li>`;
         }).join('')}
       </ul>
+      ${founderTraits(cands)}
       <div class="planbar founding__bar">
         <p class="small">${n ? `<strong>${esc(names.join(', '))}</strong><br>` : ''}${n === FOUNDERS_TO_PICK ? `Wages ${money(wages)} a week. Rent ${money(state.rent)}, due Sunday.` : `Picked ${n} of ${FOUNDERS_TO_PICK}.`}</p>
         <button class="btn btn--primary" data-action="found-crew" ${n === FOUNDERS_TO_PICK ? '' : 'disabled'}>${n === FOUNDERS_TO_PICK ? 'Start with these three' : `Pick ${FOUNDERS_TO_PICK - n} more`}</button>
       </div>
     </section>`;
+}
+
+/** What the candidates' traits do, on a tap (the card itself is the pick button, so a trait can't open from it; 2026-11-26). */
+function founderTraits(cands) {
+  const ids = [...new Set(cands.flatMap((c) => c.traits))].filter((t) => TRAITS[t]);
+  if (!ids.length) return '';
+  return `<details class="pfold founding__traits">
+        <summary>What their traits do</summary>
+        <p class="muted small">The numbers on the cards already count them.</p>
+        <dl class="founding__traitlist">${ids.map((t) => `<div><dt>${esc(TRAITS[t].name)}</dt><dd>${esc(TRAITS[t].desc)}</dd></div>`).join('')}</dl>
+      </details>`;
 }
 
 // --- save --------------------------------------------------------------
@@ -155,6 +169,14 @@ export function renderSettings() {
         <div class="segmented segmented--grid">
           <button class="seg ${getPref('theme-red') ? '' : 'is-on'}" data-action="theme" data-id="cyan" aria-pressed="${!getPref('theme-red')}"><strong>Cyan</strong><span>Standard</span></button>
           <button class="seg ${getPref('theme-red') ? 'is-on' : ''}" data-action="theme" data-id="red" aria-pressed="${getPref('theme-red')}"><strong>Red channel</strong><span>Red frame</span></button>
+        </div>
+      </div>
+      <div class="riskcard">
+        <p>Today: <strong>${getPref('today-classic') ? 'classic inbox' : 'the desk'}</strong></p>
+        <p class="muted small">The desk shows what needs you as cards with their answer on them, and the rest as a log of the day's news. The classic inbox lists every message as mail. Only changes how Today looks, and is kept on this device, not in the save.</p>
+        <div class="segmented segmented--grid">
+          <button class="seg ${getPref('today-classic') ? '' : 'is-on'}" data-action="today-layout" data-id="desk" aria-pressed="${!getPref('today-classic')}"><strong>The desk</strong><span>New</span></button>
+          <button class="seg ${getPref('today-classic') ? 'is-on' : ''}" data-action="today-layout" data-id="classic" aria-pressed="${getPref('today-classic')}"><strong>Classic inbox</strong><span>Every message</span></button>
         </div>
       </div>
       <div class="riskcard">

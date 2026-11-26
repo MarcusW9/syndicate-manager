@@ -13,7 +13,7 @@ import { loyaltyPoints, addLoyalty } from './loyalty.js';
 import { marketWage, round50 } from './pricing.js';
 import { buyoutAmount, operativeToCard } from './dossier.js';
 import { carried } from './gear.js';
-import { money } from './money.js';
+import { moveCash, money } from './money.js';
 import { isSworn } from './oath.js';
 import { bookGrade } from './book.js';
 import { OATH } from '../data/oath.js';
@@ -51,7 +51,7 @@ function execute(state, op, tong, text) {
   const buyout = Math.min(buyoutAmount(tong, op.wage), tong.wealth);
   for (const item of carried(op)) (state.stash ??= []).push(item);
   state.crew = state.crew.filter((o) => o.id !== op.id);
-  state.cash += buyout;
+  moveCash(state, buyout, `${op.handle} bought out by ${tong?.name ?? 'another tong'}`);
   tong.wealth -= buyout;
   const card = { ...operativeToCard(state, op), tongId: tong.id, formerOf: 'player' }; // the street remembers whose they were (C4.3)
   if (state.rivals.cards.filter((c) => c.tongId === tong.id).length < 12) state.rivals.cards.push(card);

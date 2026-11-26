@@ -59,6 +59,9 @@ export function onClick(e) {
     case 'hall-compound': V.hallInside = null; V.buildView = null; break;
     case 'build-done': V.buildView = null; break;
     case 'toggle-hallart': setPref('hallart', !getPref('hallart')); break;
+    case 'today-layout': setPref('today-classic', id === 'classic'); V.openMessageId = null; break; // Save › Look (2026-11-24)
+    case 'desk-news-all': V.deskAllNews = !V.deskAllNews; break;
+    case 'desk-week-day': V.deskWeekDay = V.deskWeekDay === Number(id) ? null : Number(id); break;
     case 'theme': setPref('theme-red', id === 'red'); break;
     case 'nav': if (state.founding && !FOUNDING_TABS.includes(id)) return; V.screen = id; nav.clear(); V.scrollDue = 0; V.buildView = null; V.tongsView = null; V.cityDistrict = null; V.leadName = null; V.clientPage = null; V.hallPage = null; V.openMessageId = null; V.openOperativeId = null; V.openRecruitId = null; V.gearSlot = null; V.bagPick = null; V.plan = null; V.sidePlan = null; V.pickSlot = null; break;
     case 'continue': {
@@ -174,6 +177,8 @@ export function onClick(e) {
     case 'crew-tab': V.crewTab = id; break;
     case 'crew-filter': V.crewFilter = id; V.crewFilterOpen = false; V.focusNext = { action: 'crew-filter-open' }; break;
     case 'crew-filter-open': V.crewFilterOpen = !V.crewFilterOpen; break;
+    case 'cash-today': V.cashOpen = !V.cashOpen; if (!V.cashOpen) V.focusNext = { action: 'cash-today' }; break;
+    case 'close-cash': V.cashOpen = false; V.focusNext = { action: 'cash-today' }; break;
     case 'stat-tip': V.statTip = V.statTip === id ? null : id; V.focusNext = { action: 'stat-tip', id }; break;
     case 'crew-filter-close': V.crewFilterOpen = false; V.focusNext = { action: 'crew-filter-open' }; break;
     // Shortcuts to a sub-tab's home from another page (a link, not a tab choice: Back returns).
@@ -423,7 +428,7 @@ export function onClick(e) {
       const next = sendOnSideTask(state, V.sidePlan.taskId, V.sidePlan.crew);
       V.sidePlan = null;
       nav.clear();
-      V.screen = 'city'; V.cityTab = 'map'; V.cityDistrict = null;
+      V.screen = 'inbox'; // back to Today, where the day's work is (2026-11-26); crews out are followed on City › Map
       return setState(next);
     }
     case 'send-job': {
@@ -434,7 +439,7 @@ export function onClick(e) {
         crewIds: [...out.mission.crewIds, out.mission.overwatch?.id, out.mission.wheels, out.mission.standby?.id].filter(Boolean) };
       V.plan = null;
       nav.clear();
-      V.screen = 'city'; V.cityTab = 'map'; V.cityDistrict = null;
+      V.screen = 'inbox'; // back to Today, where the day's work is (2026-11-26); crews out are followed on City › Map
       V.openMessageId = null;
       return setState(next);
     }
@@ -448,7 +453,7 @@ export function onClick(e) {
           crewIds: [...out.mission.crewIds, out.mission.overwatch?.id, out.mission.wheels, out.mission.standby?.id].filter(Boolean) };
         V.plan = null;
         nav.clear();
-        V.screen = 'city'; V.cityTab = 'map'; V.cityDistrict = null;
+        V.screen = 'inbox'; // back to Today, where the day's work is (2026-11-26); crews out are followed on City › Map
         V.openMessageId = null;
         return setState(next);
       }

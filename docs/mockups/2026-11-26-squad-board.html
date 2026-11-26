@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Squad board layouts: mockups (2026-11-26)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+@font-face{font-family:'Rajdhani';font-weight:600;src:url(../../node_modules/@fontsource/rajdhani/files/rajdhani-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Rajdhani';font-weight:700;src:url(../../node_modules/@fontsource/rajdhani/files/rajdhani-latin-700-normal.woff2) format('woff2')}
+:root{--bg:#0a0c0f;--panel:#12151b;--panel-2:#161a21;--line:#2a303b;--text:#e9ecf1;--muted:#8a93a6;--accent:#ff3d5f;--accent-2:#3de8d8;--warn:#f2d541;--ok:#5fe0a5;--slot:#3a4254;
+ --display:'Rajdhani','Barlow Condensed','Arial Narrow',system-ui,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:#050607;color:var(--text);font:14px/1.35 system-ui,-apple-system,sans-serif;padding:24px}
+h1.page{font:700 22px var(--display);letter-spacing:.08em;margin:0 0 6px}
+.note{color:var(--muted);max-width:900px;margin:0 0 24px}
+.grid{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.opt{width:390px}
+.opt h2{font:700 15px var(--display);letter-spacing:.12em;color:var(--accent-2);margin:0 0 4px}
+.opt .why{color:#c9ced8;font-size:13px;margin:0 0 10px;min-height:54px}
+.phone{width:390px;padding:14px 16px;background:var(--bg) linear-gradient(rgba(61,232,216,.025) 1px,transparent 1px) 0 0/32px 32px,linear-gradient(90deg,rgba(61,232,216,.025) 1px,transparent 1px) 0 0/32px 32px;border:1px solid #333}
+.sh{display:flex;align-items:center;gap:10px;font:700 13px var(--display);letter-spacing:.18em;color:var(--accent-2);margin:0 0 8px}
+.sh::after{content:'';flex:1;height:1px;background:var(--line)}
+.ok{display:inline-block;font:600 12px var(--display);letter-spacing:.08em;color:var(--ok);background:rgba(95,224,165,.12);padding:4px 8px;margin-bottom:8px}
+.mat{position:relative;border:1px solid var(--line);background:linear-gradient(rgba(61,232,216,.05),rgba(61,232,216,.02));padding:10px;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%)}
+.head{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px;margin-bottom:8px}
+.joss{font:700 12px var(--display);letter-spacing:.14em;color:var(--ok);border:1px solid rgba(95,224,165,.4);background:rgba(95,224,165,.08);padding:9px 10px}
+.lab{display:flex;justify-content:space-between;font:700 10.5px var(--display);letter-spacing:.16em;color:var(--muted);margin:8px 0 5px}
+.lab i{font-style:normal;letter-spacing:.04em;font-family:system-ui;font-weight:400;font-size:11px}
+.cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+/* a crew card: polaroid + gear squares + stat */
+.card{display:grid;gap:4px;position:relative;min-width:0}.card > *{min-width:0}
+.pola,.pola .ph,.pola .nm,.stat{display:block}
+.pola{background:#f1ede3;padding:4px 4px 0;transform:rotate(var(--t,-1deg));box-shadow:0 2px 6px rgba(0,0,0,.5)}
+.pola .ph{aspect-ratio:1;background:var(--face,linear-gradient(160deg,#c8a07a,#5a4030))}
+.pola .nm{font:700 11px var(--display);color:#1b1f28;text-align:center;padding:3px 0 5px}
+.pin{position:absolute;top:-3px;left:30%;width:40%;height:4px;background:var(--pin,#ff4f7b)}
+.x{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:#1f2430;border:1px solid #4a5262;color:#c9cfdb;font-size:11px;display:grid;place-items:center}
+.inv{display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px;background:#0a0c10;border:1px solid var(--line)}
+.inv i{aspect-ratio:1;background:#141821;box-shadow:inset 0 0 0 1px #1f2532}
+.stat{font-size:10px;color:#c9cfdb;text-align:center}
+.slot{border:2px dashed var(--slot);display:grid;place-content:center;text-align:center;gap:3px;color:var(--muted);font-size:10px;padding:4px}
+.slot b{font:700 10px var(--display);letter-spacing:.08em;color:#c9cfdb}
+.slot.off{border-style:dotted;opacity:.85}.slot.off b{color:var(--muted)}
+.slot .lnk{color:var(--accent-2);font:600 11px system-ui}
+.tall{min-height:150px}
+.dim{color:var(--muted)}
+/* option 1: short outside tiles */
+.tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.tile{min-height:58px;border:2px dashed var(--slot);display:grid;grid-template-columns:auto 1fr;align-items:center;gap:6px;padding:6px 8px;text-align:left}
+.tile .ic{width:22px;height:22px;border:1.6px solid #c9cfdb;border-radius:3px;display:grid;place-items:center;font:700 11px var(--display);color:#c9cfdb}
+.tile b{display:block;font:700 10.5px var(--display);letter-spacing:.1em;color:#c9cfdb}
+.tile small{display:block;color:var(--muted);font-size:10px;line-height:1.2}
+.tile.off{border-style:dotted}.tile.off b,.tile.off .ic{color:var(--muted);border-color:var(--muted)}
+.tile.off small a{color:var(--accent-2);text-decoration:none}
+/* option 2: side rail */
+.rail2{display:grid;grid-template-columns:minmax(0,1fr) 86px;gap:9px}
+.rail2 .cols{grid-template-columns:repeat(3,minmax(0,1fr))}
+.rail{display:grid;gap:6px;align-content:start;border-left:1px solid var(--line);padding-left:8px}
+.rail .tile{grid-template-columns:1fr;text-align:center;justify-items:center;min-height:62px;padding:5px 4px;gap:2px}
+/* option 3: plan diagram */
+.site{position:relative;height:330px;border:1px solid var(--line);background:#0b0e12}
+.bld{position:absolute;left:10px;top:44px;width:204px;height:200px;border:1.5px solid #4a5568;background:repeating-linear-gradient(45deg,rgba(61,232,216,.03) 0 6px,transparent 6px 12px)}
+.bld .tag,.zone .tag{position:absolute;top:-9px;left:8px;background:#0b0e12;padding:0 5px;font:700 10px var(--display);letter-spacing:.14em;color:var(--muted)}
+.bld .cols{position:absolute;left:8px;right:8px;top:16px;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.roof{position:absolute;right:10px;top:10px;width:100px;height:110px;border:1.5px dashed #4a5568}
+.street{position:absolute;left:0;right:0;bottom:0;height:70px;border-top:1px dashed #3a4254;background:repeating-linear-gradient(90deg,#14181f 0 20px,transparent 20px 40px) 0 34px/100% 2px no-repeat}
+.zone{position:absolute}
+.zone .tile{grid-template-columns:1fr;text-align:center;justify-items:center;padding:5px;gap:2px}
+.sight{position:absolute;right:108px;top:70px;width:34px;border-top:1.5px dashed rgba(61,232,216,.5);transform:rotate(18deg)}
+/* option 4: roster rows */
+.rows{display:grid;gap:6px}
+.row{display:grid;grid-template-columns:44px 1fr auto auto;align-items:center;gap:10px;min-height:56px;border:1px solid var(--line);background:#0e1116;padding:6px 8px;position:relative}
+.row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--pin,#3de8d8)}
+.row .av{width:44px;height:44px;background:var(--face);border:2px solid #f1ede3}
+.row .who small{display:block}
+.row .who b{display:block;font:700 14px var(--display);letter-spacing:.06em}
+.row .who small{color:var(--muted);font-size:11px}
+.row .gear{display:grid;grid-template-columns:repeat(2,22px);gap:2px}.row .gear i{width:22px;height:22px;background:#141821;box-shadow:inset 0 0 0 1px #2a303b}
+.row .rx{width:30px;height:30px;border-radius:50%;border:1px solid #4a5262;display:grid;place-items:center;color:#c9cfdb}
+.row.empty{border-style:dashed;border-color:var(--slot);background:transparent;grid-template-columns:44px 1fr auto}
+.row.empty::before{display:none}
+.row.empty .av{background:none;border:2px dashed var(--slot);display:grid;place-items:center;color:#c9cfdb;font:700 18px var(--display)}
+.row.empty .who b{font-size:12px;letter-spacing:.14em;color:#c9cfdb}
+.row.off{border-style:dotted}.row.off .who b{color:var(--muted)}
+.row .lnk{color:var(--accent-2);font:600 12px system-ui}
+.grp{font:700 10.5px var(--display);letter-spacing:.16em;color:var(--muted);margin:6px 0 2px;display:flex;justify-content:space-between}
+.grp i{font-style:normal;font-family:system-ui;font-weight:400;letter-spacing:0}
+.foot{color:var(--accent-2);font:700 12px var(--display);letter-spacing:.1em;margin-top:10px}
+.foot span{color:#c9cfdb;font:400 13px system-ui;letter-spacing:0}
+</style></head><body>
+<h1 class="page">Squad board layouts</h1>
+<p class="note">The squad board at phone width (390px), on day one: Signal and Drizzle inside, nobody outside, nobody carrying a rifle. Faces are placeholders. 0 is how it looks now; 1 to 4 are alternatives. Every option keeps Joss's picks, the dashed "+" slots and the gear squares.</p>
+<div class="grid">
+
+<!-- 0: now -->
+<section class="opt" id="opt0"><h2>0 · Now</h2>
+<p class="why">Inside and Outside share one grid of slot columns (since today). Consistent, but the three empty Outside slots are as tall as a crew card, so the board is long before anyone is on it.</p>
+<div class="phone"><div class="sh">SQUAD</div><span class="ok">2/2 · full crew, no penalty</span>
+<div class="mat"><div class="head"><span>2 inside · 2 recommended</span><span class="joss">JOSS'S PICKS</span></div>
+<div class="lab">INSIDE TEAM <i>moves as one group</i></div>
+<div class="cols">
+ <div class="card"><span class="pola" style="--t:-1.2deg"><span class="ph" style="--face:linear-gradient(160deg,#d6b35a,#5a4426)"></span><span class="nm">Signal</span></span><span class="pin" style="--pin:#ff4f7b"></span><span class="x">×</span><span class="inv"><i></i><i></i></span><span class="stat">Tech 9</span></div>
+ <div class="card"><span class="pola" style="--t:.8deg"><span class="ph"></span><span class="nm">Drizzle</span></span><span class="pin" style="--pin:#36d6c3"></span><span class="x">×</span><span class="inv"><i></i><i></i></span><span class="stat">Social 9</span></div>
+ <div class="slot tall"><b>+ EXTRA</b></div>
+</div>
+<div class="lab">OUTSIDE <i>optional</i></div>
+<div class="cols">
+ <div class="slot off tall"><b>OVERWATCH</b>needs a rifle or a drone<span class="lnk">Armoury →</span></div>
+ <div class="slot tall"><b>+ WHEELS</b></div>
+ <div class="slot tall"><b>+ STANDBY</b></div>
+</div></div></div></section>
+
+<!-- 1: short outside tiles -->
+<section class="opt" id="opt1"><h2>1 · Short Outside tiles</h2>
+<p class="why">Inside unchanged. Outside's empty slots are short tiles (58px) with the role's icon and one line on what it does; a tile becomes a full crew card once someone is on it. About 90px shorter than now.</p>
+<div class="phone"><div class="sh">SQUAD</div><span class="ok">2/2 · full crew, no penalty</span>
+<div class="mat"><div class="head"><span>2 inside · 2 recommended</span><span class="joss">JOSS'S PICKS</span></div>
+<div class="lab">INSIDE TEAM <i>moves as one group</i></div>
+<div class="cols">
+ <div class="card"><span class="pola" style="--t:-1.2deg"><span class="ph" style="--face:linear-gradient(160deg,#d6b35a,#5a4426)"></span><span class="nm">Signal</span></span><span class="pin"></span><span class="x">×</span><span class="inv"><i></i><i></i></span><span class="stat">Tech 9</span></div>
+ <div class="card"><span class="pola" style="--t:.8deg"><span class="ph"></span><span class="nm">Drizzle</span></span><span class="pin" style="--pin:#36d6c3"></span><span class="x">×</span><span class="inv"><i></i><i></i></span><span class="stat">Social 9</span></div>
+ <div class="slot tall"><b>+ EXTRA</b></div>
+</div>
+<div class="lab">OUTSIDE <i>optional</i></div>
+<div class="tiles">
+ <div class="tile off"><span class="ic">⌖</span><span><b>OVERWATCH</b><small>needs a rifle · <a>Armoury →</a></small></span></div>
+ <div class="tile"><span class="ic">+</span><span><b>WHEELS</b><small>the driving</small></span></div>
+ <div class="tile"><span class="ic">+</span><span><b>STANDBY</b><small>on call</small></span></div>
+</div></div></div></section>
+
+<!-- 2: side rail -->
+<section class="opt" id="opt2"><h2>2 · Side rail</h2>
+<p class="why">The inside team fills the left; Outside is a narrow rail on the right, three stacked tiles. Reads as "the team, and the people around them". The shortest option; the crew cards get a little smaller.</p>
+<div class="phone"><div class="sh">SQUAD</div><span class="ok">2/2 · full crew, no penalty</span>
+<div class="mat"><div class="head"><span>2 inside · 2 recommended</span><span class="joss">JOSS'S PICKS</span></div>
+<div class="rail2">
+ <div><div class="lab">INSIDE TEAM</div>
+ <div class="cols">
+  <div class="card"><span class="pola" style="--t:-1.2deg"><span class="ph" style="--face:linear-gradient(160deg,#d6b35a,#5a4426)"></span><span class="nm">Signal</span></span><span class="pin"></span><span class="x">×</span><span class="inv"><i></i><i></i></span><span class="stat">Tech 9</span></div>
+  <div class="card"><span class="pola" style="--t:.8deg"><span class="ph"></span><span class="nm">Drizzle</span></span><span class="pin" style="--pin:#36d6c3"></span><span class="x">×</span><span class="inv"><i></i><i></i></span><span class="stat">Social 9</span></div>
+  <div class="slot tall"><b>+ EXTRA</b></div>
+ </div></div>
+ <div class="rail"><div class="lab">OUTSIDE</div>
+  <div class="tile off"><b>OVERWATCH</b><small>needs a rifle</small><small><a style="color:var(--accent-2)">Armoury →</a></small></div>
+  <div class="tile"><b>+ WHEELS</b><small>driving</small></div>
+  <div class="tile"><b>+ STANDBY</b><small>on call</small></div>
+ </div>
+</div></div></div></section>
+
+<!-- 3: plan diagram -->
+<section class="opt" id="opt3"><h2>3 · Plan diagram</h2>
+<p class="why">The board as a heist plan: the inside team in the building, Overwatch on the roof across with a sight line, Wheels in the street, Standby off to the side. Says what each slot does by where it sits. The most character; the tallest, and the hardest to fit four inside.</p>
+<div class="phone"><div class="sh">SQUAD</div><span class="ok">2/2 · full crew, no penalty</span>
+<div class="mat"><div class="head"><span>2 inside · 2 recommended</span><span class="joss">JOSS'S PICKS</span></div>
+<div class="site">
+ <div class="bld"><span class="tag">INSIDE · ONE GROUP</span>
+  <div class="cols">
+   <div class="card"><span class="pola" style="--t:-1.2deg"><span class="ph" style="--face:linear-gradient(160deg,#d6b35a,#5a4426)"></span><span class="nm">Signal</span></span><span class="x">×</span><span class="inv"><i></i><i></i></span></div>
+   <div class="card"><span class="pola" style="--t:.8deg"><span class="ph"></span><span class="nm">Drizzle</span></span><span class="x">×</span><span class="inv"><i></i><i></i></span></div>
+   <div class="slot" style="min-height:128px"><b>+ EXTRA</b></div>
+  </div></div>
+ <div class="sight"></div>
+ <div class="zone" style="right:10px;top:22px;width:96px"><span class="tag" style="position:static;display:block;font:700 10px var(--display);letter-spacing:.14em;color:var(--muted);margin-bottom:4px">ROOF</span><div class="tile off"><b>OVERWATCH</b><small>needs a rifle</small><small><a style="color:var(--accent-2)">Armoury →</a></small></div></div>
+ <div class="zone" style="right:10px;top:150px;width:96px"><span class="tag" style="position:static;display:block;font:700 10px var(--display);letter-spacing:.14em;color:var(--muted);margin-bottom:4px">ON CALL</span><div class="tile"><b>+ STANDBY</b></div></div>
+ <div class="street"></div>
+ <div class="zone" style="left:12px;bottom:10px;width:150px"><div class="tile" style="grid-template-columns:auto 1fr;text-align:left;justify-items:start"><span class="ic">▭</span><span><b>+ WHEELS</b><small>in the van</small></span></div></div>
+ <span style="position:absolute;right:12px;bottom:10px;font:700 10px var(--display);letter-spacing:.14em;color:var(--muted)">STREET</span>
+</div></div></div></section>
+
+<!-- 4: roster rows -->
+<section class="opt" id="opt4"><h2>4 · Roster rows</h2>
+<p class="why">A list: one row per slot, a small face, name, role and stat, the gear squares, ×. Empty slots are dashed rows that say what they do. Every target is a full row (56px), and four inside still fit, but it loses the polaroid board look.</p>
+<div class="phone"><div class="sh">SQUAD</div><span class="ok">2/2 · full crew, no penalty</span>
+<div class="mat"><div class="head"><span>2 inside · 2 recommended</span><span class="joss">JOSS'S PICKS</span></div>
+<div class="grp">INSIDE TEAM <i>moves as one group</i></div>
+<div class="rows">
+ <div class="row" style="--pin:#ff4f7b"><span class="av" style="--face:linear-gradient(160deg,#d6b35a,#5a4426)"></span><span class="who"><b>Signal</b><small>tech · Tech 9</small></span><span class="gear"><i></i><i></i></span><span class="rx">×</span></div>
+ <div class="row" style="--pin:#36d6c3"><span class="av" style="--face:linear-gradient(160deg,#c8a07a,#5a4030)"></span><span class="who"><b>Drizzle</b><small>medic · Social 9</small></span><span class="gear"><i></i><i></i></span><span class="rx">×</span></div>
+ <div class="row empty"><span class="av">+</span><span class="who"><b>EXTRA</b><small class="dim">more backup, more at risk</small></span><span></span></div>
+</div>
+<div class="grp">OUTSIDE <i>optional</i></div>
+<div class="rows">
+ <div class="row empty off"><span class="av" style="border-style:dotted;color:var(--muted)">⌖</span><span class="who"><b>OVERWATCH</b><small class="dim">needs a rifle or a drone</small></span><span class="lnk">Armoury →</span></div>
+ <div class="row empty"><span class="av">+</span><span class="who"><b>WHEELS</b><small class="dim">takes the piloting rolls</small></span><span></span></div>
+ <div class="row empty"><span class="av">+</span><span class="who"><b>STANDBY</b><small class="dim">called in when it goes wrong</small></span><span></span></div>
+</div></div></div></section>
+
+</div>
+<p class="foot">PICK ONE <span>(or mix: e.g. option 1's tiles with option 4's rows for Outside only).</span></p>
+</body></html>

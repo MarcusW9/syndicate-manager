@@ -36,6 +36,7 @@ export const V = {
   crewFilter: 'all', // the roster's filter: 'all' | 'ready' | 'out'
   statTip: null, // the crew list's tapped stat box, '<opId>|<stat>' (2026-11-24)
   crewFilterOpen: false, // its drop menu is open
+  cashOpen: false, // the top bar's change, opened into what made it up (2026-11-26)
   crewTab: 'roster', // Crew's sub-tab: 'roster' | 'leads' | 'wall'
   hallTab: 'overview', // a hall page's tab (2026-11-21): 'overview' | 'crew' | 'build' | 'grow'; kept across halls
   hallInside: null, // inside one building of the open hall (a part's id), or null for the compound (2026-11-09; UI only, never saved)
@@ -80,6 +81,8 @@ export const V = {
   whyOpen: false, // the plan bar's notes, all of them, on tap
   buzzStage: null, // the direct buzz (a heist's call): null ringing, 'open' picked up (playtest, 2026-11-07)
   inboxUnread: false, // Today's list: only unread messages (playtest, 2026-11-07)
+  deskWeekDay: null, // the desk's week track: the day tapped open (2026-11-24)
+  deskAllNews: false, // the desk's news log shows every day, not the last three (2026-11-24)
   jossFoldedDay: null, // Joss's line folded to one line for this day; a new day opens it again (owner, 2026-11-11)
   upcomingDue: false, // scroll to Coming up after the next render (Today's "next up" line on a phone)
   planBarHtml: '', // the plan bar as renderPlan last drew it; the jobs screen places it (under the list on wide screens)

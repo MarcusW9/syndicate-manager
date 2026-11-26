@@ -28,7 +28,7 @@ import { d20, hashRng, pick } from './rng.js';
 import { gainXp } from './development.js';
 import { adjustTrust } from './clients.js';
 import { addHeat } from './heat.js';
-import { money } from './money.js';
+import { moveCash, money } from './money.js';
 import { noteInjury } from './earned.js';
 import { nextRng } from './random.js';
 import { HOME_HALL } from '../data/halls.js';
@@ -471,7 +471,7 @@ export function payContracts(state) {
     }
     c.owed = 0;
   }
-  state.cash += total;
+  moveCash(state, total, 'Security posts paid');
   ct.active = ct.active.filter((c) => !c.ended);
   state.contracts = ct;
   return { total, lines };

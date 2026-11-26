@@ -905,11 +905,32 @@ function jossFace(mood, dx = 0, dy = 0, scale = 1) {
 }
 
 /**
- * Joss's icon. variant: 'handset' (a cracked second-hand phone with tape and a bent
- * antenna, as WORLD.md has it), 'bot' (a round little droid), 'relay' (a box of salvaged
- * relay boards with LED eyes). mood: neutral, happy, worried, smug.
+ * Joss's icon. The warm Old Town lantern is their avatar, not the hardware they run on.
+ * The earlier handset, bot and relay variants remain available for comparison.
  */
-export function jossIcon({ variant = 'handset', mood = 'neutral', size = 36 } = {}) {
+export function jossIcon({ variant = 'lantern', mood = 'neutral', size = 36 } = {}) {
+  if (variant === 'lantern') {
+    const large = size >= 64;
+    const id = large ? `jl${++uid}` : '';
+    const paper = `M24 17h16q15 5 15 16 0 13-16 17H25Q8 46 8 33q0-12 16-16Z`;
+    return svg(`
+      ${large ? `<defs>
+        <radialGradient id="${id}halo"><stop offset=".35" stop-color="#f26338" stop-opacity=".26"/><stop offset="1" stop-color="#d94139" stop-opacity="0"/></radialGradient>
+        <radialGradient id="${id}paper" cx="52%" cy="59%" r="57%"><stop stop-color="#ef9851"/><stop offset=".52" stop-color="#bb4937"/><stop offset="1" stop-color="#602537"/></radialGradient>
+      </defs><circle cx="32" cy="34" r="32" fill="url(#${id}halo)"/>` : ''}
+      <path d="M28 11V7q4-5 8 0v4" fill="none" stroke="#91aaa0" stroke-width="1.8"/>
+      <path d="M23 11h18l3 4-5 4H25l-5-4Z" fill="#87ada1"/>
+      <path d="${paper}" fill="${large ? `url(#${id}paper)` : '#b14d3c'}" stroke="#e79264" stroke-width="1.1"/>
+      <path d="M26 18h12q8 6 8 15 0 10-9 16H27q-9-6-9-16 0-9 8-15Z" fill="#392031"/>
+      <path d="M29 18q-9 7-9 15 0 10 8 16m8-31q9 7 9 15 0 10-8 16" stroke="#df825c" stroke-width="1.25" fill="none"/>
+      ${large ? `<path d="M25 18q-12 6-12 15 0 10 12 16m14-31q12 6 12 15 0 10-12 16" stroke="#ffb479" stroke-width="1" opacity=".8" fill="none"/>` : ''}
+      <path d="m12 30 7-1-1 4-7 1Z" fill="#f3c26b"/>
+      <path d="M23 49h18l-3 4H26Z" fill="#92afa1"/>
+      <path d="M31 53h5l-1 4 2 4-2 2-1-3v3h-3l1-5-3 3 1-4Z" fill="#efb35c"/>
+      ${large ? `<path d="M36 55q4 0 5 3" fill="none" stroke="#7ea099" stroke-width="1.1"/>` : ''}
+      <circle class="joss-led" cx="41" cy="58" r="1.5" fill="${ART.pink}"/>
+      ${jossFace(mood, 4, 0, 1.35)}`, { size });
+  }
   if (variant === 'bot') {
     return svg(`
       <path d="M32 10 V4" stroke="${ART.muted}" stroke-width="2"/><circle class="joss-led" cx="32" cy="4" r="2.6" fill="${ART.pink}"/>
@@ -1408,7 +1429,8 @@ function sidearmCharm(kind, fr, c) {
     case 'tassel': return `${cord(1.4)}<path d="M${end[0] - 1} ${ly + 1.4} L${end[0] + 1} ${ly + 1.4} L${end[0] + 1.4} ${Math.min(31.8, ly + 5)} L${end[0] - 1.4} ${Math.min(31.8, ly + 5)} Z" fill="${red}"/><circle cx="${end[0]}" cy="${ly + 1.2}" r="0.5" fill="${gold}"/>`;
     case 'coin': return `${cord(0.6)}<circle cx="${end[0]}" cy="${Math.min(30.4, ly + 1.6)}" r="1.4" fill="${gold}"/><rect x="${end[0] - 0.35}" y="${Math.min(30.4, ly + 1.6) - 0.35}" width="0.7" height="0.7" fill="#0d1016"/>`;
     case 'talisman': return `<g transform="rotate(-4 ${fx} ${fy})"><rect x="${fx - 1.2}" y="${fy - 3}" width="2.4" height="6" fill="#e9d27c"/><g stroke="#b3261e" stroke-width="0.3" fill="none"><circle cx="${fx}" cy="${fy - 1.8}" r="0.5"/><path d="M${fx - 0.6} ${fy - 0.6} H${fx + 0.6} M${fx} ${fy - 0.6} Q${fx - 0.6} ${fy + 0.8} ${fx + 0.4} ${fy + 1.4} M${fx - 0.6} ${fy + 2.2} H${fx + 0.6}"/></g></g>`;
-    case 'mahjong': return `${cord(0.6)}<rect x="${end[0] - 1.1}" y="${ly + 0.6}" width="2.2" height="${Math.min(3, 31.8 - ly - 0.6)}" rx="0.3" fill="#ece6d6"/><circle cx="${end[0] - 0.2}" cy="${ly + 1.5}" r="0.4" fill="${red}"/>`;
+    // The tile hangs below the lanyard, lifted to stay inside the frame (a lanyard on the bottom edge gave it a negative height, 2026-11-26).
+    case 'mahjong': { const y = Math.min(ly + 0.6, 28.8); return `${cord(0.6)}<rect x="${end[0] - 1.1}" y="${y}" width="2.2" height="3" rx="0.3" fill="#ece6d6"/><circle cx="${end[0] - 0.2}" cy="${y + 0.9}" r="0.4" fill="${red}"/>`; }
     case 'sticker': return `<circle cx="${fx}" cy="${fy}" r="1.8" fill="#fff"/><circle cx="${fx}" cy="${fy}" r="1.5" fill="#ff4f7b"/><circle cx="${fx - 0.5}" cy="${fy - 0.3}" r="0.22" fill="#1b1f28"/><circle cx="${fx + 0.5}" cy="${fy - 0.3}" r="0.22" fill="#1b1f28"/><path d="M${fx - 0.4} ${fy + 0.4} Q${fx} ${fy + 0.8} ${fx + 0.4} ${fy + 0.4}" stroke="#1b1f28" stroke-width="0.22" fill="none"/>`;
     case 'cube': { const y = Math.min(29, ly + 0.8); return `${cord(0.8, '#2a2e36')}<rect x="${end[0] - 1.2}" y="${y}" width="2.4" height="2.4" fill="${c.neon}" opacity="0.2"/><rect x="${end[0] - 1}" y="${y + 0.2}" width="2" height="2" fill="none" stroke="${c.neon}" stroke-width="0.4"/><rect x="${end[0] - 0.3}" y="${y + 0.9}" width="0.6" height="0.6" fill="${c.neon}"/><rect x="${end[0] - 2.2}" y="${y - 1}" width="4.4" height="4.4" fill="${c.neon}" opacity="0.1"/>`; }
     case 'shard': { const y = Math.min(28.4, ly + 0.6); return `${cord(0.6, '#2a2e36')}<path d="M${end[0]} ${y} L${end[0] + 1.1} ${y + 1.4} L${end[0]} ${y + 3.4} L${end[0] - 1.1} ${y + 1.4} Z" fill="${c.neon}" opacity="0.35" stroke="${c.neon}" stroke-width="0.3"/><path d="M${end[0]} ${y} V${y + 3.4}" stroke="#fff" stroke-width="0.2" opacity="0.6"/>`; }

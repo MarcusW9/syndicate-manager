@@ -161,6 +161,8 @@ export const FIGHT_JOBS = {
   still_clocked_in: 'holdHack', the_last_collection: 'holdExtract',
   // 2026-11-23 (/add-job): inquiries and inspections, technical or records work, so they hold the hack. No recipes.
   salt_in_the_seals: 'holdHack', signed_for_the_shift: 'holdHack', the_demonstration_passed: 'holdHack', the_last_call_out: 'holdHack',
+  // The six jobs rewritten from the Seventy-One Floors prep that never shipped (2026-11-25): carrying or collecting holds and extracts; the plant-room repair and the rota hold the hack.
+  loading_slot: 'holdExtract', relay_courier: 'holdExtract', half_a_repair: 'holdHack', the_test_rota: 'holdHack', before_the_inventory: 'holdExtract', the_wrong_hands: 'holdExtract',
   the_wrong_fare: 'holdHack',
   // The fourteen jobs with a fight in their own crises, moved to engine 2 together (owner, 2026-11-17): no recipes, the district's own force.
   kidnap: 'holdExtract', casino: 'holdHack', clinic: 'holdYard', ledger: 'holdExtract', container409: 'holdExtract', chrome: 'holdHack',

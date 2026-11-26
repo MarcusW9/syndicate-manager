@@ -21,10 +21,10 @@ Navigation state (`screen`, `cityTab`, the open page ids) is module state in `ui
 
 ## Shell (every screen)
 
-- **Top bar:** day/clock, Cash, Heat, rank, Continue (hidden while planning a job), ☰ Save.
+- **Top bar:** day/clock, Cash (the day's ▲/▼ is a button: a tap opens **Cash today**, the day's money line by line, 2026-11-26), Heat, rank, Continue (hidden while planning a job; an outline instead of solid red while someone is free and a job on Today fits them), ☰ Save.
 - **Back:** a detail page (a message, a runner, a lead, the Armoury, a hall and its build, a plan, a tong, a name) has one Back control; root views have none.
 - **Tab bar:** Today · City · Tong · Crew · Jobs (five, the most there can be). Pills: Today's attention count (anything waiting on the player, each event once: `attentionCount` in `ui/nav.js`) and open jobs on Jobs; City and Tong show none. Save is the ☰ in the top bar. The **Book** (Who's who · History; was the Lore tab) is a link in City's header, reachable from every City sub-tab.
-- **Dock (phone):** Continue above the tab bar, except while planning or on a job.
+- **Dock (phone):** Continue above the tab bar, except while planning or on a job. Sending a crew (main job or side work) comes back to Today with the send-off (2026-11-26; it went to City › Map before).
 - **During a job:** tabs and Save step aside; the watch screen (`renderMission`) owns the page.
 - **Founding (new game):** only Today (the founder pick) and ☰ Save are enabled.
 
@@ -42,6 +42,12 @@ Navigation state (`screen`, `cityTab`, the open page ids) is module state in `ui
 ## Inside each screen (the small sections)
 
 Section names are the headings in the code. "(x)" marks something that shows only sometimes.
+
+**Today as the desk** (`renderDesk`, 2026-11-24, the default; the classic inbox below is behind Save › Look › Today)
+- Left: Joss's bubble (the day's opener and "N things want you"; a tap folds it for the day), the raid lines, **Needs you** (Joss's alerts that are not messages: short of the bills, broke, a lead's last day; New in the stash; a card per decision (`ui/nav.js isDecision`) with its answer as a button that opens it), **On the board** (jobs new today or ending by tomorrow, Plan it; a pile to Jobs for the rest).
+- Drawn as the calm HUD (2026-11-24): an urgent decision is a signal card (a call-in shows "Day N of M" and Take the call on the card); the rest are plain rows. A still ticker of The Word across the top of every tab on tablets and computers.
+- Right: **The week** (a seven-day track; tap a day for its list; the next thing in full under it), **Roster** (the Out lines, then a face and status light for each runner who isn't free, one tile for the free), **Intercepts** (news by day, three days, Older news; The Word here on phones). An open message takes the right column (phones: replaces the list, as before). No Week card. Badge and the Continue hint count decisions.
+- Tablets (900 to 1199px wide) get the 64px icon rail while the desk is on.
 
 **Today** (`renderInbox`)
 - Inbox column, messages first: briefing (`renderBriefing`; Joss's line folds to one line on a tap, for the day), the next-up line (`renderNextUp`, phones only: the soonest raid, bills or last day; a tap scrolls to Coming up), back cards (crews home), **New in the stash** (2026-11-24, `ui/gear.js newGearLine`: the newest unseen drop, who it would help most, Give to · Armoury · ✕; never on the badge), Out line (links to City › Map), the All / To do filter (To do = what the badge counts), then message rows (tag, subject, preview, day).
@@ -72,7 +78,7 @@ Section names are the headings in the code. "(x)" marks something that shows onl
 **Jobs** (`renderJobs`)
 - Sub-tabs. Board: runners strip (collapsible), job board (job cards with flags). Clients: a row each (trust, jobs on the board), and a client's page (`renderClientPage`). Heists: the heist card (`renderHeist`). Side: the side board (the scout rows for free names are gone: scouting is on Crew › Leads).
 - Plan (`renderPlan`): the plan grid holds the approach, the squad board, the orders chips and the risk card, with the client box (and a rival remark) beside them. On the five engine-2 jobs a **fight block** (`renderFightPlan`, `ui/fightscreen.js`) leads the risk card: the fight type and objective, likely enemies, gaps (no jammer, no medic, no armour on the tech), each runner's order and pull-out threshold, the risk picker (the same chips as "On their own") and the chance of losing someone. The plan bar at the bottom has the Send / Watch live buttons, the risk read and the tries count.
-- Squad board (`ui/board.js`): Inside team (moves as one group), Outside (optional), Wheels card with getaway risk, Joss's picks, the coverage read. A runner picker sheet lists "Who's on …?" in groups by fit, plus "Not free today".
+- Squad board (`ui/board.js`): Inside team (moves as one group), Outside (optional: Overwatch, Wheels and Standby side by side, each a short tile when empty and a crew card when filled; Overwatch is a dotted tile with Armoury → until someone on the team has a rifle or drone; 2026-11-26), Wheels card with getaway risk, Joss's picks, the coverage read. A runner picker sheet lists "Who's on …?" in groups by fit, plus "Not free today".
 - Side-work plan (`renderSidePlan`): Who goes (up to n), checkbox picker, the Clients list.
 
 **Book** (`renderLore`, opened from City's header; was the Lore tab): header, then the sub-tabs Who's who and History ("Everyone knows" and "A short history" are History's two sections). The districts moved to their pages in City › Districts and the clients to Jobs › Clients (step 4).
