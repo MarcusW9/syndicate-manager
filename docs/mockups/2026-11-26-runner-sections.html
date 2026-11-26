@@ -1,0 +1,1069 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Runner Sections</title>
+<!-- Mockup, 2026-11-26 (follows docs/mockups/2026-11-26-runner-page-compact.html): six looks for "What they've become" and six for
+     the stats, all for Jax (portrait and icons from the game: ui/art.js portrait, ui/icons.js). Proposal, not decided.
+     Street-terminal tokens from docs/UI-SKIN.md. Not wired to the game. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c0f; --panel:#12151b; --panel-2:#161a21; --line:#2a303b;
+  --text:#e9ecf1; --muted:#8a93a6; --accent:#ff3d5f; --accent-2:#3de8d8;
+  --warn:#f2d541; --danger:#ff4a4a; --good:#5fe0a5; --violet:#b48cff; --cut:10px;
+  --disp:'Rajdhani',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background-image:linear-gradient(rgba(61,232,216,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(61,232,216,.025) 1px,transparent 1px);
+  background-size:32px 32px;padding:16px max(16px,env(safe-area-inset-left)) 40px}
+.wrap{max-width:1400px;margin:0 auto}
+h1{font:700 22px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin:4px 0}
+h2{font:700 16px var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--warn);margin:30px 0 4px}
+.lede{color:var(--muted);max-width:820px;margin:0 0 18px}
+.grid{display:grid;gap:22px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));align-items:start}
+.look{font:700 13px var(--disp);letter-spacing:.16em;color:var(--accent-2);text-transform:uppercase;margin:0 0 6px}
+.why{color:var(--muted);font-size:13px;margin:0 0 10px;min-height:72px}
+.panel{position:relative;background:linear-gradient(var(--panel-2),var(--panel));border:1px solid var(--line);
+  clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%);padding:16px}
+.panel::before{content:"";position:absolute;top:-1px;left:16px;width:36px;height:2px;background:var(--accent-2)}
+.back{font:600 14px var(--disp);letter-spacing:.12em;color:var(--accent-2);text-transform:uppercase;min-height:24px}
+.title{font:700 24px/1.15 var(--disp);letter-spacing:.06em;text-transform:uppercase;margin:0}
+.k{font:700 11px var(--disp);letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+.label{font:700 12px var(--disp);letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin:18px 0 8px;display:flex;align-items:center;gap:10px}
+.label::after{content:"";flex:1;height:1px;background:var(--line)}
+.label.cy{color:var(--accent-2)}
+.small{font-size:12px;color:var(--muted)}
+.joss{color:var(--accent-2);font-style:italic}
+.cut7{clip-path:polygon(0 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%)}
+.face{border-radius:2px;flex:none}
+.fL{background:linear-gradient(160deg,#4a2a20 0 40%,#ff9a5a 40% 55%,#1b2340 55%)}
+.fV{background:linear-gradient(160deg,#2d3a52 0 40%,#3de8d8 40% 55%,#1b2340 55%)}
+.fM{background:linear-gradient(160deg,#2a2440 0 40%,#b48cff 40% 55%,#1b2340 55%)}
+.role{font:600 12px var(--disp);letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+/* segmented bars */
+.bar{display:flex;gap:1px;height:8px}
+.bar i{flex:1;background:#232a35}
+.bar i.on{background:#5a6478}.bar i.new{background:var(--accent-2)}.bar i.y{background:var(--warn)}
+.bar.thin{height:4px}
+.barline{display:flex;justify-content:space-between;font:600 12px var(--disp);letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-top:4px}
+.barline em{font-style:normal;color:var(--accent-2)}.barline strong{color:var(--warn)}
+.chip{display:inline-flex;align-items:center;gap:6px;font:700 12px var(--disp);letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);padding:4px 8px;min-height:30px}
+.chip.cy{border-color:var(--accent-2);color:var(--accent-2)}
+.chip.y{border-color:var(--warn);color:var(--warn)}
+.chip.r{border-color:#ff9a5a;color:#ff9a5a}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.btn{background:var(--accent);color:#fff;font:700 15px var(--disp);letter-spacing:.12em;padding:0 18px;min-height:44px;display:grid;place-items:center;margin-top:12px;text-transform:uppercase;
+  clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.btn.ghost{background:none;border:1px solid var(--accent-2);color:var(--accent-2)}
+.notes{margin-top:26px;color:var(--muted);font-size:13px;max-width:900px}
+.notes li{margin:4px 0}
+
+/* R1 runner page */
+.lvchip{display:inline-flex;align-items:baseline;gap:4px;font:700 13px var(--disp);letter-spacing:.12em;color:var(--accent-2)}
+.lvchip b{font-size:22px;letter-spacing:.02em}
+.who{display:flex;gap:12px;align-items:flex-start;margin-top:10px}
+.who .meta{flex:1;min-width:0}
+.oneline{margin:10px 0 0;font-size:15px;line-height:1.45}
+.become{display:grid;gap:6px}
+.brow{display:flex;gap:10px;align-items:center;min-height:44px;border:1px solid var(--line);background:var(--panel);padding:6px 10px}
+.brow .ic{width:24px;height:24px;border:1.5px solid currentColor;border-radius:50%;flex:none;opacity:.8}
+.brow .t{flex:1;font-size:14px}.brow .t b{display:block;font:700 14px var(--disp);letter-spacing:.08em;text-transform:uppercase}
+.brow.skill{color:var(--accent-2)}.brow.trait{color:var(--good)}.brow.pair{color:var(--violet)}.brow.set{color:#ff9a5a}
+.brow .t span{color:#c9cfda}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}
+.st{display:grid;grid-template-columns:1fr auto;align-items:end;min-height:44px;padding:4px 0;border-bottom:1px solid rgba(42,48,59,.6)}
+.st .n{font:700 20px/1 var(--disp)}
+.st .nm{font:600 12px var(--disp);letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.st .bar{grid-column:1/-1;margin-top:4px}
+.st.main .nm{color:var(--accent-2)}
+.road{border-left:2px solid var(--line);padding-left:12px;display:grid;gap:8px}
+.road div{position:relative;font-size:14px}
+.road div::before{content:"";position:absolute;left:-17px;top:6px;width:8px;height:8px;background:var(--line)}
+.road div.hi::before{background:var(--accent-2)}
+.road b{font:700 11px var(--disp);letter-spacing:.12em;color:var(--muted);margin-right:6px}
+
+/* R2 report */
+.came{border:1px solid var(--line);background:var(--panel);padding:12px;margin-top:8px}
+.came .top{display:flex;gap:10px;align-items:center}
+.came .top .nm{flex:1;font:700 17px var(--disp);letter-spacing:.04em}
+.came .say{margin:8px 0 6px;font-size:14px;color:#c9cfda}
+.ticks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.came.lv{border-color:var(--warn)}
+
+/* R3 roster */
+.rr{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;min-height:64px;padding:8px 0;border-bottom:1px solid rgba(42,48,59,.6)}
+.rr .nm{font:700 16px var(--disp);letter-spacing:.04em}
+.rr .line{font-size:13px;color:#c9cfda}
+.rr .lvn{font:700 13px var(--disp);letter-spacing:.1em;color:var(--accent-2);text-align:right}
+.rr .lvn b{display:block;font-size:22px;line-height:1}
+.rr .lvn.y{color:var(--warn)}
+
+/* V1 dossier */
+.dossier{font:15px/1.6 Georgia,'Times New Roman',serif;color:#d6dae2}
+.dossier p{margin:0 0 10px}
+.dossier .hl{color:var(--accent-2)}
+.fold{display:flex;justify-content:space-between;align-items:center;min-height:44px;border-top:1px solid var(--line);margin-top:8px;font:700 13px var(--disp);letter-spacing:.14em;color:var(--accent-2);text-transform:uppercase}
+
+/* V2 path */
+.path{position:relative;margin-left:22px;border-left:2px solid var(--line);padding-left:18px}
+.node{position:relative;margin-bottom:12px;min-height:44px}
+.node .dot{position:absolute;left:-31px;top:2px;width:24px;height:24px;display:grid;place-items:center;background:var(--bg);border:2px solid var(--line);font:700 12px var(--disp)}
+.node.done .dot{border-color:#5a6478;color:var(--text)}
+.node.now .dot{border-color:var(--accent-2);color:var(--accent-2)}
+.node.next .dot{border-color:var(--warn);color:var(--warn);border-style:dashed}
+.node .what{font:700 14px var(--disp);letter-spacing:.08em;text-transform:uppercase}
+.node .where{font-size:13px;color:var(--muted)}
+.node.big .what{color:var(--accent-2)}
+
+/* V3 HUD */
+.hud{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.ring{width:120px;height:120px;border-radius:50%;display:grid;place-items:center;text-align:center;
+  background:conic-gradient(var(--accent-2) 0 62%,var(--violet) 62% 74%,#232a35 74% 100%);position:relative}
+.ring::after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--panel)}
+.ring div{position:relative;z-index:1}
+.ring b{display:block;font:700 28px/1 var(--disp)}
+.ring small{font:700 10px var(--disp);letter-spacing:.14em;color:var(--muted)}
+.hbar{display:grid;grid-template-columns:44px 1fr 26px;gap:8px;align-items:center;font:700 12px var(--disp);letter-spacing:.1em;color:var(--muted);margin-top:6px}
+.hbar .t{height:10px;background:#232a35;position:relative}
+.hbar .t i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#5a6478,var(--accent-2))}
+.hbar .t s{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--warn)}
+.hbar span:last-child{color:var(--text);text-align:right}
+
+/* V4 card */
+.tcard{position:relative;width:100%;max-width:300px;margin:0 auto;border:1px solid var(--warn);background:linear-gradient(170deg,#1c1a12,#12151b 50%);padding:0 0 12px;
+  clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}
+.tcard .art{height:200px;background:linear-gradient(160deg,#4a2a20 0 38%,#ff9a5a 38% 52%,#1b2340 52%)}
+.tcard .lvbig{position:absolute;top:10px;left:12px;font:700 40px/1 var(--disp);color:var(--warn);text-shadow:0 2px 0 #000}
+.tcard .lvbig small{display:block;font-size:11px;letter-spacing:.16em}
+.tcard .rl{position:absolute;top:10px;right:16px;font:700 12px var(--disp);letter-spacing:.14em;color:var(--warn)}
+.tcard .nm{text-align:center;font:700 26px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin-top:8px}
+.tcard .ttl{text-align:center;font:700 11px var(--disp);letter-spacing:.16em;color:var(--warn);text-transform:uppercase}
+.tcard .six{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 6px;padding:10px 14px 0;text-align:center}
+.tcard .six div{font:700 20px/1 var(--disp)}.tcard .six small{display:block;font:700 10px var(--disp);letter-spacing:.14em;color:var(--muted)}
+.tcard .sig{margin:10px 14px 0;font-size:13px;color:#c9cfda;text-align:center}
+.minis{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px}
+.mini{border:1px solid var(--line);background:var(--panel);text-align:center;padding:0 0 6px;min-height:44px}
+.mini .a{height:54px}.mini b{display:block;font:700 13px var(--disp);letter-spacing:.06em;margin-top:4px}
+.mini span{font:700 11px var(--disp);color:var(--accent-2)}
+.chead{display:flex;gap:14px;align-items:flex-start;margin-top:10px}
+.chead .meta{flex:1;min-width:0}
+.pwrap{position:relative;width:96px;height:96px;flex:none;border:1px solid var(--line);background:#0d1016}
+.pwrap svg,.fwrap svg,.art2 svg{width:100%;height:100%;display:block}
+.lvtag{position:absolute;right:-6px;bottom:-6px;min-width:34px;height:34px;padding:0 4px;display:grid;place-items:center;align-content:center;background:var(--accent-2);color:var(--bg);font:700 18px/1 var(--disp);
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%)}
+.lvtag small{font-size:8px;letter-spacing:.14em}
+.jline{margin:6px 0 0;font-size:14px;line-height:1.4}
+.chips .chip{min-height:44px}
+.chip.g{border-color:var(--good);color:var(--good)}.chip.v{border-color:var(--violet);color:var(--violet)}.chip.m{color:var(--muted)}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.sc{border:1px solid var(--line);background:var(--panel);padding:6px 6px 7px;min-height:56px;display:grid;align-content:start}
+.sc b{font:700 20px/1 var(--disp)}.sc small{font:700 10px var(--disp);letter-spacing:.14em;color:var(--muted);margin:2px 0 4px}
+.sc.main{border-color:var(--accent-2)}.sc.main small{color:var(--accent-2)}
+.label .more{order:3;font:700 12px var(--disp);letter-spacing:.12em;color:var(--accent-2)}
+.fwrap{width:44px;height:44px;border:1px solid var(--line);background:#0d1016}
+.tcard2{position:relative;max-width:300px;margin:0 auto;border:1px solid var(--warn);background:linear-gradient(170deg,#1c1a12,#12151b 50%);padding:0 0 12px;
+  clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}
+.art2{height:230px;background:#0d1016;overflow:hidden}
+.tcard2 .lvbig{position:absolute;top:10px;left:12px;font:700 40px/1 var(--disp);color:var(--warn);text-shadow:0 2px 0 #000}
+.tcard2 .lvbig small{display:block;font-size:11px;letter-spacing:.16em}
+.tcard2 .rl{position:absolute;top:12px;right:18px;font:700 12px var(--disp);letter-spacing:.14em;color:var(--warn)}
+.tcard2 .nm{text-align:center;font:700 26px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin-top:8px}
+.tcard2 .ttl{text-align:center;font:700 11px var(--disp);letter-spacing:.16em;color:var(--warn);text-transform:uppercase}
+.tcard2 .six{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 6px;padding:10px 14px 0;text-align:center}
+.tcard2 .six div{font:700 20px/1 var(--disp)}.tcard2 .six small{display:block;font:700 10px var(--disp);letter-spacing:.14em;color:var(--muted)}
+.tcard2 .sig{margin:10px 14px 0;font-size:13px;color:#c9cfda;text-align:center}
+
+.mhead{display:flex;gap:10px;align-items:center;margin-top:2px}
+.mhead .nm{font:700 17px var(--disp);letter-spacing:.04em}
+.chip.on{background:rgba(95,224,165,.12)}
+.shelf{display:grid;grid-template-columns:62px 1fr;gap:8px;align-items:start;margin-top:6px}
+.sk{font:700 11px var(--disp);letter-spacing:.14em;color:var(--muted);text-transform:uppercase;padding-top:14px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tile{aspect-ratio:1;min-height:72px;border:1px solid var(--line);border-bottom-width:3px;background:var(--panel);display:grid;place-items:center;align-content:center;gap:4px;padding:4px;text-align:center;
+  font:700 10px/1.1 var(--disp);letter-spacing:.06em;text-transform:uppercase}
+.tile.c{color:var(--accent-2);border-bottom-color:var(--accent-2)}.tile.g{color:var(--good);border-bottom-color:var(--good)}.tile.v{color:var(--violet);border-bottom-color:var(--violet)}
+.tile.r{color:#ff9a5a;border-bottom-color:#ff9a5a}.tile.m{color:var(--muted)}.tile.e{border-style:dashed;color:var(--warn)}.tile.e span:first-child{font-size:22px}
+.prose{font-size:16px;line-height:1.7;margin:0}
+.prose a{color:var(--accent-2);border-bottom:1px dotted currentColor;padding:6px 0}
+.prose a.g{color:var(--good)}.prose a.v{color:var(--violet)}.prose a.r{color:#ff9a5a}.prose a.m{color:#c9cfda}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.slot{border:1px solid var(--accent-2);background:var(--panel);padding:8px;min-height:60px}
+.slot .sk{display:block;padding:0}.slot b{font:700 14px var(--disp);letter-spacing:.06em;text-transform:uppercase;color:var(--accent-2)}
+.slot.open{border-style:dashed;border-color:var(--warn)}.slot.open b{color:var(--warn)}
+.open{margin-top:8px;border-left:2px solid var(--good);padding:6px 10px;font-size:14px;color:#c9cfda}
+.open b{color:var(--good);font:700 14px var(--disp);letter-spacing:.08em;text-transform:uppercase}
+.hero{border:1px solid var(--accent-2);background:var(--panel);padding:10px 12px}
+.hl{display:flex;gap:12px;align-items:center;color:var(--accent-2)}
+.hl b{display:block;font:700 40px/1 var(--disp);color:var(--text)}.hl span{font:700 13px var(--disp);letter-spacing:.12em;text-transform:uppercase}
+.rstrip{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:6px}
+.rs{border:1px solid var(--line);text-align:center;padding:6px 0;min-height:48px}.rs b{display:block;font:700 18px/1 var(--disp)}.rs small{font:700 9px var(--disp);letter-spacing:.1em;color:var(--muted)}
+.wlist,.slist{display:grid}
+.wr{display:grid;grid-template-columns:22px 1fr auto 28px;grid-template-rows:auto auto;column-gap:8px;align-items:center;min-height:44px;padding:4px 0;border-bottom:1px solid rgba(42,48,59,.6)}
+.wr svg{color:var(--muted)}.wn{font-size:14px}.ww{font:700 12px var(--disp);letter-spacing:.12em;text-transform:uppercase}
+.wv{font:700 15px var(--disp);color:var(--muted);text-align:right}.wr .bar{grid-column:2/-1}
+.w-elite{color:var(--warn)}.w-strong{color:var(--accent-2)}.w-solid{color:var(--good)}.w-fair{color:#c9cfda}.w-weak{color:var(--muted)}
+.sr{display:grid;grid-template-columns:40px 1fr 24px;gap:8px;align-items:center;min-height:44px;font:700 12px var(--disp);letter-spacing:.1em;color:var(--muted)}
+.track{position:relative;height:10px;background:#232a35}.track i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#5a6478,var(--accent-2))}
+.track .zone{position:absolute;top:-3px;bottom:-3px;background:rgba(242,213,65,.35);border:1px solid var(--warn)}
+.sv{color:var(--text);text-align:right;font-size:14px}
+.radar{width:100%;max-width:300px;display:block;margin:0 auto}
+.radar text{font:700 10px Rajdhani,sans-serif;letter-spacing:.08em;fill:#8a93a6}
+.gt{font:700 11px var(--disp);letter-spacing:.16em;color:var(--accent-2);text-transform:uppercase;margin:8px 0 2px}
+.gr{display:grid;grid-template-columns:20px 1fr 26px 26px;grid-template-rows:auto auto;column-gap:8px;align-items:center;min-height:40px;border-bottom:1px solid rgba(42,48,59,.6)}
+.gr svg{color:var(--muted)}.gn{font-size:14px}.gv{font:700 16px var(--disp);text-align:right}.gd{font:700 12px var(--disp);color:var(--good)}.gr .bar{grid-column:2/-1;margin-bottom:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Jax: two sections, twelve looks</h1>
+<p class="lede">Variations for the two parts of the runner's page that take the most room. Jax's stats and born traits are real; the skills, earned traits and progress are placeholders. Portrait and icons are the game's own.</p>
+<h2>What they've become</h2><div class="grid"><section><p class="look">W1 · Chips by colour</p><p class="why">The compact page as drawn: one block, colour says the kind, a key underneath. Smallest; the colours have to be learned.</p><div class="panel"><div class="mhead"><div class="fwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf2bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf2h"><path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z"/></clipPath>
+    <clipPath id="pf2s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf2t"><path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z"/></clipPath>
+    <clipPath id="pf2b"><path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf2bg)"/>
+  
+
+  <g >
+  <path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z" fill="#7f5428"/>
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf2s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.7036 37 L27.7036 48 Q32 51 36.2964 48 L36.2964 37 Z" fill="#86685f"/><path d="M34.4964 38 L36.2964 37 L36.2964 48 L34.4964 49 Z" fill="#9bb89b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.380799999999997" cy="30" rx="2.062545" ry="3.69087" fill="#86685f"/>
+  <ellipse cx="43.619200000000006" cy="30" rx="2.062545" ry="3.69087" fill="#d49a76"/><path d="M44.519200000000005 27.286125 Q45.547525 30 44.3192 33.25665" stroke="#9bb89b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z" fill="#d49a76"/>
+  <g clip-path="url(#pf2h)">
+    <path d="M0 0 L30.594848 9 C25.55972 20 26.379392 31 30.5 48 L0 64 Z" fill="#86685f"/>
+    <path d="M34.9274 33 L42.909600000000005 29.8 L38.748 37.6 Z" fill="#af826b" opacity="0.75"/>
+    <path d="M64 0 L41.909600000000005 12 L42.409600000000005 30 L37.448 40.5 L64 64 Z" fill="#9bb89b"/>
+        
+    
+    
+    <g transform="translate(0 0.15670000000000073)"><path d="M22.290399999999998 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#af826b"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.1567 L29.44784 34.4699 L32.7 35.2699 L31.6 33.9699 Z" fill="#86685f"/>
+    <path d="M32.9 32.569900000000004 L33.5 34.569900000000004 L32.7 35.2699 Z" fill="#9bb89b" opacity="0.7"/>
+    <path d="M29.973200000000002 35.3699 Q32 35.7199 33.80144 35.3699" stroke="#7f5643" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf2e-1"><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z"/></clipPath><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z" fill="#e3d0c0"/><circle cx="27.677500000000002" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e-1)"/><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.927500000000002" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf2e1"><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z"/></clipPath><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z" fill="#e3d0c0"/><circle cx="36.9225" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e1)"/><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1725" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.677500000000002 25.103300000000004 Q27.0375 24.892920000000007 24.8775 25.684620000000006 L24.8775 26.326380000000004 Q27.0375 26.336880000000004 29.677500000000002 26.707700000000003 Z" fill="#4c331a"/><path d="M34.322500000000005 25.103300000000004 Q36.962500000000006 24.892920000000007 39.1225 25.684620000000006 L39.1225 26.326380000000004 Q36.962500000000006 26.336880000000004 34.322500000000005 26.707700000000003 Z" fill="#4c331a"/><path d="M29.4175 40.841499999999996 Q32 41.741499999999995 34.5825 40.841499999999996" stroke="#7f5643" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.2175 41.5415 Q32 43.102199999999996 33.782500000000006 41.5415 Z" fill="#c48769"/>
+  <g transform="translate(0 0.84)"></g>
+  <path d="M22.790399999999998 22 L24.290399999999998 24 L23.490399999999998 25.2 L25.290399999999998 28" stroke="#e3af97" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z" fill="#7f5428" />
+    <g clip-path="url(#pf2t)"><path d="M34.9274 0 L64 0 L64 30 L39.02576 30 Z" fill="#5e9e80" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  <path d="M19.290399999999998 26.2 L44.7096 25.8 L44.3096 31.2 L19.690399999999997 31.6 Z" fill="#0b0f14"/><path d="M19.8904 27.2 L44.1096 26.8" stroke="#3de8d8" stroke-width="0.6" opacity="0.85"/><path d="M36.7096 29.6 h2 M39.3096 29.6 h1" stroke="#3de8d8" stroke-width="0.5" opacity="0.6"/>
+  <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35 L43.1096 33 Z" fill="#d1ab95" opacity="0.85"/>
+        <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35" stroke="#6a4d3b" stroke-width="0.45" fill="none"/>
+        <circle cx="38.2096" cy="24.5" r="0.65" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg></div><div><div class="nm">Jax</div><div class="role">Pro · muscle · LV 6</div></div></div>
+<div class="label cy">What they've become</div>
+<div class="chips"><span class="chip cy">Ricochet</span><span class="chip cy">Incendiary Rounds</span><span class="chip g">Corner Fighter</span><span class="chip v">With Static</span><span class="chip r">Short Fuse</span><span class="chip m">Hothead</span><span class="chip m">Loyal</span></div>
+<p class="small" style="margin-top:6px">Cyan picked · green earned · violet partner · orange lately · grey born with.</p></div></section><section><p class="look">W2 · Shelves: picked, earned, born</p><p class="why">Same chips, sorted onto three labelled lines, so nothing has to be learned. A little taller; the order says what the player shaped first.</p><div class="panel"><div class="mhead"><div class="fwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf2bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf2h"><path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z"/></clipPath>
+    <clipPath id="pf2s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf2t"><path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z"/></clipPath>
+    <clipPath id="pf2b"><path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf2bg)"/>
+  
+
+  <g >
+  <path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z" fill="#7f5428"/>
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf2s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.7036 37 L27.7036 48 Q32 51 36.2964 48 L36.2964 37 Z" fill="#86685f"/><path d="M34.4964 38 L36.2964 37 L36.2964 48 L34.4964 49 Z" fill="#9bb89b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.380799999999997" cy="30" rx="2.062545" ry="3.69087" fill="#86685f"/>
+  <ellipse cx="43.619200000000006" cy="30" rx="2.062545" ry="3.69087" fill="#d49a76"/><path d="M44.519200000000005 27.286125 Q45.547525 30 44.3192 33.25665" stroke="#9bb89b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z" fill="#d49a76"/>
+  <g clip-path="url(#pf2h)">
+    <path d="M0 0 L30.594848 9 C25.55972 20 26.379392 31 30.5 48 L0 64 Z" fill="#86685f"/>
+    <path d="M34.9274 33 L42.909600000000005 29.8 L38.748 37.6 Z" fill="#af826b" opacity="0.75"/>
+    <path d="M64 0 L41.909600000000005 12 L42.409600000000005 30 L37.448 40.5 L64 64 Z" fill="#9bb89b"/>
+        
+    
+    
+    <g transform="translate(0 0.15670000000000073)"><path d="M22.290399999999998 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#af826b"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.1567 L29.44784 34.4699 L32.7 35.2699 L31.6 33.9699 Z" fill="#86685f"/>
+    <path d="M32.9 32.569900000000004 L33.5 34.569900000000004 L32.7 35.2699 Z" fill="#9bb89b" opacity="0.7"/>
+    <path d="M29.973200000000002 35.3699 Q32 35.7199 33.80144 35.3699" stroke="#7f5643" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf2e-1"><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z"/></clipPath><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z" fill="#e3d0c0"/><circle cx="27.677500000000002" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e-1)"/><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.927500000000002" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf2e1"><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z"/></clipPath><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z" fill="#e3d0c0"/><circle cx="36.9225" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e1)"/><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1725" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.677500000000002 25.103300000000004 Q27.0375 24.892920000000007 24.8775 25.684620000000006 L24.8775 26.326380000000004 Q27.0375 26.336880000000004 29.677500000000002 26.707700000000003 Z" fill="#4c331a"/><path d="M34.322500000000005 25.103300000000004 Q36.962500000000006 24.892920000000007 39.1225 25.684620000000006 L39.1225 26.326380000000004 Q36.962500000000006 26.336880000000004 34.322500000000005 26.707700000000003 Z" fill="#4c331a"/><path d="M29.4175 40.841499999999996 Q32 41.741499999999995 34.5825 40.841499999999996" stroke="#7f5643" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.2175 41.5415 Q32 43.102199999999996 33.782500000000006 41.5415 Z" fill="#c48769"/>
+  <g transform="translate(0 0.84)"></g>
+  <path d="M22.790399999999998 22 L24.290399999999998 24 L23.490399999999998 25.2 L25.290399999999998 28" stroke="#e3af97" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z" fill="#7f5428" />
+    <g clip-path="url(#pf2t)"><path d="M34.9274 0 L64 0 L64 30 L39.02576 30 Z" fill="#5e9e80" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  <path d="M19.290399999999998 26.2 L44.7096 25.8 L44.3096 31.2 L19.690399999999997 31.6 Z" fill="#0b0f14"/><path d="M19.8904 27.2 L44.1096 26.8" stroke="#3de8d8" stroke-width="0.6" opacity="0.85"/><path d="M36.7096 29.6 h2 M39.3096 29.6 h1" stroke="#3de8d8" stroke-width="0.5" opacity="0.6"/>
+  <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35 L43.1096 33 Z" fill="#d1ab95" opacity="0.85"/>
+        <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35" stroke="#6a4d3b" stroke-width="0.45" fill="none"/>
+        <circle cx="38.2096" cy="24.5" r="0.65" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg></div><div><div class="nm">Jax</div><div class="role">Pro · muscle · LV 6</div></div></div>
+<div class="label cy">What they've become</div>
+<div class="shelf"><span class="sk">Picked</span><div class="chips"><span class="chip cy">Ricochet</span><span class="chip cy">Incendiary Rounds</span></div></div>
+<div class="shelf"><span class="sk">Earned</span><div class="chips"><span class="chip g">Corner Fighter</span><span class="chip v">With Static</span><span class="chip r">Short Fuse</span></div></div>
+<div class="shelf"><span class="sk">Born</span><div class="chips"><span class="chip m">Hothead</span><span class="chip m">Loyal</span></div></div></div></section><section><p class="look">W3 · Tiles with icons</p><p class="why">An inventory of who they are, like the gear grid: square tiles with the game's line icons and a coloured edge. Tap a tile for what it does. Reads at a glance once the icons are known.</p><div class="panel"><div class="mhead"><div class="fwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf2bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf2h"><path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z"/></clipPath>
+    <clipPath id="pf2s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf2t"><path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z"/></clipPath>
+    <clipPath id="pf2b"><path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf2bg)"/>
+  
+
+  <g >
+  <path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z" fill="#7f5428"/>
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf2s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.7036 37 L27.7036 48 Q32 51 36.2964 48 L36.2964 37 Z" fill="#86685f"/><path d="M34.4964 38 L36.2964 37 L36.2964 48 L34.4964 49 Z" fill="#9bb89b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.380799999999997" cy="30" rx="2.062545" ry="3.69087" fill="#86685f"/>
+  <ellipse cx="43.619200000000006" cy="30" rx="2.062545" ry="3.69087" fill="#d49a76"/><path d="M44.519200000000005 27.286125 Q45.547525 30 44.3192 33.25665" stroke="#9bb89b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z" fill="#d49a76"/>
+  <g clip-path="url(#pf2h)">
+    <path d="M0 0 L30.594848 9 C25.55972 20 26.379392 31 30.5 48 L0 64 Z" fill="#86685f"/>
+    <path d="M34.9274 33 L42.909600000000005 29.8 L38.748 37.6 Z" fill="#af826b" opacity="0.75"/>
+    <path d="M64 0 L41.909600000000005 12 L42.409600000000005 30 L37.448 40.5 L64 64 Z" fill="#9bb89b"/>
+        
+    
+    
+    <g transform="translate(0 0.15670000000000073)"><path d="M22.290399999999998 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#af826b"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.1567 L29.44784 34.4699 L32.7 35.2699 L31.6 33.9699 Z" fill="#86685f"/>
+    <path d="M32.9 32.569900000000004 L33.5 34.569900000000004 L32.7 35.2699 Z" fill="#9bb89b" opacity="0.7"/>
+    <path d="M29.973200000000002 35.3699 Q32 35.7199 33.80144 35.3699" stroke="#7f5643" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf2e-1"><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z"/></clipPath><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z" fill="#e3d0c0"/><circle cx="27.677500000000002" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e-1)"/><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.927500000000002" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf2e1"><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z"/></clipPath><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z" fill="#e3d0c0"/><circle cx="36.9225" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e1)"/><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1725" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.677500000000002 25.103300000000004 Q27.0375 24.892920000000007 24.8775 25.684620000000006 L24.8775 26.326380000000004 Q27.0375 26.336880000000004 29.677500000000002 26.707700000000003 Z" fill="#4c331a"/><path d="M34.322500000000005 25.103300000000004 Q36.962500000000006 24.892920000000007 39.1225 25.684620000000006 L39.1225 26.326380000000004 Q36.962500000000006 26.336880000000004 34.322500000000005 26.707700000000003 Z" fill="#4c331a"/><path d="M29.4175 40.841499999999996 Q32 41.741499999999995 34.5825 40.841499999999996" stroke="#7f5643" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.2175 41.5415 Q32 43.102199999999996 33.782500000000006 41.5415 Z" fill="#c48769"/>
+  <g transform="translate(0 0.84)"></g>
+  <path d="M22.790399999999998 22 L24.290399999999998 24 L23.490399999999998 25.2 L25.290399999999998 28" stroke="#e3af97" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z" fill="#7f5428" />
+    <g clip-path="url(#pf2t)"><path d="M34.9274 0 L64 0 L64 30 L39.02576 30 Z" fill="#5e9e80" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  <path d="M19.290399999999998 26.2 L44.7096 25.8 L44.3096 31.2 L19.690399999999997 31.6 Z" fill="#0b0f14"/><path d="M19.8904 27.2 L44.1096 26.8" stroke="#3de8d8" stroke-width="0.6" opacity="0.85"/><path d="M36.7096 29.6 h2 M39.3096 29.6 h1" stroke="#3de8d8" stroke-width="0.5" opacity="0.6"/>
+  <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35 L43.1096 33 Z" fill="#d1ab95" opacity="0.85"/>
+        <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35" stroke="#6a4d3b" stroke-width="0.45" fill="none"/>
+        <circle cx="38.2096" cy="24.5" r="0.65" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg></div><div><div class="nm">Jax</div><div class="role">Pro · muscle · LV 6</div></div></div>
+<div class="label cy">What they've become</div>
+<div class="tiles">
+<div class="tile c"><svg class="icon " viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l6-6 4 4 6-8M15 8h5v5"/></g></svg><span>Ricochet</span></div>
+<div class="tile c"><svg class="icon " viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4 0-6-2.6-6-5.6 0-3.4 3-5 3.5-9 2 1.5 3 3.2 3 5 1-1 1.5-2.2 1.5-3.4 2.5 2 4 4.6 4 7.4 0 3-2 5.6-6 5.6z"/></g></svg><span>Incendiary</span></div>
+<div class="tile g"><svg class="icon " viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l9-9M14 5l5 5M12 7l5 5M5 15l4 4M3 21l3-3"/></g></svg><span>Corner Fighter</span></div>
+<div class="tile v"><svg class="icon " viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c.8-3.8 3.6-6 7-6s6.2 2.2 7 6"/></g></svg><span>With Static</span></div>
+<div class="tile r"><svg class="icon " viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></g></svg><span>Short Fuse</span></div>
+<div class="tile m"><svg class="icon " viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></g></svg><span>Hothead</span></div>
+<div class="tile m"><svg class="icon " viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></g></svg><span>Loyal</span></div>
+<div class="tile e"><span>+</span><span>Level 9</span></div>
+</div></div></section><section><p class="look">W4 · A sentence</p><p class="why">Words over numbers, all the way: the same seven things written as Joss would say them, each name tappable. Most character, slowest to scan, and it needs good generated writing.</p><div class="panel"><div class="mhead"><div class="fwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf2bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf2h"><path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z"/></clipPath>
+    <clipPath id="pf2s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf2t"><path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z"/></clipPath>
+    <clipPath id="pf2b"><path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf2bg)"/>
+  
+
+  <g >
+  <path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z" fill="#7f5428"/>
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf2s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.7036 37 L27.7036 48 Q32 51 36.2964 48 L36.2964 37 Z" fill="#86685f"/><path d="M34.4964 38 L36.2964 37 L36.2964 48 L34.4964 49 Z" fill="#9bb89b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.380799999999997" cy="30" rx="2.062545" ry="3.69087" fill="#86685f"/>
+  <ellipse cx="43.619200000000006" cy="30" rx="2.062545" ry="3.69087" fill="#d49a76"/><path d="M44.519200000000005 27.286125 Q45.547525 30 44.3192 33.25665" stroke="#9bb89b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z" fill="#d49a76"/>
+  <g clip-path="url(#pf2h)">
+    <path d="M0 0 L30.594848 9 C25.55972 20 26.379392 31 30.5 48 L0 64 Z" fill="#86685f"/>
+    <path d="M34.9274 33 L42.909600000000005 29.8 L38.748 37.6 Z" fill="#af826b" opacity="0.75"/>
+    <path d="M64 0 L41.909600000000005 12 L42.409600000000005 30 L37.448 40.5 L64 64 Z" fill="#9bb89b"/>
+        
+    
+    
+    <g transform="translate(0 0.15670000000000073)"><path d="M22.290399999999998 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#af826b"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.1567 L29.44784 34.4699 L32.7 35.2699 L31.6 33.9699 Z" fill="#86685f"/>
+    <path d="M32.9 32.569900000000004 L33.5 34.569900000000004 L32.7 35.2699 Z" fill="#9bb89b" opacity="0.7"/>
+    <path d="M29.973200000000002 35.3699 Q32 35.7199 33.80144 35.3699" stroke="#7f5643" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf2e-1"><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z"/></clipPath><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z" fill="#e3d0c0"/><circle cx="27.677500000000002" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e-1)"/><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.927500000000002" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf2e1"><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z"/></clipPath><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z" fill="#e3d0c0"/><circle cx="36.9225" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e1)"/><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1725" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.677500000000002 25.103300000000004 Q27.0375 24.892920000000007 24.8775 25.684620000000006 L24.8775 26.326380000000004 Q27.0375 26.336880000000004 29.677500000000002 26.707700000000003 Z" fill="#4c331a"/><path d="M34.322500000000005 25.103300000000004 Q36.962500000000006 24.892920000000007 39.1225 25.684620000000006 L39.1225 26.326380000000004 Q36.962500000000006 26.336880000000004 34.322500000000005 26.707700000000003 Z" fill="#4c331a"/><path d="M29.4175 40.841499999999996 Q32 41.741499999999995 34.5825 40.841499999999996" stroke="#7f5643" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.2175 41.5415 Q32 43.102199999999996 33.782500000000006 41.5415 Z" fill="#c48769"/>
+  <g transform="translate(0 0.84)"></g>
+  <path d="M22.790399999999998 22 L24.290399999999998 24 L23.490399999999998 25.2 L25.290399999999998 28" stroke="#e3af97" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z" fill="#7f5428" />
+    <g clip-path="url(#pf2t)"><path d="M34.9274 0 L64 0 L64 30 L39.02576 30 Z" fill="#5e9e80" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  <path d="M19.290399999999998 26.2 L44.7096 25.8 L44.3096 31.2 L19.690399999999997 31.6 Z" fill="#0b0f14"/><path d="M19.8904 27.2 L44.1096 26.8" stroke="#3de8d8" stroke-width="0.6" opacity="0.85"/><path d="M36.7096 29.6 h2 M39.3096 29.6 h1" stroke="#3de8d8" stroke-width="0.5" opacity="0.6"/>
+  <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35 L43.1096 33 Z" fill="#d1ab95" opacity="0.85"/>
+        <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35" stroke="#6a4d3b" stroke-width="0.45" fill="none"/>
+        <circle cx="38.2096" cy="24.5" r="0.65" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg></div><div><div class="nm">Jax</div><div class="role">Pro · muscle · LV 6</div></div></div>
+<div class="label cy">What they've become</div>
+<p class="prose">Learned <a>Ricochet</a> and <a>Incendiary Rounds</a>. Earned <a class="g">Corner Fighter</a> when cornered on Back Rent. Steadier <a class="v">with Static</a>. Lately on a <a class="r">short fuse</a>. Always a <a class="m">hothead</a>, always <a class="m">loyal</a>.</p></div></section><section><p class="look">W5 · Slots, then the rest</p><p class="why">Shows the build as three slots (move, payload, specialisation), one still open with when it unlocks, so the next level has a visible place to go. Earned and born traits follow as a chip strip.</p><div class="panel"><div class="mhead"><div class="fwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf2bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf2h"><path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z"/></clipPath>
+    <clipPath id="pf2s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf2t"><path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z"/></clipPath>
+    <clipPath id="pf2b"><path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf2bg)"/>
+  
+
+  <g >
+  <path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z" fill="#7f5428"/>
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf2s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.7036 37 L27.7036 48 Q32 51 36.2964 48 L36.2964 37 Z" fill="#86685f"/><path d="M34.4964 38 L36.2964 37 L36.2964 48 L34.4964 49 Z" fill="#9bb89b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.380799999999997" cy="30" rx="2.062545" ry="3.69087" fill="#86685f"/>
+  <ellipse cx="43.619200000000006" cy="30" rx="2.062545" ry="3.69087" fill="#d49a76"/><path d="M44.519200000000005 27.286125 Q45.547525 30 44.3192 33.25665" stroke="#9bb89b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z" fill="#d49a76"/>
+  <g clip-path="url(#pf2h)">
+    <path d="M0 0 L30.594848 9 C25.55972 20 26.379392 31 30.5 48 L0 64 Z" fill="#86685f"/>
+    <path d="M34.9274 33 L42.909600000000005 29.8 L38.748 37.6 Z" fill="#af826b" opacity="0.75"/>
+    <path d="M64 0 L41.909600000000005 12 L42.409600000000005 30 L37.448 40.5 L64 64 Z" fill="#9bb89b"/>
+        
+    
+    
+    <g transform="translate(0 0.15670000000000073)"><path d="M22.290399999999998 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#af826b"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.1567 L29.44784 34.4699 L32.7 35.2699 L31.6 33.9699 Z" fill="#86685f"/>
+    <path d="M32.9 32.569900000000004 L33.5 34.569900000000004 L32.7 35.2699 Z" fill="#9bb89b" opacity="0.7"/>
+    <path d="M29.973200000000002 35.3699 Q32 35.7199 33.80144 35.3699" stroke="#7f5643" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf2e-1"><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z"/></clipPath><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z" fill="#e3d0c0"/><circle cx="27.677500000000002" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e-1)"/><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.927500000000002" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf2e1"><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z"/></clipPath><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z" fill="#e3d0c0"/><circle cx="36.9225" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e1)"/><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1725" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.677500000000002 25.103300000000004 Q27.0375 24.892920000000007 24.8775 25.684620000000006 L24.8775 26.326380000000004 Q27.0375 26.336880000000004 29.677500000000002 26.707700000000003 Z" fill="#4c331a"/><path d="M34.322500000000005 25.103300000000004 Q36.962500000000006 24.892920000000007 39.1225 25.684620000000006 L39.1225 26.326380000000004 Q36.962500000000006 26.336880000000004 34.322500000000005 26.707700000000003 Z" fill="#4c331a"/><path d="M29.4175 40.841499999999996 Q32 41.741499999999995 34.5825 40.841499999999996" stroke="#7f5643" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.2175 41.5415 Q32 43.102199999999996 33.782500000000006 41.5415 Z" fill="#c48769"/>
+  <g transform="translate(0 0.84)"></g>
+  <path d="M22.790399999999998 22 L24.290399999999998 24 L23.490399999999998 25.2 L25.290399999999998 28" stroke="#e3af97" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z" fill="#7f5428" />
+    <g clip-path="url(#pf2t)"><path d="M34.9274 0 L64 0 L64 30 L39.02576 30 Z" fill="#5e9e80" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  <path d="M19.290399999999998 26.2 L44.7096 25.8 L44.3096 31.2 L19.690399999999997 31.6 Z" fill="#0b0f14"/><path d="M19.8904 27.2 L44.1096 26.8" stroke="#3de8d8" stroke-width="0.6" opacity="0.85"/><path d="M36.7096 29.6 h2 M39.3096 29.6 h1" stroke="#3de8d8" stroke-width="0.5" opacity="0.6"/>
+  <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35 L43.1096 33 Z" fill="#d1ab95" opacity="0.85"/>
+        <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35" stroke="#6a4d3b" stroke-width="0.45" fill="none"/>
+        <circle cx="38.2096" cy="24.5" r="0.65" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg></div><div><div class="nm">Jax</div><div class="role">Pro · muscle · LV 6</div></div></div>
+<div class="label cy">Skills</div>
+<div class="slots"><div class="slot"><span class="sk">Move</span><b>Ricochet</b></div><div class="slot"><span class="sk">Payload</span><b>Incendiary</b></div><div class="slot open"><span class="sk">Specialist</span><b>Level 9</b></div></div>
+<div class="label">Who they are</div>
+<div class="chips"><span class="chip g">Corner Fighter</span><span class="chip v">With Static</span><span class="chip r">Short Fuse</span><span class="chip m">Hothead</span><span class="chip m">Loyal</span></div></div></section><section><p class="look">W6 · Chips, one opened</p><p class="why">How any chip version behaves on tap: the chip opens a line under the block (as the stat strip does today) with what it does and where it came from. Only one open at a time.</p><div class="panel"><div class="mhead"><div class="fwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf2bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf2h"><path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z"/></clipPath>
+    <clipPath id="pf2s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf2t"><path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z"/></clipPath>
+    <clipPath id="pf2b"><path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf2bg)"/>
+  
+
+  <g >
+  <path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z" fill="#7f5428"/>
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf2s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.7036 37 L27.7036 48 Q32 51 36.2964 48 L36.2964 37 Z" fill="#86685f"/><path d="M34.4964 38 L36.2964 37 L36.2964 48 L34.4964 49 Z" fill="#9bb89b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.380799999999997" cy="30" rx="2.062545" ry="3.69087" fill="#86685f"/>
+  <ellipse cx="43.619200000000006" cy="30" rx="2.062545" ry="3.69087" fill="#d49a76"/><path d="M44.519200000000005 27.286125 Q45.547525 30 44.3192 33.25665" stroke="#9bb89b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z" fill="#d49a76"/>
+  <g clip-path="url(#pf2h)">
+    <path d="M0 0 L30.594848 9 C25.55972 20 26.379392 31 30.5 48 L0 64 Z" fill="#86685f"/>
+    <path d="M34.9274 33 L42.909600000000005 29.8 L38.748 37.6 Z" fill="#af826b" opacity="0.75"/>
+    <path d="M64 0 L41.909600000000005 12 L42.409600000000005 30 L37.448 40.5 L64 64 Z" fill="#9bb89b"/>
+        
+    
+    
+    <g transform="translate(0 0.15670000000000073)"><path d="M22.290399999999998 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#af826b"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.1567 L29.44784 34.4699 L32.7 35.2699 L31.6 33.9699 Z" fill="#86685f"/>
+    <path d="M32.9 32.569900000000004 L33.5 34.569900000000004 L32.7 35.2699 Z" fill="#9bb89b" opacity="0.7"/>
+    <path d="M29.973200000000002 35.3699 Q32 35.7199 33.80144 35.3699" stroke="#7f5643" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf2e-1"><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z"/></clipPath><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z" fill="#e3d0c0"/><circle cx="27.677500000000002" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e-1)"/><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.927500000000002" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf2e1"><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z"/></clipPath><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z" fill="#e3d0c0"/><circle cx="36.9225" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e1)"/><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1725" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.677500000000002 25.103300000000004 Q27.0375 24.892920000000007 24.8775 25.684620000000006 L24.8775 26.326380000000004 Q27.0375 26.336880000000004 29.677500000000002 26.707700000000003 Z" fill="#4c331a"/><path d="M34.322500000000005 25.103300000000004 Q36.962500000000006 24.892920000000007 39.1225 25.684620000000006 L39.1225 26.326380000000004 Q36.962500000000006 26.336880000000004 34.322500000000005 26.707700000000003 Z" fill="#4c331a"/><path d="M29.4175 40.841499999999996 Q32 41.741499999999995 34.5825 40.841499999999996" stroke="#7f5643" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.2175 41.5415 Q32 43.102199999999996 33.782500000000006 41.5415 Z" fill="#c48769"/>
+  <g transform="translate(0 0.84)"></g>
+  <path d="M22.790399999999998 22 L24.290399999999998 24 L23.490399999999998 25.2 L25.290399999999998 28" stroke="#e3af97" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z" fill="#7f5428" />
+    <g clip-path="url(#pf2t)"><path d="M34.9274 0 L64 0 L64 30 L39.02576 30 Z" fill="#5e9e80" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  <path d="M19.290399999999998 26.2 L44.7096 25.8 L44.3096 31.2 L19.690399999999997 31.6 Z" fill="#0b0f14"/><path d="M19.8904 27.2 L44.1096 26.8" stroke="#3de8d8" stroke-width="0.6" opacity="0.85"/><path d="M36.7096 29.6 h2 M39.3096 29.6 h1" stroke="#3de8d8" stroke-width="0.5" opacity="0.6"/>
+  <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35 L43.1096 33 Z" fill="#d1ab95" opacity="0.85"/>
+        <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35" stroke="#6a4d3b" stroke-width="0.45" fill="none"/>
+        <circle cx="38.2096" cy="24.5" r="0.65" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg></div><div><div class="nm">Jax</div><div class="role">Pro · muscle · LV 6</div></div></div>
+<div class="label cy">What they've become</div>
+<div class="chips"><span class="chip cy">Ricochet</span><span class="chip cy">Incendiary Rounds</span><span class="chip g on">Corner Fighter</span><span class="chip v">With Static</span><span class="chip r">Short Fuse</span><span class="chip m">Hothead</span><span class="chip m">Loyal</span></div>
+<div class="open"><b>Corner Fighter</b> · lasting<br>+1 combat in a fight once someone on the crew is hurt.<br><span class="small">Earned day 52 on Back Rent: held the stairwell while the others got out.</span></div></div></section></div>
+<h2>Stats</h2><div class="grid"><section><p class="look">S1 · Grid of eight</p><p class="why">The compact page as drawn: eight boxes in two rows, main stat outlined, a next-point bar in each. Even weight for every stat.</p><div class="panel"><div class="mhead"><div class="fwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf2bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf2h"><path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z"/></clipPath>
+    <clipPath id="pf2s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf2t"><path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z"/></clipPath>
+    <clipPath id="pf2b"><path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf2bg)"/>
+  
+
+  <g >
+  <path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z" fill="#7f5428"/>
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf2s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.7036 37 L27.7036 48 Q32 51 36.2964 48 L36.2964 37 Z" fill="#86685f"/><path d="M34.4964 38 L36.2964 37 L36.2964 48 L34.4964 49 Z" fill="#9bb89b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.380799999999997" cy="30" rx="2.062545" ry="3.69087" fill="#86685f"/>
+  <ellipse cx="43.619200000000006" cy="30" rx="2.062545" ry="3.69087" fill="#d49a76"/><path d="M44.519200000000005 27.286125 Q45.547525 30 44.3192 33.25665" stroke="#9bb89b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z" fill="#d49a76"/>
+  <g clip-path="url(#pf2h)">
+    <path d="M0 0 L30.594848 9 C25.55972 20 26.379392 31 30.5 48 L0 64 Z" fill="#86685f"/>
+    <path d="M34.9274 33 L42.909600000000005 29.8 L38.748 37.6 Z" fill="#af826b" opacity="0.75"/>
+    <path d="M64 0 L41.909600000000005 12 L42.409600000000005 30 L37.448 40.5 L64 64 Z" fill="#9bb89b"/>
+        
+    
+    
+    <g transform="translate(0 0.15670000000000073)"><path d="M22.290399999999998 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#af826b"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.1567 L29.44784 34.4699 L32.7 35.2699 L31.6 33.9699 Z" fill="#86685f"/>
+    <path d="M32.9 32.569900000000004 L33.5 34.569900000000004 L32.7 35.2699 Z" fill="#9bb89b" opacity="0.7"/>
+    <path d="M29.973200000000002 35.3699 Q32 35.7199 33.80144 35.3699" stroke="#7f5643" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf2e-1"><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z"/></clipPath><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z" fill="#e3d0c0"/><circle cx="27.677500000000002" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e-1)"/><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.927500000000002" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf2e1"><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z"/></clipPath><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z" fill="#e3d0c0"/><circle cx="36.9225" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e1)"/><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1725" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.677500000000002 25.103300000000004 Q27.0375 24.892920000000007 24.8775 25.684620000000006 L24.8775 26.326380000000004 Q27.0375 26.336880000000004 29.677500000000002 26.707700000000003 Z" fill="#4c331a"/><path d="M34.322500000000005 25.103300000000004 Q36.962500000000006 24.892920000000007 39.1225 25.684620000000006 L39.1225 26.326380000000004 Q36.962500000000006 26.336880000000004 34.322500000000005 26.707700000000003 Z" fill="#4c331a"/><path d="M29.4175 40.841499999999996 Q32 41.741499999999995 34.5825 40.841499999999996" stroke="#7f5643" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.2175 41.5415 Q32 43.102199999999996 33.782500000000006 41.5415 Z" fill="#c48769"/>
+  <g transform="translate(0 0.84)"></g>
+  <path d="M22.790399999999998 22 L24.290399999999998 24 L23.490399999999998 25.2 L25.290399999999998 28" stroke="#e3af97" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z" fill="#7f5428" />
+    <g clip-path="url(#pf2t)"><path d="M34.9274 0 L64 0 L64 30 L39.02576 30 Z" fill="#5e9e80" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  <path d="M19.290399999999998 26.2 L44.7096 25.8 L44.3096 31.2 L19.690399999999997 31.6 Z" fill="#0b0f14"/><path d="M19.8904 27.2 L44.1096 26.8" stroke="#3de8d8" stroke-width="0.6" opacity="0.85"/><path d="M36.7096 29.6 h2 M39.3096 29.6 h1" stroke="#3de8d8" stroke-width="0.5" opacity="0.6"/>
+  <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35 L43.1096 33 Z" fill="#d1ab95" opacity="0.85"/>
+        <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35" stroke="#6a4d3b" stroke-width="0.45" fill="none"/>
+        <circle cx="38.2096" cy="24.5" r="0.65" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg></div><div><div class="nm">Jax</div><div class="role">Pro · muscle · LV 6</div></div></div><div class="label">Stats</div><div class="sgrid"><div class="sc main"><b>15</b><small>CMB</small><span class="bar thin"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span></div><div class="sc"><b>12</b><small>END</small><span class="bar thin"><i class="on"></i><i></i><i></i><i></i><i></i></span></div><div class="sc"><b>9</b><small>DRV</small><span class="bar thin"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></div><div class="sc"><b>8</b><small>SOC</small><span class="bar thin"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span></div><div class="sc"><b>7</b><small>COOL</small><span class="bar thin"><i class="on"></i><i></i><i></i><i></i><i></i></span></div><div class="sc"><b>6</b><small>STL</small><span class="bar thin"><i></i><i></i><i></i><i></i><i></i></span></div><div class="sc"><b>5</b><small>TECH</small><span class="bar thin"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span></div><div class="sc"><b>4</b><small>MED</small><span class="bar thin"><i class="on"></i><i></i><i></i><i></i><i></i></span></div></div></div></section><section><p class="look">S2 · The main stat leads</p><p class="why">A runner is mostly their main stat, so it gets the room: a big number, its word, how close the next point is and the scout's read on the ceiling. The other seven in one strip.</p><div class="panel"><div class="mhead"><div class="fwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf2bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf2h"><path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z"/></clipPath>
+    <clipPath id="pf2s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf2t"><path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z"/></clipPath>
+    <clipPath id="pf2b"><path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf2bg)"/>
+  
+
+  <g >
+  <path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z" fill="#7f5428"/>
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf2s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.7036 37 L27.7036 48 Q32 51 36.2964 48 L36.2964 37 Z" fill="#86685f"/><path d="M34.4964 38 L36.2964 37 L36.2964 48 L34.4964 49 Z" fill="#9bb89b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.380799999999997" cy="30" rx="2.062545" ry="3.69087" fill="#86685f"/>
+  <ellipse cx="43.619200000000006" cy="30" rx="2.062545" ry="3.69087" fill="#d49a76"/><path d="M44.519200000000005 27.286125 Q45.547525 30 44.3192 33.25665" stroke="#9bb89b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z" fill="#d49a76"/>
+  <g clip-path="url(#pf2h)">
+    <path d="M0 0 L30.594848 9 C25.55972 20 26.379392 31 30.5 48 L0 64 Z" fill="#86685f"/>
+    <path d="M34.9274 33 L42.909600000000005 29.8 L38.748 37.6 Z" fill="#af826b" opacity="0.75"/>
+    <path d="M64 0 L41.909600000000005 12 L42.409600000000005 30 L37.448 40.5 L64 64 Z" fill="#9bb89b"/>
+        
+    
+    
+    <g transform="translate(0 0.15670000000000073)"><path d="M22.290399999999998 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#af826b"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.1567 L29.44784 34.4699 L32.7 35.2699 L31.6 33.9699 Z" fill="#86685f"/>
+    <path d="M32.9 32.569900000000004 L33.5 34.569900000000004 L32.7 35.2699 Z" fill="#9bb89b" opacity="0.7"/>
+    <path d="M29.973200000000002 35.3699 Q32 35.7199 33.80144 35.3699" stroke="#7f5643" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf2e-1"><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z"/></clipPath><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z" fill="#e3d0c0"/><circle cx="27.677500000000002" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e-1)"/><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.927500000000002" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf2e1"><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z"/></clipPath><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z" fill="#e3d0c0"/><circle cx="36.9225" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e1)"/><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1725" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.677500000000002 25.103300000000004 Q27.0375 24.892920000000007 24.8775 25.684620000000006 L24.8775 26.326380000000004 Q27.0375 26.336880000000004 29.677500000000002 26.707700000000003 Z" fill="#4c331a"/><path d="M34.322500000000005 25.103300000000004 Q36.962500000000006 24.892920000000007 39.1225 25.684620000000006 L39.1225 26.326380000000004 Q36.962500000000006 26.336880000000004 34.322500000000005 26.707700000000003 Z" fill="#4c331a"/><path d="M29.4175 40.841499999999996 Q32 41.741499999999995 34.5825 40.841499999999996" stroke="#7f5643" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.2175 41.5415 Q32 43.102199999999996 33.782500000000006 41.5415 Z" fill="#c48769"/>
+  <g transform="translate(0 0.84)"></g>
+  <path d="M22.790399999999998 22 L24.290399999999998 24 L23.490399999999998 25.2 L25.290399999999998 28" stroke="#e3af97" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z" fill="#7f5428" />
+    <g clip-path="url(#pf2t)"><path d="M34.9274 0 L64 0 L64 30 L39.02576 30 Z" fill="#5e9e80" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  <path d="M19.290399999999998 26.2 L44.7096 25.8 L44.3096 31.2 L19.690399999999997 31.6 Z" fill="#0b0f14"/><path d="M19.8904 27.2 L44.1096 26.8" stroke="#3de8d8" stroke-width="0.6" opacity="0.85"/><path d="M36.7096 29.6 h2 M39.3096 29.6 h1" stroke="#3de8d8" stroke-width="0.5" opacity="0.6"/>
+  <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35 L43.1096 33 Z" fill="#d1ab95" opacity="0.85"/>
+        <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35" stroke="#6a4d3b" stroke-width="0.45" fill="none"/>
+        <circle cx="38.2096" cy="24.5" r="0.65" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg></div><div><div class="nm">Jax</div><div class="role">Pro · muscle · LV 6</div></div></div>
+<div class="label">Stats</div>
+<div class="hero"><div class="hl"><svg class="icon " viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l9-9M14 5l5 5M12 7l5 5M5 15l4 4M3 21l3-3"/></g></svg><div><b>15</b><span>Combat · strong</span></div></div>
+<div class="bar" style="margin-top:8px"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></div><div class="barline"><span>16 soon</span><span>Scout: nearly at their wall</span></div></div>
+<div class="rstrip"><div class="rs"><b>12</b><small>END</small></div><div class="rs"><b>9</b><small>DRV</small></div><div class="rs"><b>8</b><small>SOC</small></div><div class="rs"><b>7</b><small>COOL</small></div><div class="rs"><b>6</b><small>STL</small></div><div class="rs"><b>5</b><small>TECH</small></div><div class="rs"><b>4</b><small>MED</small></div></div></div></section><section><p class="look">S3 · Icons and words</p><p class="why">Each stat a row: the game's icon, its name, a word (elite, strong, solid, fair, weak), the number small, and the next-point bar. Words first, as the risk reads are.</p><div class="panel"><div class="mhead"><div class="fwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf2bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf2h"><path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z"/></clipPath>
+    <clipPath id="pf2s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf2t"><path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z"/></clipPath>
+    <clipPath id="pf2b"><path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf2bg)"/>
+  
+
+  <g >
+  <path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z" fill="#7f5428"/>
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf2s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.7036 37 L27.7036 48 Q32 51 36.2964 48 L36.2964 37 Z" fill="#86685f"/><path d="M34.4964 38 L36.2964 37 L36.2964 48 L34.4964 49 Z" fill="#9bb89b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.380799999999997" cy="30" rx="2.062545" ry="3.69087" fill="#86685f"/>
+  <ellipse cx="43.619200000000006" cy="30" rx="2.062545" ry="3.69087" fill="#d49a76"/><path d="M44.519200000000005 27.286125 Q45.547525 30 44.3192 33.25665" stroke="#9bb89b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z" fill="#d49a76"/>
+  <g clip-path="url(#pf2h)">
+    <path d="M0 0 L30.594848 9 C25.55972 20 26.379392 31 30.5 48 L0 64 Z" fill="#86685f"/>
+    <path d="M34.9274 33 L42.909600000000005 29.8 L38.748 37.6 Z" fill="#af826b" opacity="0.75"/>
+    <path d="M64 0 L41.909600000000005 12 L42.409600000000005 30 L37.448 40.5 L64 64 Z" fill="#9bb89b"/>
+        
+    
+    
+    <g transform="translate(0 0.15670000000000073)"><path d="M22.290399999999998 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#af826b"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.1567 L29.44784 34.4699 L32.7 35.2699 L31.6 33.9699 Z" fill="#86685f"/>
+    <path d="M32.9 32.569900000000004 L33.5 34.569900000000004 L32.7 35.2699 Z" fill="#9bb89b" opacity="0.7"/>
+    <path d="M29.973200000000002 35.3699 Q32 35.7199 33.80144 35.3699" stroke="#7f5643" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf2e-1"><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z"/></clipPath><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z" fill="#e3d0c0"/><circle cx="27.677500000000002" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e-1)"/><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.927500000000002" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf2e1"><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z"/></clipPath><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z" fill="#e3d0c0"/><circle cx="36.9225" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e1)"/><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1725" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.677500000000002 25.103300000000004 Q27.0375 24.892920000000007 24.8775 25.684620000000006 L24.8775 26.326380000000004 Q27.0375 26.336880000000004 29.677500000000002 26.707700000000003 Z" fill="#4c331a"/><path d="M34.322500000000005 25.103300000000004 Q36.962500000000006 24.892920000000007 39.1225 25.684620000000006 L39.1225 26.326380000000004 Q36.962500000000006 26.336880000000004 34.322500000000005 26.707700000000003 Z" fill="#4c331a"/><path d="M29.4175 40.841499999999996 Q32 41.741499999999995 34.5825 40.841499999999996" stroke="#7f5643" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.2175 41.5415 Q32 43.102199999999996 33.782500000000006 41.5415 Z" fill="#c48769"/>
+  <g transform="translate(0 0.84)"></g>
+  <path d="M22.790399999999998 22 L24.290399999999998 24 L23.490399999999998 25.2 L25.290399999999998 28" stroke="#e3af97" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z" fill="#7f5428" />
+    <g clip-path="url(#pf2t)"><path d="M34.9274 0 L64 0 L64 30 L39.02576 30 Z" fill="#5e9e80" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  <path d="M19.290399999999998 26.2 L44.7096 25.8 L44.3096 31.2 L19.690399999999997 31.6 Z" fill="#0b0f14"/><path d="M19.8904 27.2 L44.1096 26.8" stroke="#3de8d8" stroke-width="0.6" opacity="0.85"/><path d="M36.7096 29.6 h2 M39.3096 29.6 h1" stroke="#3de8d8" stroke-width="0.5" opacity="0.6"/>
+  <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35 L43.1096 33 Z" fill="#d1ab95" opacity="0.85"/>
+        <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35" stroke="#6a4d3b" stroke-width="0.45" fill="none"/>
+        <circle cx="38.2096" cy="24.5" r="0.65" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg></div><div><div class="nm">Jax</div><div class="role">Pro · muscle · LV 6</div></div></div><div class="label">Stats</div><div class="wlist"><div class="wr"><svg class="icon " viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l9-9M14 5l5 5M12 7l5 5M5 15l4 4M3 21l3-3"/></g></svg><span class="wn">Combat</span><span class="ww w-strong">strong</span><span class="wv">15</span><span class="bar thin"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span></div><div class="wr"><svg class="icon " viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9v6M17 9v6M4 11v2M20 11v2M7 12h10"/></g></svg><span class="wn">Endurance</span><span class="ww w-solid">solid</span><span class="wv">12</span><span class="bar thin"><i class="on"></i><i></i><i></i><i></i><i></i></span></div><div class="wr"><svg class="icon " viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/><path d="M4.5 10.5l5.6 1M19.5 10.5l-5.6 1M12 14v6"/></g></svg><span class="wn">Driving</span><span class="ww w-solid">solid</span><span class="wv">9</span><span class="bar thin"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></div><div class="wr"><svg class="icon " viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H10l-4 4v-4H4z"/></g></svg><span class="wn">Social</span><span class="ww w-fair">fair</span><span class="wv">8</span><span class="bar thin"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span></div><div class="wr"><svg class="icon " viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-4 3 8 2-4h7"/></g></svg><span class="wn">Cool</span><span class="ww w-fair">fair</span><span class="wv">7</span><span class="bar thin"><i class="on"></i><i></i><i></i><i></i><i></i></span></div><div class="wr"><svg class="icon " viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c2.5-4 5.5-6 9-6s6.5 2 9 6c-2.5 4-5.5 6-9 6s-6.5-2-9-6z"/><path d="M4 4l16 16"/></g></svg><span class="wn">Stealth</span><span class="ww w-fair">fair</span><span class="wv">6</span><span class="bar thin"><i></i><i></i><i></i><i></i><i></i></span></div><div class="wr"><svg class="icon " viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1"/><path d="M10 4v3M14 4v3M10 17v3M14 17v3M4 10h3M4 14h3M17 10h3M17 14h3"/></g></svg><span class="wn">Tech</span><span class="ww w-weak">weak</span><span class="wv">5</span><span class="bar thin"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span></div><div class="wr"><svg class="icon " viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6v5h5v6h-5v5H9v-5H4V9h5z"/></g></svg><span class="wn">Medical</span><span class="ww w-weak">weak</span><span class="wv">4</span><span class="bar thin"><i class="on"></i><i></i><i></i><i></i><i></i></span></div></div></div></section><section><p class="look">S4 · Bars on the 1–20 scale</p><p class="why">Every stat as a bar out of 20, so the shape of the runner shows. A soft yellow zone marks the scout's read of the ceiling where there is one (a read, not the truth, and only for the main stat, as today).</p><div class="panel"><div class="mhead"><div class="fwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf2bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf2h"><path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z"/></clipPath>
+    <clipPath id="pf2s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf2t"><path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z"/></clipPath>
+    <clipPath id="pf2b"><path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf2bg)"/>
+  
+
+  <g >
+  <path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z" fill="#7f5428"/>
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf2s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.7036 37 L27.7036 48 Q32 51 36.2964 48 L36.2964 37 Z" fill="#86685f"/><path d="M34.4964 38 L36.2964 37 L36.2964 48 L34.4964 49 Z" fill="#9bb89b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.380799999999997" cy="30" rx="2.062545" ry="3.69087" fill="#86685f"/>
+  <ellipse cx="43.619200000000006" cy="30" rx="2.062545" ry="3.69087" fill="#d49a76"/><path d="M44.519200000000005 27.286125 Q45.547525 30 44.3192 33.25665" stroke="#9bb89b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z" fill="#d49a76"/>
+  <g clip-path="url(#pf2h)">
+    <path d="M0 0 L30.594848 9 C25.55972 20 26.379392 31 30.5 48 L0 64 Z" fill="#86685f"/>
+    <path d="M34.9274 33 L42.909600000000005 29.8 L38.748 37.6 Z" fill="#af826b" opacity="0.75"/>
+    <path d="M64 0 L41.909600000000005 12 L42.409600000000005 30 L37.448 40.5 L64 64 Z" fill="#9bb89b"/>
+        
+    
+    
+    <g transform="translate(0 0.15670000000000073)"><path d="M22.290399999999998 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#af826b"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.1567 L29.44784 34.4699 L32.7 35.2699 L31.6 33.9699 Z" fill="#86685f"/>
+    <path d="M32.9 32.569900000000004 L33.5 34.569900000000004 L32.7 35.2699 Z" fill="#9bb89b" opacity="0.7"/>
+    <path d="M29.973200000000002 35.3699 Q32 35.7199 33.80144 35.3699" stroke="#7f5643" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf2e-1"><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z"/></clipPath><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z" fill="#e3d0c0"/><circle cx="27.677500000000002" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e-1)"/><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.927500000000002" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf2e1"><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z"/></clipPath><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z" fill="#e3d0c0"/><circle cx="36.9225" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e1)"/><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1725" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.677500000000002 25.103300000000004 Q27.0375 24.892920000000007 24.8775 25.684620000000006 L24.8775 26.326380000000004 Q27.0375 26.336880000000004 29.677500000000002 26.707700000000003 Z" fill="#4c331a"/><path d="M34.322500000000005 25.103300000000004 Q36.962500000000006 24.892920000000007 39.1225 25.684620000000006 L39.1225 26.326380000000004 Q36.962500000000006 26.336880000000004 34.322500000000005 26.707700000000003 Z" fill="#4c331a"/><path d="M29.4175 40.841499999999996 Q32 41.741499999999995 34.5825 40.841499999999996" stroke="#7f5643" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.2175 41.5415 Q32 43.102199999999996 33.782500000000006 41.5415 Z" fill="#c48769"/>
+  <g transform="translate(0 0.84)"></g>
+  <path d="M22.790399999999998 22 L24.290399999999998 24 L23.490399999999998 25.2 L25.290399999999998 28" stroke="#e3af97" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z" fill="#7f5428" />
+    <g clip-path="url(#pf2t)"><path d="M34.9274 0 L64 0 L64 30 L39.02576 30 Z" fill="#5e9e80" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  <path d="M19.290399999999998 26.2 L44.7096 25.8 L44.3096 31.2 L19.690399999999997 31.6 Z" fill="#0b0f14"/><path d="M19.8904 27.2 L44.1096 26.8" stroke="#3de8d8" stroke-width="0.6" opacity="0.85"/><path d="M36.7096 29.6 h2 M39.3096 29.6 h1" stroke="#3de8d8" stroke-width="0.5" opacity="0.6"/>
+  <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35 L43.1096 33 Z" fill="#d1ab95" opacity="0.85"/>
+        <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35" stroke="#6a4d3b" stroke-width="0.45" fill="none"/>
+        <circle cx="38.2096" cy="24.5" r="0.65" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg></div><div><div class="nm">Jax</div><div class="role">Pro · muscle · LV 6</div></div></div><div class="label">Stats</div><div class="slist"><div class="sr"><span class="sn">CMB</span><span class="track"><i style="width:75.0%"></i><s class="zone" style="left:75.0%;width:10.0%"></s></span><span class="sv">15</span></div><div class="sr"><span class="sn">END</span><span class="track"><i style="width:60.0%"></i></span><span class="sv">12</span></div><div class="sr"><span class="sn">DRV</span><span class="track"><i style="width:45.0%"></i></span><span class="sv">9</span></div><div class="sr"><span class="sn">SOC</span><span class="track"><i style="width:40.0%"></i></span><span class="sv">8</span></div><div class="sr"><span class="sn">COOL</span><span class="track"><i style="width:35.0%"></i></span><span class="sv">7</span></div><div class="sr"><span class="sn">STL</span><span class="track"><i style="width:30.0%"></i></span><span class="sv">6</span></div><div class="sr"><span class="sn">TECH</span><span class="track"><i style="width:25.0%"></i></span><span class="sv">5</span></div><div class="sr"><span class="sn">MED</span><span class="track"><i style="width:20.0%"></i></span><span class="sv">4</span></div></div><div class="barline" style="margin-top:6px"><span>out of 20</span><span style="color:var(--warn)">yellow: scout's read of the wall</span></div></div></section><section><p class="look">S5 · The shape</p><p class="why">All eight on a radar: the outline says what kind of runner this is before any number is read (Jax leans hard to combat and endurance). Tap a corner for the stat. Good for comparing two runners; poor at showing a single point of growth.</p><div class="panel"><div class="mhead"><div class="fwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf2bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf2h"><path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z"/></clipPath>
+    <clipPath id="pf2s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf2t"><path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z"/></clipPath>
+    <clipPath id="pf2b"><path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf2bg)"/>
+  
+
+  <g >
+  <path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z" fill="#7f5428"/>
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf2s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.7036 37 L27.7036 48 Q32 51 36.2964 48 L36.2964 37 Z" fill="#86685f"/><path d="M34.4964 38 L36.2964 37 L36.2964 48 L34.4964 49 Z" fill="#9bb89b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.380799999999997" cy="30" rx="2.062545" ry="3.69087" fill="#86685f"/>
+  <ellipse cx="43.619200000000006" cy="30" rx="2.062545" ry="3.69087" fill="#d49a76"/><path d="M44.519200000000005 27.286125 Q45.547525 30 44.3192 33.25665" stroke="#9bb89b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z" fill="#d49a76"/>
+  <g clip-path="url(#pf2h)">
+    <path d="M0 0 L30.594848 9 C25.55972 20 26.379392 31 30.5 48 L0 64 Z" fill="#86685f"/>
+    <path d="M34.9274 33 L42.909600000000005 29.8 L38.748 37.6 Z" fill="#af826b" opacity="0.75"/>
+    <path d="M64 0 L41.909600000000005 12 L42.409600000000005 30 L37.448 40.5 L64 64 Z" fill="#9bb89b"/>
+        
+    
+    
+    <g transform="translate(0 0.15670000000000073)"><path d="M22.290399999999998 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#af826b"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.1567 L29.44784 34.4699 L32.7 35.2699 L31.6 33.9699 Z" fill="#86685f"/>
+    <path d="M32.9 32.569900000000004 L33.5 34.569900000000004 L32.7 35.2699 Z" fill="#9bb89b" opacity="0.7"/>
+    <path d="M29.973200000000002 35.3699 Q32 35.7199 33.80144 35.3699" stroke="#7f5643" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf2e-1"><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z"/></clipPath><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z" fill="#e3d0c0"/><circle cx="27.677500000000002" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e-1)"/><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.927500000000002" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf2e1"><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z"/></clipPath><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z" fill="#e3d0c0"/><circle cx="36.9225" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e1)"/><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1725" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.677500000000002 25.103300000000004 Q27.0375 24.892920000000007 24.8775 25.684620000000006 L24.8775 26.326380000000004 Q27.0375 26.336880000000004 29.677500000000002 26.707700000000003 Z" fill="#4c331a"/><path d="M34.322500000000005 25.103300000000004 Q36.962500000000006 24.892920000000007 39.1225 25.684620000000006 L39.1225 26.326380000000004 Q36.962500000000006 26.336880000000004 34.322500000000005 26.707700000000003 Z" fill="#4c331a"/><path d="M29.4175 40.841499999999996 Q32 41.741499999999995 34.5825 40.841499999999996" stroke="#7f5643" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.2175 41.5415 Q32 43.102199999999996 33.782500000000006 41.5415 Z" fill="#c48769"/>
+  <g transform="translate(0 0.84)"></g>
+  <path d="M22.790399999999998 22 L24.290399999999998 24 L23.490399999999998 25.2 L25.290399999999998 28" stroke="#e3af97" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z" fill="#7f5428" />
+    <g clip-path="url(#pf2t)"><path d="M34.9274 0 L64 0 L64 30 L39.02576 30 Z" fill="#5e9e80" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  <path d="M19.290399999999998 26.2 L44.7096 25.8 L44.3096 31.2 L19.690399999999997 31.6 Z" fill="#0b0f14"/><path d="M19.8904 27.2 L44.1096 26.8" stroke="#3de8d8" stroke-width="0.6" opacity="0.85"/><path d="M36.7096 29.6 h2 M39.3096 29.6 h1" stroke="#3de8d8" stroke-width="0.5" opacity="0.6"/>
+  <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35 L43.1096 33 Z" fill="#d1ab95" opacity="0.85"/>
+        <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35" stroke="#6a4d3b" stroke-width="0.45" fill="none"/>
+        <circle cx="38.2096" cy="24.5" r="0.65" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg></div><div><div class="nm">Jax</div><div class="role">Pro · muscle · LV 6</div></div></div><div class="label">Stats</div><svg viewBox="-14 0 268 236" class="radar"><polygon points="120.0,92.0 137.0,99.0 144.0,116.0 137.0,133.0 120.0,140.0 103.0,133.0 96.0,116.0 103.0,99.0" fill="none" stroke="#2a303b"/><polygon points="120.0,68.0 153.9,82.1 168.0,116.0 153.9,149.9 120.0,164.0 86.1,149.9 72.0,116.0 86.1,82.1" fill="none" stroke="#2a303b"/><polygon points="120.0,44.0 170.9,65.1 192.0,116.0 170.9,166.9 120.0,188.0 69.1,166.9 48.0,116.0 69.1,65.1" fill="none" stroke="#2a303b"/><polygon points="120.0,20.0 187.9,48.1 216.0,116.0 187.9,183.9 120.0,212.0 52.1,183.9 24.0,116.0 52.1,48.1" fill="none" stroke="#2a303b"/><line x1="120" y1="116" x2="120.0" y2="20.0" stroke="#2a303b"/><line x1="120" y1="116" x2="187.9" y2="48.1" stroke="#2a303b"/><line x1="120" y1="116" x2="216.0" y2="116.0" stroke="#2a303b"/><line x1="120" y1="116" x2="187.9" y2="183.9" stroke="#2a303b"/><line x1="120" y1="116" x2="120.0" y2="212.0" stroke="#2a303b"/><line x1="120" y1="116" x2="52.1" y2="183.9" stroke="#2a303b"/><line x1="120" y1="116" x2="24.0" y2="116.0" stroke="#2a303b"/><line x1="120" y1="116" x2="52.1" y2="48.1" stroke="#2a303b"/><polygon points="120.0,44.0 140.4,95.6 144.0,116.0 147.2,143.2 120.0,159.2 106.4,129.6 86.4,116.0 79.3,75.3" fill="rgba(61,232,216,.18)" stroke="#3de8d8" stroke-width="2"/><text x="120.0" y="4.0" text-anchor="middle" dominant-baseline="middle">CMB 15</text><text x="199.2" y="36.8" text-anchor="middle" dominant-baseline="middle">STL 6</text><text x="232.0" y="116.0" text-anchor="middle" dominant-baseline="middle">TECH 5</text><text x="199.2" y="195.2" text-anchor="middle" dominant-baseline="middle">SOC 8</text><text x="120.0" y="228.0" text-anchor="middle" dominant-baseline="middle">DRV 9</text><text x="40.8" y="195.2" text-anchor="middle" dominant-baseline="middle">MED 4</text><text x="8.0" y="116.0" text-anchor="middle" dominant-baseline="middle">COOL 7</text><text x="40.8" y="36.8" text-anchor="middle" dominant-baseline="middle">END 12</text></svg></div></section><section><p class="look">S6 · Grouped by what they're for</p><p class="why">Split into the work (combat, stealth, tech, social, driving, medical) and holding up (cool, endurance), with this season's change in green. Says how stats are used without a manual.</p><div class="panel"><div class="mhead"><div class="fwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf2bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf2h"><path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z"/></clipPath>
+    <clipPath id="pf2s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf2t"><path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z"/></clipPath>
+    <clipPath id="pf2b"><path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf2bg)"/>
+  
+
+  <g >
+  <path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z" fill="#7f5428"/>
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf2s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.7036 37 L27.7036 48 Q32 51 36.2964 48 L36.2964 37 Z" fill="#86685f"/><path d="M34.4964 38 L36.2964 37 L36.2964 48 L34.4964 49 Z" fill="#9bb89b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.380799999999997" cy="30" rx="2.062545" ry="3.69087" fill="#86685f"/>
+  <ellipse cx="43.619200000000006" cy="30" rx="2.062545" ry="3.69087" fill="#d49a76"/><path d="M44.519200000000005 27.286125 Q45.547525 30 44.3192 33.25665" stroke="#9bb89b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z" fill="#d49a76"/>
+  <g clip-path="url(#pf2h)">
+    <path d="M0 0 L30.594848 9 C25.55972 20 26.379392 31 30.5 48 L0 64 Z" fill="#86685f"/>
+    <path d="M34.9274 33 L42.909600000000005 29.8 L38.748 37.6 Z" fill="#af826b" opacity="0.75"/>
+    <path d="M64 0 L41.909600000000005 12 L42.409600000000005 30 L37.448 40.5 L64 64 Z" fill="#9bb89b"/>
+        
+    
+    
+    <g transform="translate(0 0.15670000000000073)"><path d="M22.290399999999998 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#af826b"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.1567 L29.44784 34.4699 L32.7 35.2699 L31.6 33.9699 Z" fill="#86685f"/>
+    <path d="M32.9 32.569900000000004 L33.5 34.569900000000004 L32.7 35.2699 Z" fill="#9bb89b" opacity="0.7"/>
+    <path d="M29.973200000000002 35.3699 Q32 35.7199 33.80144 35.3699" stroke="#7f5643" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf2e-1"><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z"/></clipPath><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z" fill="#e3d0c0"/><circle cx="27.677500000000002" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e-1)"/><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.927500000000002" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf2e1"><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z"/></clipPath><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z" fill="#e3d0c0"/><circle cx="36.9225" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e1)"/><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1725" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.677500000000002 25.103300000000004 Q27.0375 24.892920000000007 24.8775 25.684620000000006 L24.8775 26.326380000000004 Q27.0375 26.336880000000004 29.677500000000002 26.707700000000003 Z" fill="#4c331a"/><path d="M34.322500000000005 25.103300000000004 Q36.962500000000006 24.892920000000007 39.1225 25.684620000000006 L39.1225 26.326380000000004 Q36.962500000000006 26.336880000000004 34.322500000000005 26.707700000000003 Z" fill="#4c331a"/><path d="M29.4175 40.841499999999996 Q32 41.741499999999995 34.5825 40.841499999999996" stroke="#7f5643" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.2175 41.5415 Q32 43.102199999999996 33.782500000000006 41.5415 Z" fill="#c48769"/>
+  <g transform="translate(0 0.84)"></g>
+  <path d="M22.790399999999998 22 L24.290399999999998 24 L23.490399999999998 25.2 L25.290399999999998 28" stroke="#e3af97" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z" fill="#7f5428" />
+    <g clip-path="url(#pf2t)"><path d="M34.9274 0 L64 0 L64 30 L39.02576 30 Z" fill="#5e9e80" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  <path d="M19.290399999999998 26.2 L44.7096 25.8 L44.3096 31.2 L19.690399999999997 31.6 Z" fill="#0b0f14"/><path d="M19.8904 27.2 L44.1096 26.8" stroke="#3de8d8" stroke-width="0.6" opacity="0.85"/><path d="M36.7096 29.6 h2 M39.3096 29.6 h1" stroke="#3de8d8" stroke-width="0.5" opacity="0.6"/>
+  <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35 L43.1096 33 Z" fill="#d1ab95" opacity="0.85"/>
+        <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35" stroke="#6a4d3b" stroke-width="0.45" fill="none"/>
+        <circle cx="38.2096" cy="24.5" r="0.65" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg></div><div><div class="nm">Jax</div><div class="role">Pro · muscle · LV 6</div></div></div><div class="label">Stats</div><div class="gt">On the job</div><div class="gr"><svg class="icon " viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l9-9M14 5l5 5M12 7l5 5M5 15l4 4M3 21l3-3"/></g></svg><span class="gn">Combat</span><span class="gv">15</span><span class=gd>+1</span><span class="bar thin"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span></div><div class="gr"><svg class="icon " viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="2"/><path d="M4.5 10.5l5.6 1M19.5 10.5l-5.6 1M12 14v6"/></g></svg><span class="gn">Driving</span><span class="gv">9</span><span class=gd>+1</span><span class="bar thin"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></div><div class="gr"><svg class="icon " viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H10l-4 4v-4H4z"/></g></svg><span class="gn">Social</span><span class="gv">8</span><span class=gd></span><span class="bar thin"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span></div><div class="gr"><svg class="icon " viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c2.5-4 5.5-6 9-6s6.5 2 9 6c-2.5 4-5.5 6-9 6s-6.5-2-9-6z"/><path d="M4 4l16 16"/></g></svg><span class="gn">Stealth</span><span class="gv">6</span><span class=gd></span><span class="bar thin"><i></i><i></i><i></i><i></i><i></i></span></div><div class="gr"><svg class="icon " viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1"/><path d="M10 4v3M14 4v3M10 17v3M14 17v3M4 10h3M4 14h3M17 10h3M17 14h3"/></g></svg><span class="gn">Tech</span><span class="gv">5</span><span class=gd></span><span class="bar thin"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span></div><div class="gr"><svg class="icon " viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4h6v5h5v6h-5v5H9v-5H4V9h5z"/></g></svg><span class="gn">Medical</span><span class="gv">4</span><span class=gd></span><span class="bar thin"><i class="on"></i><i></i><i></i><i></i><i></i></span></div><div class="gt">Holding up</div><div class="gr"><svg class="icon " viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9v6M17 9v6M4 11v2M20 11v2M7 12h10"/></g></svg><span class="gn">Endurance</span><span class="gv">12</span><span class=gd></span><span class="bar thin"><i class="on"></i><i></i><i></i><i></i><i></i></span></div><div class="gr"><svg class="icon " viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-4 3 8 2-4h7"/></g></svg><span class="gn">Cool</span><span class="gv">7</span><span class=gd></span><span class="bar thin"><i class="on"></i><i></i><i></i><i></i><i></i></span></div></div></section></div>
+<ul class="notes">
+<li>Any "what they've become" look pairs with any stats look; the page order stays: header, level, what they've become, stats, the road.</li>
+<li>S2 and S4 show the scout's read of the ceiling, as the game does today only for the main stat, and only as a read (it can be wrong). Other stats have no read.</li>
+<li>S3's words (elite to weak) are placeholder bands; they'd come from the same bands the risk reads use.</li>
+<li>Tap targets: chips, tiles, slots, rows and words are 44px or taller (S4's bars and S5's corners open the stat on tap through a 44px row or hit area). Nothing is on hover only.</li>
+</ul></div>
+</body>
+</html>
