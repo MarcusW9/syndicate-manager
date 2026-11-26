@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Runner Page Redesign</title>
+<!-- Mockup, 2026-11-26. After the levels and power mockups and the pushback in chat: the recommended design (R1-R3) and four
+     variations drawn from first principles (V1-V4), to compare where a runner's data should sit. Proposal, not decided.
+     Street-terminal tokens from docs/UI-SKIN.md. Not wired to the game; names, numbers and lines are placeholders. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c0f; --panel:#12151b; --panel-2:#161a21; --line:#2a303b;
+  --text:#e9ecf1; --muted:#8a93a6; --accent:#ff3d5f; --accent-2:#3de8d8;
+  --warn:#f2d541; --danger:#ff4a4a; --good:#5fe0a5; --violet:#b48cff; --cut:10px;
+  --disp:'Rajdhani',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background-image:linear-gradient(rgba(61,232,216,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(61,232,216,.025) 1px,transparent 1px);
+  background-size:32px 32px;padding:16px max(16px,env(safe-area-inset-left)) 40px}
+.wrap{max-width:1400px;margin:0 auto}
+h1{font:700 22px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin:4px 0}
+h2{font:700 16px var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--warn);margin:30px 0 4px}
+.lede{color:var(--muted);max-width:820px;margin:0 0 18px}
+.grid{display:grid;gap:22px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));align-items:start}
+.look{font:700 13px var(--disp);letter-spacing:.16em;color:var(--accent-2);text-transform:uppercase;margin:0 0 6px}
+.why{color:var(--muted);font-size:13px;margin:0 0 10px;min-height:72px}
+.panel{position:relative;background:linear-gradient(var(--panel-2),var(--panel));border:1px solid var(--line);
+  clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%);padding:16px}
+.panel::before{content:"";position:absolute;top:-1px;left:16px;width:36px;height:2px;background:var(--accent-2)}
+.back{font:600 14px var(--disp);letter-spacing:.12em;color:var(--accent-2);text-transform:uppercase;min-height:24px}
+.title{font:700 24px/1.15 var(--disp);letter-spacing:.06em;text-transform:uppercase;margin:0}
+.k{font:700 11px var(--disp);letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+.label{font:700 12px var(--disp);letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin:18px 0 8px;display:flex;align-items:center;gap:10px}
+.label::after{content:"";flex:1;height:1px;background:var(--line)}
+.label.cy{color:var(--accent-2)}
+.small{font-size:12px;color:var(--muted)}
+.joss{color:var(--accent-2);font-style:italic}
+.cut7{clip-path:polygon(0 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%)}
+.face{border-radius:2px;flex:none}
+.fL{background:linear-gradient(160deg,#4a2a20 0 40%,#ff9a5a 40% 55%,#1b2340 55%)}
+.fV{background:linear-gradient(160deg,#2d3a52 0 40%,#3de8d8 40% 55%,#1b2340 55%)}
+.fM{background:linear-gradient(160deg,#2a2440 0 40%,#b48cff 40% 55%,#1b2340 55%)}
+.role{font:600 12px var(--disp);letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+/* segmented bars */
+.bar{display:flex;gap:1px;height:8px}
+.bar i{flex:1;background:#232a35}
+.bar i.on{background:#5a6478}.bar i.new{background:var(--accent-2)}.bar i.y{background:var(--warn)}
+.bar.thin{height:4px}
+.barline{display:flex;justify-content:space-between;font:600 12px var(--disp);letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-top:4px}
+.barline em{font-style:normal;color:var(--accent-2)}.barline strong{color:var(--warn)}
+.chip{display:inline-flex;align-items:center;gap:6px;font:700 12px var(--disp);letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);padding:4px 8px;min-height:30px}
+.chip.cy{border-color:var(--accent-2);color:var(--accent-2)}
+.chip.y{border-color:var(--warn);color:var(--warn)}
+.chip.r{border-color:#ff9a5a;color:#ff9a5a}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.btn{background:var(--accent);color:#fff;font:700 15px var(--disp);letter-spacing:.12em;padding:0 18px;min-height:44px;display:grid;place-items:center;margin-top:12px;text-transform:uppercase;
+  clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.btn.ghost{background:none;border:1px solid var(--accent-2);color:var(--accent-2)}
+.notes{margin-top:26px;color:var(--muted);font-size:13px;max-width:900px}
+.notes li{margin:4px 0}
+
+/* R1 runner page */
+.lvchip{display:inline-flex;align-items:baseline;gap:4px;font:700 13px var(--disp);letter-spacing:.12em;color:var(--accent-2)}
+.lvchip b{font-size:22px;letter-spacing:.02em}
+.who{display:flex;gap:12px;align-items:flex-start;margin-top:10px}
+.who .meta{flex:1;min-width:0}
+.oneline{margin:10px 0 0;font-size:15px;line-height:1.45}
+.become{display:grid;gap:6px}
+.brow{display:flex;gap:10px;align-items:center;min-height:44px;border:1px solid var(--line);background:var(--panel);padding:6px 10px}
+.brow .ic{width:24px;height:24px;border:1.5px solid currentColor;border-radius:50%;flex:none;opacity:.8}
+.brow .t{flex:1;font-size:14px}.brow .t b{display:block;font:700 14px var(--disp);letter-spacing:.08em;text-transform:uppercase}
+.brow.skill{color:var(--accent-2)}.brow.trait{color:var(--good)}.brow.pair{color:var(--violet)}.brow.set{color:#ff9a5a}
+.brow .t span{color:#c9cfda}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}
+.st{display:grid;grid-template-columns:1fr auto;align-items:end;min-height:44px;padding:4px 0;border-bottom:1px solid rgba(42,48,59,.6)}
+.st .n{font:700 20px/1 var(--disp)}
+.st .nm{font:600 12px var(--disp);letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.st .bar{grid-column:1/-1;margin-top:4px}
+.st.main .nm{color:var(--accent-2)}
+.road{border-left:2px solid var(--line);padding-left:12px;display:grid;gap:8px}
+.road div{position:relative;font-size:14px}
+.road div::before{content:"";position:absolute;left:-17px;top:6px;width:8px;height:8px;background:var(--line)}
+.road div.hi::before{background:var(--accent-2)}
+.road b{font:700 11px var(--disp);letter-spacing:.12em;color:var(--muted);margin-right:6px}
+
+/* R2 report */
+.came{border:1px solid var(--line);background:var(--panel);padding:12px;margin-top:8px}
+.came .top{display:flex;gap:10px;align-items:center}
+.came .top .nm{flex:1;font:700 17px var(--disp);letter-spacing:.04em}
+.came .say{margin:8px 0 6px;font-size:14px;color:#c9cfda}
+.ticks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.came.lv{border-color:var(--warn)}
+
+/* R3 roster */
+.rr{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;min-height:64px;padding:8px 0;border-bottom:1px solid rgba(42,48,59,.6)}
+.rr .nm{font:700 16px var(--disp);letter-spacing:.04em}
+.rr .line{font-size:13px;color:#c9cfda}
+.rr .lvn{font:700 13px var(--disp);letter-spacing:.1em;color:var(--accent-2);text-align:right}
+.rr .lvn b{display:block;font-size:22px;line-height:1}
+.rr .lvn.y{color:var(--warn)}
+
+/* V1 dossier */
+.dossier{font:15px/1.6 Georgia,'Times New Roman',serif;color:#d6dae2}
+.dossier p{margin:0 0 10px}
+.dossier .hl{color:var(--accent-2)}
+.fold{display:flex;justify-content:space-between;align-items:center;min-height:44px;border-top:1px solid var(--line);margin-top:8px;font:700 13px var(--disp);letter-spacing:.14em;color:var(--accent-2);text-transform:uppercase}
+
+/* V2 path */
+.path{position:relative;margin-left:22px;border-left:2px solid var(--line);padding-left:18px}
+.node{position:relative;margin-bottom:12px;min-height:44px}
+.node .dot{position:absolute;left:-31px;top:2px;width:24px;height:24px;display:grid;place-items:center;background:var(--bg);border:2px solid var(--line);font:700 12px var(--disp)}
+.node.done .dot{border-color:#5a6478;color:var(--text)}
+.node.now .dot{border-color:var(--accent-2);color:var(--accent-2)}
+.node.next .dot{border-color:var(--warn);color:var(--warn);border-style:dashed}
+.node .what{font:700 14px var(--disp);letter-spacing:.08em;text-transform:uppercase}
+.node .where{font-size:13px;color:var(--muted)}
+.node.big .what{color:var(--accent-2)}
+
+/* V3 HUD */
+.hud{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.ring{width:120px;height:120px;border-radius:50%;display:grid;place-items:center;text-align:center;
+  background:conic-gradient(var(--accent-2) 0 62%,var(--violet) 62% 74%,#232a35 74% 100%);position:relative}
+.ring::after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--panel)}
+.ring div{position:relative;z-index:1}
+.ring b{display:block;font:700 28px/1 var(--disp)}
+.ring small{font:700 10px var(--disp);letter-spacing:.14em;color:var(--muted)}
+.hbar{display:grid;grid-template-columns:44px 1fr 26px;gap:8px;align-items:center;font:700 12px var(--disp);letter-spacing:.1em;color:var(--muted);margin-top:6px}
+.hbar .t{height:10px;background:#232a35;position:relative}
+.hbar .t i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#5a6478,var(--accent-2))}
+.hbar .t s{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--warn)}
+.hbar span:last-child{color:var(--text);text-align:right}
+
+/* V4 card */
+.tcard{position:relative;width:100%;max-width:300px;margin:0 auto;border:1px solid var(--warn);background:linear-gradient(170deg,#1c1a12,#12151b 50%);padding:0 0 12px;
+  clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}
+.tcard .art{height:200px;background:linear-gradient(160deg,#4a2a20 0 38%,#ff9a5a 38% 52%,#1b2340 52%)}
+.tcard .lvbig{position:absolute;top:10px;left:12px;font:700 40px/1 var(--disp);color:var(--warn);text-shadow:0 2px 0 #000}
+.tcard .lvbig small{display:block;font-size:11px;letter-spacing:.16em}
+.tcard .rl{position:absolute;top:10px;right:16px;font:700 12px var(--disp);letter-spacing:.14em;color:var(--warn)}
+.tcard .nm{text-align:center;font:700 26px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin-top:8px}
+.tcard .ttl{text-align:center;font:700 11px var(--disp);letter-spacing:.16em;color:var(--warn);text-transform:uppercase}
+.tcard .six{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 6px;padding:10px 14px 0;text-align:center}
+.tcard .six div{font:700 20px/1 var(--disp)}.tcard .six small{display:block;font:700 10px var(--disp);letter-spacing:.14em;color:var(--muted)}
+.tcard .sig{margin:10px 14px 0;font-size:13px;color:#c9cfda;text-align:center}
+.minis{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px}
+.mini{border:1px solid var(--line);background:var(--panel);text-align:center;padding:0 0 6px;min-height:44px}
+.mini .a{height:54px}.mini b{display:block;font:700 13px var(--disp);letter-spacing:.06em;margin-top:4px}
+.mini span{font:700 11px var(--disp);color:var(--accent-2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>A runner, from first principles</h1>
+  <p class="lede">What a player wants to know about one of their people, in order: who they are now, are they getting better, what they can do, what happened to them. The recommendation follows the pushback: one progress number (the level), stats in words-and-bars, the person before the numbers, no power. Then four other ways to lay out the same runner, each drawn from scratch. Same runner throughout: Lychee, 22, infiltrator, level 5.</p>
+
+  <h2>Recommended</h2>
+  <div class="grid">
+
+    <!-- R1 -->
+    <section>
+      <p class="look">R1 · The runner's page: the person first</p>
+      <p class="why">Top to bottom in the order a player asks. A sentence from Joss says who they are now. One level, one bar. "What they've become" (skills, traits, partner, setbacks) comes before the stats. Stats are a quiet grid with next-point bars. The road at the bottom ties every level to where it was earned.</p>
+      <div class="panel">
+        <div class="back">← Crew</div>
+        <div class="who"><div class="face fL" style="width:64px;height:70px"></div>
+          <div class="meta"><div class="title">Lychee</div><div class="role">Pro · infiltrator · 22</div>
+            <div class="lvchip" style="margin-top:4px">LV <b>5</b></div></div></div>
+        <p class="oneline joss">"Went out a rookie in the spring. Now I'd send Lychee through any door in the Night Market alone."</p>
+        <div class="bar" style="margin-top:12px"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="barline"><span>Level 5</span><span>Level 6: <strong>a pick</strong> · about 3 jobs</span></div>
+
+        <div class="label cy">What they've become</div>
+        <div class="become">
+          <div class="brow skill cut7"><span class="ic"></span><span class="t"><b>Spotter's Eye</b><span>Learned at level 3</span></span></div>
+          <div class="brow trait cut7"><span class="ic"></span><span class="t"><b>Light-Fingered</b><span>From the weapon hunt</span></span></div>
+          <div class="brow pair cut7"><span class="ic"></span><span class="t"><b>Synergy · Vector</b><span>Steadier with Vector along</span></span></div>
+          <div class="brow set cut7"><span class="ic"></span><span class="t"><b>Overconfident</b><span>Fades after a failed roll</span></span></div>
+        </div>
+
+        <div class="label">Stats</div>
+        <div class="stats">
+          <div class="st main"><span class="nm">Stealth</span><span class="n">15</span><span class="bar thin"><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+          <div class="st"><span class="nm">Cool</span><span class="n">8</span><span class="bar thin"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></div>
+          <div class="st"><span class="nm">Combat</span><span class="n">6</span><span class="bar thin"><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i></span></div>
+          <div class="st"><span class="nm">Social</span><span class="n">5</span><span class="bar thin"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></span></div>
+        </div>
+        <p class="small" style="margin-top:6px">Four more stats one tap away. Tap any stat: what it does, and "nearly 9" in words.</p>
+
+        <div class="label">The road</div>
+        <div class="road">
+          <div class="hi"><b>DAY 61</b>Level 5 · weapon hunt, the Night Market. Made pro.</div>
+          <div><b>DAY 48</b>Level 4 · a week on a Docks guard post.</div>
+          <div class="hi"><b>DAY 30</b>Level 3 · learned Spotter's Eye after Clean Sheets.</div>
+          <div><b>DAY 1</b>Joined. Joss: "Quiet. Watch that one."</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- R2 -->
+    <section>
+      <p class="look">R2 · The trip report: a sentence, then the steps</p>
+      <p class="why">Each runner who went gets a card: Joss's line about them first, then the level bar with this trip lit, then only what changed as chips. A new level is the one card that lights up, and it carries the button. Nobody reads "Same as they left".</p>
+      <div class="panel">
+        <div class="back">← Today</div>
+        <div class="title" style="margin-top:10px">A weapon: got it</div>
+        <p class="small" style="margin:4px 0 0">The Night Market · 6 days · Scaled Typhoon to the stash · nobody hurt</p>
+
+        <div class="came lv cut7"><div class="top"><div class="face fL" style="width:40px;height:44px"></div><div class="nm">Lychee</div><span class="chip y">Level 5</span></div>
+          <p class="say joss">"Waited out a seller who thought the wait would win."</p>
+          <div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="new"></i><i class="new"></i><i class="new"></i><i class="new"></i><i class="new"></i></div>
+          <div class="ticks"><span class="chip cy">Stealth 14 → 15</span><span class="chip y">Now a pro</span><span class="chip" style="color:var(--good);border-color:var(--good)">New: Light-Fingered</span></div>
+          <div class="btn">Pick Lychee's level 5 skill</div>
+        </div>
+        <div class="came cut7"><div class="top"><div class="face fV" style="width:40px;height:44px"></div><div class="nm">Vector</div><span class="chip cy">+3 to level 4</span></div>
+          <p class="say joss">"Talked more this week than all of last month."</p>
+          <div class="bar"><i class="on"></i><i class="on"></i><i class="on"></i><i class="new"></i><i class="new"></i><i class="new"></i><i></i><i></i><i></i><i></i></div>
+          <div class="ticks"><span class="chip">Social: nearly 10</span></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- R3 -->
+    <section>
+      <p class="look">R3 · The roster row: three facts</p>
+      <p class="why">A row answers: who, how far along, what's going on with them. Level on the right in one place, a yellow number when a pick is waiting. The line in the middle is the one thing worth knowing today, in words. Tap the row for R1.</p>
+      <div class="panel">
+        <div class="back">← Crew</div>
+        <div class="title" style="margin:10px 0 6px">Crew</div>
+        <div class="rr"><div class="face fL" style="width:44px;height:48px"></div><div><div class="nm">Lychee</div><div class="line">Pro infiltrator · a pick waiting</div></div><div class="lvn y">LV<b>5</b></div></div>
+        <div class="rr"><div class="face fV" style="width:44px;height:48px"></div><div><div class="nm">Vector</div><div class="line">Rookie muscle · nearly level 4</div></div><div class="lvn">LV<b>3</b></div></div>
+        <div class="rr"><div class="face fM" style="width:44px;height:48px"></div><div><div class="nm">Mak</div><div class="line">Rookie tech · out: Docks post, 3 days left</div></div><div class="lvn">LV<b>2</b></div></div>
+        <p class="small" style="margin-top:10px">Rookie 1–4, pro 5–9, veteran 10 on: the tier word follows the level here (the owner's call).</p>
+      </div>
+    </section>
+  </div>
+
+  <h2>Variations</h2>
+  <div class="grid">
+
+    <!-- V1 -->
+    <section>
+      <p class="look">V1 · The dossier: words only</p>
+      <p class="why">Football Manager's scout report taken all the way: the runner is a page of prose built from their history and traits, with the level in the margin. Numbers fold away. Most atmosphere, least at-a-glance; growth has to be written well to land.</p>
+      <div class="panel">
+        <div class="back">← Crew</div>
+        <div class="who"><div class="face fL" style="width:56px;height:62px"></div>
+          <div class="meta"><div class="title">Lychee</div><div class="role">Pro · infiltrator · level 5</div></div></div>
+        <div class="dossier" style="margin-top:12px">
+          <p>Came to us at 22 with quick hands and nothing to say. <span class="hl">Made pro on the weapon hunt in the Night Market</span>, outwaiting a seller for a whole afternoon.</p>
+          <p>Best on quiet work. Marks targets for the others (<span class="hl">Spotter's Eye</span>). Steadier with Vector alongside. Lately a little too sure of every door.</p>
+          <p style="color:var(--muted)">Joss reckons Lychee could carry the hard quiet jobs, given the work.</p>
+        </div>
+        <div class="bar thin" style="margin-top:6px"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <div class="barline"><span>Level 5</span><span>a pick at 6</span></div>
+        <div class="fold">Numbers <span>›</span></div>
+      </div>
+    </section>
+
+    <!-- V2 -->
+    <section>
+      <p class="look">V2 · The path: levels as a journey</p>
+      <p class="why">Brotherhood's ladder drawn as a route. Each level is a stop saying what was picked and where it was earned (a job, a trip, a post). The next stop shows what's on offer. Shows "you made them" best; stats live on another tab.</p>
+      <div class="panel">
+        <div class="back">← Crew</div>
+        <div class="who"><div class="face fL" style="width:48px;height:52px"></div><div class="meta"><div class="title">Lychee</div><div class="role">Pro · infiltrator</div></div></div>
+        <div class="label cy">The road so far</div>
+        <div class="path">
+          <div class="node next"><span class="dot">6</span><div class="what">Next: one of three</div><div class="where">Breacher · Ricochet · a stealth push · about 3 jobs</div></div>
+          <div class="node now big"><span class="dot">5</span><div class="what">Pro · Light-Fingered</div><div class="where">Weapon hunt, the Night Market · day 61</div></div>
+          <div class="node done"><span class="dot">4</span><div class="what">Stealth push</div><div class="where">Guard post, the Docks · day 48</div></div>
+          <div class="node done big"><span class="dot">3</span><div class="what">Spotter's Eye</div><div class="where">Clean Sheets · day 30</div></div>
+          <div class="node done"><span class="dot">2</span><div class="what">Cool push</div><div class="where">Side work: night training · day 14</div></div>
+          <div class="node done"><span class="dot">1</span><div class="what">Joined</div><div class="where">Day 1</div></div>
+        </div>
+        <div class="btn ghost">Stats and gear ›</div>
+      </div>
+    </section>
+
+    <!-- V3 -->
+    <section>
+      <p class="look">V3 · The HUD: numbers forward</p>
+      <p class="why">The gacha-style read, for comparison: a big ring with power (earned in cyan, gear in violet) around the level, then stat bars with the wall marked. Fastest to compare two runners; the person is reduced to the numbers, which is the pushback.</p>
+      <div class="panel">
+        <div class="back">← Crew</div>
+        <div class="title" style="margin:10px 0 2px">Lychee</div><div class="role">Pro · infiltrator · 22</div>
+        <div class="hud" style="margin-top:12px">
+          <div class="ring"><div><small>LV</small><b>5</b><small>4,580 PWR</small></div></div>
+          <div>
+            <div class="hbar"><span>STL</span><span class="t"><i style="width:75%"></i><s style="left:85%"></s></span><span>15</span></div>
+            <div class="hbar"><span>COOL</span><span class="t"><i style="width:40%"></i><s style="left:60%"></s></span><span>8</span></div>
+            <div class="hbar"><span>CMB</span><span class="t"><i style="width:30%"></i><s style="left:45%"></s></span><span>6</span></div>
+            <div class="hbar"><span>SOC</span><span class="t"><i style="width:25%"></i><s style="left:40%"></s></span><span>5</span></div>
+          </div>
+        </div>
+        <div class="barline" style="margin-top:10px"><span><em>3,580</em> earned · <span style="color:var(--violet)">1,000</span> gear</span><span>yellow: the wall</span></div>
+        <div class="chips" style="margin-top:10px"><span class="chip cy">Spotter's Eye</span><span class="chip" style="color:var(--good);border-color:var(--good)">Light-Fingered</span><span class="chip" style="color:var(--violet);border-color:var(--violet)">Synergy</span><span class="chip r">Overconfident</span></div>
+      </div>
+    </section>
+
+    <!-- V4 -->
+    <section>
+      <p class="look">V4 · The card: a runner as a collectible</p>
+      <p class="why">One card per runner, like a sports card: big art, level in the corner, six key numbers, one signature line. The roster becomes a binder of cards. Makes each runner feel like something you own; the card is small, so the detail lives behind a tap.</p>
+      <div class="panel">
+        <div class="tcard">
+          <div class="art"></div>
+          <div class="lvbig">5<small>LEVEL</small></div><div class="rl">INFILTRATOR</div>
+          <div class="nm">Lychee</div><div class="ttl">Pro · Night Market quiet hands</div>
+          <div class="six"><div>15<small>STL</small></div><div>8<small>COOL</small></div><div>6<small>CMB</small></div><div>5<small>SOC</small></div><div>4<small>TECH</small></div><div>3<small>DRV</small></div></div>
+          <div class="sig">Spotter's Eye · Light-Fingered · with Vector</div>
+        </div>
+        <div class="label">The roster as a binder</div>
+        <div class="minis">
+          <div class="mini cut7"><div class="a fL"></div><b>Lychee</b><span>LV 5</span></div>
+          <div class="mini cut7"><div class="a fV"></div><b>Vector</b><span>LV 3</span></div>
+          <div class="mini cut7"><div class="a fM"></div><b>Mak</b><span>LV 2</span></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <ul class="notes">
+    <li><strong>What moves between them:</strong> where the level sits (beside the name, a ring, a corner, a path); whether stats lead (V3, V4) or follow the person (R1, V1); whether history is a list (R1), the main view (V2) or prose (V1); whether power exists at all (only V3).</li>
+    <li><strong>The recommendation mixes:</strong> R1's order (person, level, what they've become, stats, road), V2's road at the bottom, R2's report cards. V1's prose could replace Joss's one line later; V4's card could be the roster on a tablet.</li>
+    <li><strong>Assumed in R:</strong> one level (no power); level 1–10 picks are a skill or a stat push (more growth in a stat you choose, under the ceiling), not a flat +1; the tier word follows the level. Each is the owner's call.</li>
+    <li>"Light-Fingered", "Synergy", "Overconfident" and "Spotter's Eye" are real traits and skills; the trip that earns a trait (Light-Fingered from the weapon hunt) is not in the game yet.</li>
+    <li>Tap targets: rows, chips that open, buttons and stat cells are 44px or taller on a phone. Nothing is on hover only.</li>
+  </ul>
+</div>
+</body>
+</html>
