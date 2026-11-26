@@ -145,6 +145,8 @@ export function tickExpeditions(state) {
 
 const line = (state, e, d, crew, beat, opts = {}) => goalLine({ seed: state.seed, tripId: e.id, day: d, crew, district: e.district, facts: e.facts, goal: e.goal, beat, extra: { ...extraFor(e), ...(opts.extra ?? {}) }, ...opts });
 const write = (e, entry) => { e.log.push(entry); capLog(e.log); };
+/** A line's day without its aside, and the aside (or Joss's word) kept apart for the report's tap (core/advlog.js writeDay). */
+const said = (l, fallback, after = '') => ({ text: [l?.main ?? l?.text ?? fallback, after].filter(Boolean).join(' '), ...(l?.more ? { more: l.more } : {}) });
 
 function playDay(state, e, d, crew) {
   const g = GOALS[e.goal];
@@ -155,7 +157,7 @@ function playDay(state, e, d, crew) {
   }
   if (d === 1) {
     const l = line(state, e, d, crew, 'open');
-    write(e, { day: d, tone: 'plain', text: l?.text ?? 'The crew set out.' });
+    write(e, { day: d, tone: 'plain', ...said(l, 'The crew set out.') });
     return;
   }
   if (d >= e.days) { turn(state, e, d, crew, rng); return; }
@@ -172,7 +174,7 @@ function playDay(state, e, d, crew) {
   if (success) {
     e.progress += 1;
     const l = (back && line(state, e, d, crew, `${back}.lead`)) || line(state, e, d, crew, 'lead', { pairOk: true });
-    write(e, { day: d, tone: 'good', text: l?.text ?? 'A step closer.', stat });
+    write(e, { day: d, tone: 'good', ...said(l, 'A step closer.'), stat });
     return;
   }
   if (die <= EXPEDITION.snagDie) {
@@ -183,7 +185,7 @@ function playDay(state, e, d, crew) {
   const dead = rng() < 0.6;
   const l = dead ? ((back && line(state, e, d, crew, `${back}.deadEnd`)) || line(state, e, d, crew, 'deadEnd'))
     : line(state, e, d, crew, 'quiet.any', { pairOk: true, local: 'quiet' });
-  write(e, { day: d, tone: 'plain', text: l?.text ?? 'Nothing moved.', stat });
+  write(e, { day: d, tone: 'plain', ...said(l, 'Nothing moved.'), stat, quiet: true });
 }
 
 /** A snag's cost: a light injury when the line says someone got hurt, else a little cash. */
@@ -200,7 +202,7 @@ function snag(state, e, d, crew, l, rng) {
     e.spent = (e.spent ?? 0) + amount;
     cost = amount ? `−${money(amount)}.` : '';
   }
-  write(e, { day: d, tone: 'warn', text: [l?.text ?? 'Something went against them.', cost].filter(Boolean).join(' ') });
+  write(e, { day: d, tone: 'warn', ...said(l, 'Something went against them.', cost) });
 }
 
 /** A find on the side: cash at once, a Standard piece to the stash, or a rumour (intel on the district for a week). */
@@ -212,7 +214,7 @@ function find(state, e, d, crew, rng) {
     const l = line(state, e, d, crew, 'find.cash', { extra: { cash: money(amount) } });
     moveCash(state, amount, 'Found on a trip');
     e.finds.push(`${money(amount)} found`);
-    write(e, { day: d, tone: 'good', text: `${l?.text ?? `${money(amount)} turned up.`} +${money(amount)}.` });
+    write(e, { day: d, tone: 'good', ...said(l, `${money(amount)} turned up.`, `+${money(amount)}.`) });
     return;
   }
   if (kind === 'gear') {
@@ -220,13 +222,13 @@ function find(state, e, d, crew, rng) {
     (state.stash ??= []).push(item);
     const l = line(state, e, d, crew, 'find.gear');
     e.finds.push(`${item.name ?? itemName(item)} (${itemName({ ...item, tier: null }).toLowerCase()})`);
-    write(e, { day: d, tone: 'good', text: `${l?.text ?? 'Something useful turned up.'} To the stash: ${itemName({ ...item, tier: null }).toLowerCase()}.` });
+    write(e, { day: d, tone: 'good', ...said(l, 'Something useful turned up.', `To the stash: ${itemName({ ...item, tier: null }).toLowerCase()}.`) });
     return;
   }
   state.intel = { ...(state.intel ?? {}), [e.district]: { until: state.day + INTEL_DAYS, source: `a rumour from the ${GOALS[e.goal].name.toLowerCase()} hunt` } };
   const l = line(state, e, d, crew, 'find.rumour');
   e.finds.push(`a rumour: +${INTEL_BONUS} on jobs in ${districtText(e.district)} for a week`);
-  write(e, { day: d, tone: 'good', text: `${l?.text ?? 'A rumour, for later.'} Intel: +${INTEL_BONUS} on jobs in ${districtText(e.district)} until day ${state.day + INTEL_DAYS}.` });
+  write(e, { day: d, tone: 'good', ...said(l, 'A rumour, for later.', `Intel: +${INTEL_BONUS} on jobs in ${districtText(e.district)} until day ${state.day + INTEL_DAYS}.`) });
 }
 
 /** The last day: the goal in reach or not. A rough turn may break into a fight that calls you in; otherwise they close. */
@@ -234,7 +236,7 @@ function turn(state, e, d, crew, rng) {
   const g = GOALS[e.goal];
   const good = e.progress >= g.need;
   const l = line(state, e, d, crew, good ? 'turn.good' : 'turn.rough');
-  write(e, { day: d, tone: good ? 'good' : 'warn', text: l?.text ?? (good ? 'Within reach.' : 'It got harder.'), turn: true });
+  write(e, { day: d, tone: good ? 'good' : 'warn', ...said(l, good ? 'Within reach.' : 'It got harder.'), turn: true });
   if (!good && rng() < EXPEDITION.callChance) { callIn(state, e, d, crew); return; }
   closeExpedition(state, e, good ? 'met' : e.progress >= g.need - 1 && e.progress > 0 ? 'partial' : 'failed');
 }
@@ -247,7 +249,7 @@ function callIn(state, e, d, crew) {
   const l = line(state, e, d, crew, 'call');
   const n = COUNT_BY_THREAT[expeditionThreat(e)];
   const text = l?.text ?? 'The deal went wrong, and they are calling it in.';
-  write(e, { day: d, tone: 'bad', text });
+  write(e, { day: d, tone: 'bad', ...said(l, 'The deal went wrong, and they are calling it in.') });
   e.waiting = true;
   for (const op of crew) op.condition.awayUntil = Math.max(op.condition.awayUntil ?? 0, state.day + 1); // out until it's answered
   state.inbox.unshift({
@@ -380,7 +382,8 @@ export function closeExpedition(state, e, outcome, { text = null, fight = false 
   if (text) write(e, { day: d, tone: fight ? (outcome === 'met' ? 'good' : 'warn') : 'warn', text, ...(fight ? { fight: true } : {}) });
   if (crew.length) {
     const l = line(state, e, d, crew, `close.${outcome}`, { joss: false, aside: false, key: ':close' });
-    if (l) write(e, { day: d, tone: outcome === 'met' ? 'good' : outcome === 'partial' ? 'plain' : 'warn', text: `${l.text}${outcome === 'partial' ? '' : jossClose(state.seed, e.id, e.goal, outcome === 'met')}` });
+    const joss = outcome === 'partial' ? '' : jossClose(state.seed, e.id, e.goal, outcome === 'met').trim();
+    if (l) write(e, { day: d, tone: outcome === 'met' ? 'good' : outcome === 'partial' ? 'plain' : 'warn', text: l.main ?? l.text, ...([l.more, joss].filter(Boolean).length ? { more: [l.more, joss].filter(Boolean).join(' ') } : {}) });
   }
   const results = [];
   if (outcome === 'met' || outcome === 'partial') {
@@ -417,12 +420,12 @@ export function closeExpedition(state, e, outcome, { text = null, fight = false 
   state.inbox.unshift({
     id: `exp-${e.id}-${state.day}`, type: 'report', day: state.day,
     subject: `${g.name}, ${districtText(e.district)}: ${word}`,
-    body: [...e.log.map((l) => l.text), ...results.map((r) => r.text)].join(' '),
+    body: [...e.log.map((l) => l.text), ...results.map((r) => r.text)].join(' '), // the days only: asides stay in the report's full view
     back: { crewIds: [...e.crewIds], pay: 0, away: true, expedition: true, growth: sumGrowth(e.grew), graduated: [...(e.graduated ?? [])] },
     timeline: {
       result: outcome === 'met' ? 'completed' : outcome === 'partial' ? 'aborted' : 'setback',
       steps: [], outcome: results,
-      days: e.log.map(({ day, text }) => ({ day, text })),
+      days: e.log.map(({ day, text, more, quiet, turn: t }) => ({ day, text, ...(more ? { more } : {}), ...(quiet ? { quiet } : {}), ...(t ? { turn: t } : {}) })),
       expedition: { goal: e.goal, district: e.district, outcome },
     },
     blocking: false, read: false,

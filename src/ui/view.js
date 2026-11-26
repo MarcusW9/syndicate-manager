@@ -19,6 +19,7 @@ export const V = {
   cityDistrict: null, // the district picked on the City map (the map zooms onto it), or the district page open on City › Districts
   mapView: FULL_VIEW, // where the City map was looking when last drawn ([x, y, w, h]); it eases from here to the next view
   mapTo: null, // the view the map is heading for, set while drawing it
+  daysFull: null, // the report whose days out are shown in full (ui/messages.js renderDaysOut), by message id
   outOpen: null, // the crew-out row opened in place (ui/outrows.js), by its key
   cityTab: 'map', // City's sub-tab: 'map' | 'districts' | 'tongs'
   loreTab: 'factions', // which Book section is showing (LORE_TABS)

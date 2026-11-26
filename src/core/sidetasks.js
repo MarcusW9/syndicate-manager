@@ -215,7 +215,7 @@ function resolve(state, { taskId, crewIds, log = [] }) {
     timeline: {
       result: success ? 'completed' : 'setback', steps: [line], outcome: results,
       // The days out, a line a day; the result is the last line (the adventure log, core/advlog.js).
-      ...(log.length ? { days: capLog([...log.map(({ day, text }) => ({ day, text })), { day: task.days, text: line }]) } : {}),
+      ...(log.length ? { days: capLog([...log.map(({ day, text, more, quiet }) => ({ day, text, ...(more ? { more } : {}), ...(quiet ? { quiet } : {}) })), { day: task.days, text: line }]) } : {}),
       side: { taskId, actor: roll.op.handle, stat: task.stat, value: roll.value, notes: roll.notes, die, need, success },
     },
     blocking: false, read: false,

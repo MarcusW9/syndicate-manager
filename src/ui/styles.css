@@ -3251,6 +3251,9 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .outrow__facts b { color: var(--accent-2); }
 .outrow__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
 .outrow__foot .linkbtn { min-height: var(--tap); }
+.advlog__quiet { color: var(--muted); font-style: italic; }
+.advlog__more { color: var(--muted); }
+.advlog__toggle { min-height: var(--tap); margin-top: 2px; }
 .advlog__head { font: 700 0.8rem/1.2 var(--display, inherit); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
 
 /* Expeditions (2026-11-22, Jobs › Expeditions, ui/expeditions.js): the district picked as two tiles side by side. */

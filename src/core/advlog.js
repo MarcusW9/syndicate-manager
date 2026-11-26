@@ -173,7 +173,8 @@ export function writeDay(ctx) {
   see(ctx.facts, line);
   if (/\{contactWhat\}/.test(line)) ctx.facts.met = true;
   if (/\{place\}/.test(line)) ctx.facts.placed = true; // a place callback needs one named first
-  let text = fillLine(line, ctxv.vars);
+  const main = fillLine(line, ctxv.vars);
+  let more = '';
 
   // Personality: an aside by {who}'s temperament about one day in three, or rarely a word from Joss.
   // Asides and Joss are extras: once a trip has used them all, it goes without rather than repeat one.
@@ -183,13 +184,15 @@ export function writeDay(ctx) {
   if (ctx.aside !== false && kind !== 'pair' && tags.length && extra < ASIDE_CHANCE) {
     const a = pickFrom(rng, fresh(fit(p.asides[pickFrom(rng, tags)])));
     see(ctx.facts, a);
-    text += ` ${fillLine(a, ctxv.vars)}`;
+    more = fillLine(a, ctxv.vars);
   } else if (ctx.joss !== false && fresh(fit(p.joss?.day)).length && extra > 1 - JOSS_CHANCE) {
     const j = pickFrom(rng, fresh(fit(p.joss.day)));
     see(ctx.facts, j);
-    text += ` ${j}`;
+    more = j;
   }
-  return { text, stat, whoId: who.id, kind };
+  // text is the whole day as before; main and more apart, so a report can lead with the day and keep the aside
+  // (or Joss's word) behind a tap (owner, 2026-11-26: the days out read as a wall of text).
+  return { text: more ? `${main} ${more}` : main, main, more, stat, whoId: who.id, kind };
 }
 
 /**
@@ -218,13 +221,13 @@ export function jobDayBeat(seed, tripId, day) {
 export function jobDayLine({ seed, tripId, day, crew, district, facts }) {
   const beat = jobDayBeat(seed, tripId, day);
   const out = writeDay({ seed, tripId, day, crew, district, facts, pool: JOB_DAYS[beat], quiet: beat === 'waiting' ? 0.5 : 0, pairOk: day > 1 });
-  return out && { day, text: out.text, beat };
+  return out && { day, text: out.main, ...(out.more ? { more: out.more } : {}), beat, ...(out.kind === 'quiet' ? { quiet: true } : {}) };
 }
 
 /** A side task's line for a day before its last (core/sidetasks.js): { day, text } or null. Joss's job-day lines don't fit side work. */
 export function sideDayLine({ seed, tripId, day, crew, district, facts, purpose }) {
   const out = writeDay({ seed, tripId, day, crew, district, facts, pool: { any: [...(SIDE_DAYS[purpose] ?? []), ...SIDE_DAYS.any] }, quiet: 0.2, pairOk: true, personality: { ...JOB_DAYS, joss: null } });
-  return out && { day, text: out.text };
+  return out && { day, text: out.main, ...(out.more ? { more: out.more } : {}), ...(out.kind === 'quiet' ? { quiet: true } : {}) };
 }
 
 /** A list from a goal file by path ("find.cash", "close.met", "call"); a plain list is treated as "any". */

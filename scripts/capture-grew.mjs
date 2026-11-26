@@ -64,6 +64,15 @@ try {
   await p.evaluate(() => document.querySelector('.timeline__results')?.scrollIntoView({ block: 'center' }));
   await p.waitForTimeout(200);
   await p.screenshot({ path: `${out}/02-phone-report-came-back-sharper.png` });
+  // The days out, short and in full (2026-11-26).
+  await p.evaluate(() => document.querySelector('.advlog--report')?.scrollIntoView({ block: 'start' }));
+  await p.waitForTimeout(200);
+  await p.screenshot({ path: `${out}/03-phone-days-out-short.png` });
+  await p.evaluate(() => document.querySelector('[data-action="days-full"]')?.click());
+  await p.waitForTimeout(300);
+  await p.evaluate(() => document.querySelector('.advlog--report')?.scrollIntoView({ block: 'start' }));
+  await p.waitForTimeout(200);
+  await p.screenshot({ path: `${out}/04-phone-days-out-full.png` });
 } finally {
   await b.close();
   process.kill(-srv.pid);

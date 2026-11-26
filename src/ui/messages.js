@@ -115,7 +115,7 @@ function renderReportTimeline(m) {
       ${reportCrew(m)}
       ${reportSpoils(m)}
       ${renderReportSummary(m.timeline)}
-      ${renderDaysOut(m.timeline?.days, steps)}
+      ${renderDaysOut(m.timeline?.days, steps, m.id)}
       <ol class="timeline">
         ${steps.map((text, i) => `<li class="timeline__item" style="--i:${i}"><span class="timeline__node" aria-hidden="true">${i + 1}</span><p class="timeline__text">${crewLinks(text)}</p></li>`).join('')}
         ${outcome.length ? `<li class="timeline__item timeline__item--end timeline__item--${esc(result ?? 'plain')}" style="--i:${steps.length}">
@@ -133,12 +133,26 @@ function renderReportTimeline(m) {
  * A hands-off job's or side task's days out, a line a day (the adventure log, core/advlog.js), above
  * the timeline. A side task's last day is its result, already the timeline's step: not said twice.
  */
-function renderDaysOut(days, steps = []) {
+function renderDaysOut(days, steps = [], id = '') {
   const list = (days ?? []).filter((d) => !steps.includes(d.text));
   if (!list.length) return '';
+  // Short by default (owner, 2026-11-26: six days read as a wall of text): one line a day, without the aside or
+  // Joss's word, and a run of quiet days folded to one line. Every day in full is one tap away (V.daysFull).
+  const full = V.daysFull === id;
+  const hidden = list.some((d) => d.more || d.quiet);
+  const rows = [];
+  for (const d of list) {
+    const prev = rows.at(-1);
+    if (!full && d.quiet && prev?.quiet) { prev.to = d.day; continue; }
+    rows.push(!full && d.quiet ? { quiet: true, from: d.day, to: d.day } : d);
+  }
+  const row = (r) => r.quiet && r.from != null
+    ? `<li class="small advlog__quiet"><span class="advlog__day">${r.from === r.to ? `Day ${r.from}` : `Days ${r.from}–${r.to}`}</span> Quiet.</li>`
+    : `<li class="small"><span class="advlog__day">Day ${r.day}</span> ${crewLinks(r.text)}${full && r.more ? ` <span class="advlog__more">${crewLinks(r.more)}</span>` : ''}</li>`;
   return `<div class="advlog advlog--report">
       <h3 class="advlog__head">The days out</h3>
-      <ol class="advlog__days">${list.map((d) => `<li class="small"><span class="advlog__day">Day ${d.day}</span> ${crewLinks(d.text)}</li>`).join('')}</ol>
+      <ol class="advlog__days">${rows.map(row).join('')}</ol>
+      ${hidden ? `<button class="linkbtn advlog__toggle" data-action="days-full" data-id="${esc(id)}" aria-expanded="${full}">${full ? 'Fewer words' : 'Every day, in full'}</button>` : ''}
     </div>`;
 }
 

@@ -174,7 +174,7 @@ Format: JSON of the state in `localStorage`. Keys: `syndicate-active-slot`, `syn
 
 **Versioning:** `SAVE_VERSION` 92 in `core/state.js` (v73-v76 and v80-v81 are described in the `migrate` blocks of `save.js`). What each version added, newest first (one per line; grep `v52:`):
 
-- v92: who grew while away (`core/grew.js`): an expedition (`expeditions.active[]`) and a security post (`contracts.active[]`) carry `grew` ([{ opId, handle, stat, from, to }], each whole-point rise) and `graduated` (op ids); their reports carry `back.growth` (folded per runner and stat) and `back.graduated`; migration writes empty lists.
+- v92: who grew while away (`core/grew.js`): an expedition (`expeditions.active[]`) and a security post (`contracts.active[]`) carry `grew` ([{ opId, handle, stat, from, to }], each whole-point rise) and `graduated` (op ids); their reports carry `back.growth` (folded per runner and stat) and `back.graduated`; migration writes empty lists. Also (no migration needed, old entries read as before): a day's log entry (`am.advlog.log`, `sideOut[].log`, an expedition's `log`, a report's `timeline.days`) keeps the aside or Joss's word apart in `more` and marks a quiet day `quiet: true`; `text` is the day alone.
 - v91: the top bar's change can be opened: `cashToday` (today's money movements, `core/money.js moveCash`).
 - v90: longer jobs and rewards you can see (prep stops, routes, `unseen` stash items); nothing to change.
 - v89: "trail" renamed (`core/multimap.js`): a run's `trail` is `maps: { at, path, wrongUsed, then }`, the last map is `finale` (was `held`) in it, in its queue and in its stop events (`finale: true`, was `held: true`). A job's template key is `maps`, its stop crises `stop: true`.
