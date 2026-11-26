@@ -428,7 +428,7 @@ export function onClick(e) {
       const next = sendOnSideTask(state, V.sidePlan.taskId, V.sidePlan.crew);
       V.sidePlan = null;
       nav.clear();
-      V.screen = 'city'; V.cityTab = 'map'; V.cityDistrict = null;
+      V.screen = 'inbox'; // back to Today, where the day's work is (2026-11-26); crews out are followed on City › Map
       return setState(next);
     }
     case 'send-job': {
@@ -439,7 +439,7 @@ export function onClick(e) {
         crewIds: [...out.mission.crewIds, out.mission.overwatch?.id, out.mission.wheels, out.mission.standby?.id].filter(Boolean) };
       V.plan = null;
       nav.clear();
-      V.screen = 'city'; V.cityTab = 'map'; V.cityDistrict = null;
+      V.screen = 'inbox'; // back to Today, where the day's work is (2026-11-26); crews out are followed on City › Map
       V.openMessageId = null;
       return setState(next);
     }
@@ -453,7 +453,7 @@ export function onClick(e) {
           crewIds: [...out.mission.crewIds, out.mission.overwatch?.id, out.mission.wheels, out.mission.standby?.id].filter(Boolean) };
         V.plan = null;
         nav.clear();
-        V.screen = 'city'; V.cityTab = 'map'; V.cityDistrict = null;
+        V.screen = 'inbox'; // back to Today, where the day's work is (2026-11-26); crews out are followed on City › Map
         V.openMessageId = null;
         return setState(next);
       }

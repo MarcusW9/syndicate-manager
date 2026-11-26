@@ -8,7 +8,7 @@ The current look of every screen. Moved word for word from `ART.md` on 2026-11-1
 | `--panel` / `--panel-2` | `#12151b` / `#161a21` | panels (vertical gradient 2 → 1) |
 | `--line` | `#2a303b` | borders, hairlines |
 | `--text` / `--muted` | `#e9ecf1` / `#8a93a6` | reading text / secondary |
-| `--accent` | `#ff3d5f` signal red | actions (Continue, Start), the active tab marker |
+| `--accent` | `#ff3d5f` signal red | actions (Continue, Start), the active tab marker; Continue drops to an outline in it (`.continue--quiet`) while a free crew has a job that fits, so Today's first Plan it leads |
 | `--accent-2` | `#3de8d8` cyan | structure: section heads, panel tabs, unread, Joss |
 | `--warn` | `#f2d541` sodium yellow | warnings, tier badge |
 | `--danger` | `#ff4a4a` | money short, losses |

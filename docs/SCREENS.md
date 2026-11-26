@@ -21,10 +21,10 @@ Navigation state (`screen`, `cityTab`, the open page ids) is module state in `ui
 
 ## Shell (every screen)
 
-- **Top bar:** day/clock, Cash, Heat, rank, Continue (hidden while planning a job), ☰ Save.
+- **Top bar:** day/clock, Cash (the day's ▲/▼ is a button: a tap opens **Cash today**, the day's money line by line, 2026-11-26), Heat, rank, Continue (hidden while planning a job; an outline instead of solid red while someone is free and a job on Today fits them), ☰ Save.
 - **Back:** a detail page (a message, a runner, a lead, the Armoury, a hall and its build, a plan, a tong, a name) has one Back control; root views have none.
 - **Tab bar:** Today · City · Tong · Crew · Jobs (five, the most there can be). Pills: Today's attention count (anything waiting on the player, each event once: `attentionCount` in `ui/nav.js`) and open jobs on Jobs; City and Tong show none. Save is the ☰ in the top bar. The **Book** (Who's who · History; was the Lore tab) is a link in City's header, reachable from every City sub-tab.
-- **Dock (phone):** Continue above the tab bar, except while planning or on a job.
+- **Dock (phone):** Continue above the tab bar, except while planning or on a job. Sending a crew (main job or side work) comes back to Today with the send-off (2026-11-26; it went to City › Map before).
 - **During a job:** tabs and Save step aside; the watch screen (`renderMission`) owns the page.
 - **Founding (new game):** only Today (the founder pick) and ☰ Save are enabled.
 

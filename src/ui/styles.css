@@ -879,6 +879,8 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .btn--ghost { clip-path: none; color: var(--accent-2); }
 .btn--primary { background: var(--accent); border-color: var(--accent); }
 .btn--primary:disabled { background: #2a1a20; border-color: #2a1a20; }
+/* Continue while there is work waiting (app.js renderContinue, 2026-11-26): an outline, so Today's Plan it leads. */
+.continue--quiet { background: var(--bg); border-color: var(--accent); color: var(--accent); }
 .continue__label { font-size: 1.1rem; }
 .continue__hint { font-family: var(--display); letter-spacing: 0.06em; font-size: 0.8rem; }
 
@@ -1057,7 +1059,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .slotchip.is-off { cursor: default; grid-template-columns: 1fr auto; column-gap: 8px; }
 .slotchip.is-off b { color: var(--muted); }
 .slotchip.is-off small { grid-column: 1; }
-.slotchip__link { grid-column: 2; grid-row: 1 / span 2; align-self: center; min-height: 36px; padding: 0 8px; border: 0; background: none; color: var(--accent-2); font: 600 0.78rem system-ui, sans-serif; cursor: pointer; }
+.slotchip__link { grid-column: 2; grid-row: 1 / span 2; align-self: center; min-height: 44px; padding: 0 8px; border: 0; background: none; color: var(--accent-2); font: 600 0.78rem system-ui, sans-serif; cursor: pointer; }
 .jossline { margin: 8px 0 0; font-size: 0.82rem; line-height: 1.4; color: var(--text); } .jossline b { font: 700 0.74rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); } /* Joss's reason for their picks (2026-11-05) */
 .brief--short { margin-bottom: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; } /* the brief after the first read (2026-11-05) */
 .linkbtn { min-height: var(--tap, 44px); padding: 0; margin-bottom: 8px; border: 0; background: none; color: var(--accent-2); font: 600 0.8rem system-ui, sans-serif; cursor: pointer; }

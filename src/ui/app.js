@@ -31,7 +31,7 @@ import { renderRaidCallSheet } from './raidcards.js';
 import { renderFounding, renderSettings } from './settings.js';
 import { esc, districtName, hallLabel, fillLine, pickLine, face, rootBack, cityName } from './shared.js';
 import { NAMES } from '../config/names.js';
-import { renderInbox, renderDesk } from './today.js';
+import { renderInbox, renderDesk, workWaiting } from './today.js';
 import { root, setRoot, state, setGame, backLabel, V } from './view.js';
 
 export function mountApp(el, initialState) {
@@ -286,7 +286,9 @@ function renderContinue(blocked, resting, unread, where) {
   const warn = blocked ? '' : raidUnplanned();
   const hint = warn ? `<span class="continue__hint is-warn">${esc(warn)}</span>`
     : !blocked && waiting ? `<span class="continue__hint">${esc(waiting)}</span>` : '';
-  return `<button class="btn btn--primary continue ${where} ${resting && !blocked ? 'is-resting' : ''}" data-action="continue" ${blocked || resting ? 'disabled' : ''}>
+  // Work waiting (someone free, a job that fits): Continue steps back so Plan it leads (2026-11-26). Still one tap.
+  const quiet = !blocked && !resting && !state.activeMission && !state.founding && workWaiting();
+  return `<button class="btn ${quiet ? 'continue--quiet' : 'btn--primary'} continue ${where} ${resting && !blocked ? 'is-resting' : ''}" data-action="continue" ${blocked || resting ? 'disabled' : ''}>
       <span class="continue__label">${esc(label)}</span>${hint}
     </button>`;
 }

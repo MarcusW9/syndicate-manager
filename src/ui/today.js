@@ -459,7 +459,7 @@ const freeToday = () => state.crew.filter((op) => availability(state, op).ok);
  *  says why, so the obvious tap never sends one rookie alone into two-person work. Planning it by hand still works. */
 const shortFor = (j, free = freeToday().length) => free < (jobView(state, j).tpl.crewSize ?? 1);
 
-function deskJobCard(j) {
+function deskJobCard(j, lead = false) {
   const v = jobView(state, j);
   const ends = j.expiresDay === state.day ? 'Last day' : j.expiresDay === state.day + 1 ? 'Ends tomorrow' : 'New';
   const free = freeToday().length;
@@ -471,8 +471,15 @@ function deskJobCard(j) {
         <p class="dcard__line">${esc(ends)} · ${esc(v.client?.name ?? 'Walk-in job')}${v.days > 1 ? ` · ${v.days} days` : ''}</p>
         ${short ? `<p class="dcard__line dcard__short">Wants ${v.tpl.crewSize}; ${free ? `only ${free} free` : 'nobody free'} today.</p>` : ''}
       </div>
-      <button class="btn ${short ? 'btn--ghost' : ''} dcard__go" data-action="open-job" data-id="${esc(j.id)}">Plan it</button>
+      <button class="btn ${short ? 'btn--ghost' : lead ? 'btn--primary' : ''} dcard__go" data-action="open-job" data-id="${esc(j.id)}">Plan it</button>
     </li>`;
+}
+
+/** Someone is free and a job on Today's list fits them (2026-11-26): Continue steps back and that job's Plan it leads,
+ *  so a new player's obvious tap is the work, not skipping the day. */
+export function workWaiting() {
+  const free = freeToday().length;
+  return free > 0 && deskJobs().shown.some((j) => !shortFor(j, free));
 }
 
 /** Joss, when someone is free but no job on the board wants that few: rest them, or side work (2026-11-26). */
@@ -630,7 +637,7 @@ export function renderDesk() {
           ${decisions.length ? `<ul class="dcards">${decisions.map(deskCard).join('')}</ul>` : ''}
           ${!count && !gear && !paidOut ? '<p class="muted desk__clear">A clear desk.</p>' : ''}
           ${jobs.length || rest ? `<h2 class="desk__h">On the board${state.jobs.length ? ` · ${state.jobs.length}` : ''}</h2>` : ''}
-          ${jobs.length ? `<ul class="dcards">${jobs.map(deskJobCard).join('')}</ul>` : ''}
+          ${jobs.length ? `<ul class="dcards">${jobs.map((j, i) => deskJobCard(j, i === jobs.findIndex((x) => !shortFor(x)))).join('')}</ul>` : ''}
           ${shortHandedLine(jobs)}
           ${rest ? `<button class="deskpile" data-action="goto" data-id="jobs:board">${jobs.length ? `${rest} more` : `${rest} ${rest === 1 ? 'job' : 'jobs'}`} on the board · Jobs ›</button>` : ''}
         </section>
