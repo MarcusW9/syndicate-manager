@@ -1,6 +1,6 @@
 # Management-game comparators: what players asked for, and where they bounced
 
-Started 2026-11-26. Sources: an r/rpg_gamers thread asking for RPGs where you build up and run a guild or company, Steam reviews of King of Dragon Pass (KoDP) and Steam reviews of Majesty Gold HD, all shared by the owner.
+Started 2026-11-26. Sources: an r/rpg_gamers thread asking for RPGs where you build up and run a guild or company, and Steam reviews of King of Dragon Pass (KoDP), Majesty Gold HD and Fallout Shelter, all shared by the owner.
 
 ## 1. The Reddit thread: games named as comparators
 
@@ -62,7 +62,27 @@ Majesty is billed as a fantasy kingdom sim but plays like a conventional RTS: yo
 
 **Lesson:** the autonomy is the product. Do not hand the player direct control to make a hands-off system feel safer; add readable incentives instead.
 
-## 4. How this applies to Syndicate Manager
+## 4. Fallout Shelter (Steam reviews)
+
+A free-to-play vault builder (mobile first, also on PC): you assign dwellers to rooms, keep resources up, defend against breaches, and send dwellers out to explore the wasteland and run quests. It runs on a real-time clock. The owner shared it as the closest vibe: a crew you look after and send out.
+
+**What reviewers loved**
+- Watching the vault grow, looking after the dwellers, sending them out to explore.
+- Low stress and casual: "a good game to drift in and out of", playable in a small window beside another game.
+- Check-in play: "the quest system is fun to check in on every once in a while"; one player plays daily for months, drops it for a year, then comes back.
+- Humor and small stories: dwellers' pickup lines, chaos when roaches break through the floor, "actual storylines that keep your attention".
+- Breaches that pull you back in at a moment's notice.
+
+**Where reviewers bounced**
+- Progress gets repetitive after a while.
+- Mission animations are choppy and the combat "outdated and boring, even by mobile game standards".
+- Microtransactions (lunchboxes) in a single-player game: pointless at best, a trap at worst; trivially got for free by editing files.
+- Achievements are a long grind without editing the save.
+- Daily-login seasons: one player dropped out because they could not log in every day.
+
+**Lesson:** the pull is caring for people and sending them out, in short sessions. The weak spots are repetition and a fight layer nobody wants to watch.
+
+## 5. How this applies to Syndicate Manager
 
 1. **Show risk, do not hide it.** The planning read (`core/squad.js`, `core/risk.js`) and the rule that deaths follow a risk the player was shown answer the "hidden information" complaint. Keep one clear read per decision; do not pile up small ones.
 2. **Visible progression in an endless game.** The sharpest negative review is "no clear progression" plus rivals the player can never really dent. We already have markers (rank and standing in words on the Tong tab, halls, the Anchor's Book), and rival tongs rise, strain and fold in the background (`docs/RIVAL-TONGS.md`). The player cannot attack a rival directly; their levers are signing, buyouts and poaching. Worth checking in a playtest: does the player feel their own moves changed a rival's fortunes, or only watch the weather?
@@ -71,9 +91,15 @@ Majesty is billed as a fantasy kingdom sim but plays like a conventional RTS: yo
 5. **Safe defaults.** On any screen with a risky action, the preselected one is the safe one (iOS-ready rules already say no hover-only info).
 6. **Save policy.** Already decided: `save.js` keeps three slots, saves as you play, makes a weekly automatic backup (not for Ironman) and reminds about backups every 28 days. KoDP's split over savescumming suggests keeping Ironman as an opt-in rather than the default.
 7. **Streamline.** Cut systems the player would only manage by hand.
-8. **Indirect control where we have it.** Main jobs are planned and played by hand, so Majesty's lesson applies only to hands-off runs (`core/autorun.js`), where standing orders price each downside as a share of the pay, much like a bounty. If those feel too loose, the Majesty lesson is to make the orders more readable, not to add hands-on control mid-run. Separately, character voice in the small lines (Majesty's catch-phrases, the advisor) is what players remember.
+8. **Indirect control where we have it.** Main jobs are planned and played by hand, so Majesty's lesson applies only to hands-off runs (`core/autorun.js`), where standing orders price each downside as a share of the pay, much like a bounty. If those feel too loose, the Majesty lesson is to make the orders more readable, not to add hands-on control mid-run. Separately, character voice in the small lines (Majesty's catch-phrases, the advisor, Fallout Shelter's dwellers) is what players remember.
 
-## 5. Open checks
+9. **Short sessions and coming back.** Fallout Shelter is played in short check-ins and picked up again after months. Ours runs on in-game days, not a real-time clock (real-time expedition timers were rejected, design log 2026-11-21), so no daily-login pressure; keep it that way. Saves already upgrade across versions; what we lack is a recap for a player returning after a long break (what is out, who is hurt, what is owed). Worth a look.
+10. **Sending crew out is the draw.** Expeditions and hands-off runs (`core/expeditions.js`, `core/autorun.js`) are our version of the wasteland trips. Their reports are where the small stories and humor land.
+11. **Fights must be worth watching, or skippable.** Fallout Shelter's combat is its most criticised part. The watchable-combat work (`docs/BATTLES.md`) is the answer; hands-off fights should always offer a short report instead.
+12. **No paid shortcuts.** Not a plan here, but the reviews are unanimous: paid loot in a single-player game reads as a trap.
+
+## 6. Open checks
 
 - When cash goes below zero, does the screen show a way out? (The sims already measure how often it happens.)
 - In a playtest: does the player feel their signings, buyouts and poaching changed a rival tong's fortunes?
+- Returning after a long break: does the first screen tell the player enough to pick the run back up?
