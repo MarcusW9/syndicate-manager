@@ -452,17 +452,35 @@ function deskJobs() {
   return { shown, rest: state.jobs.length - shown.length };
 }
 
+/** Who could go out today (free and fit to work). */
+const freeToday = () => state.crew.filter((op) => availability(state, op).ok);
+
+/** A job the free crew can't staff at the size it asks for (2026-11-26): Today still lists it, but quietly, and
+ *  says why, so the obvious tap never sends one rookie alone into two-person work. Planning it by hand still works. */
+const shortFor = (j, free = freeToday().length) => free < (jobView(state, j).tpl.crewSize ?? 1);
+
 function deskJobCard(j) {
   const v = jobView(state, j);
   const ends = j.expiresDay === state.day ? 'Last day' : j.expiresDay === state.day + 1 ? 'Ends tomorrow' : 'New';
+  const free = freeToday().length;
+  const short = shortFor(j, free);
   return `
-    <li class="dcard dcard--job ${j.expiresDay === state.day ? 'is-last' : ''}">
+    <li class="dcard dcard--job ${j.expiresDay === state.day ? 'is-last' : ''} ${short ? 'is-short' : ''}">
       <div class="dcard__text">
         <p class="dcard__title"><strong>${esc(v.tpl.name)}</strong> <span class="dcard__pay">${money(v.pay)}</span></p>
         <p class="dcard__line">${esc(ends)} · ${esc(v.client?.name ?? 'Walk-in job')}${v.days > 1 ? ` · ${v.days} days` : ''}</p>
+        ${short ? `<p class="dcard__line dcard__short">Wants ${v.tpl.crewSize}; ${free ? `only ${free} free` : 'nobody free'} today.</p>` : ''}
       </div>
-      <button class="btn dcard__go" data-action="open-job" data-id="${esc(j.id)}">Plan it</button>
+      <button class="btn ${short ? 'btn--ghost' : ''} dcard__go" data-action="open-job" data-id="${esc(j.id)}">Plan it</button>
     </li>`;
+}
+
+/** Joss, when someone is free but no job on the board wants that few: rest them, or side work (2026-11-26). */
+function shortHandedLine(jobs) {
+  const free = freeToday();
+  if (!free.length || !state.jobs.length || state.jobs.some((j) => !shortFor(j, free.length))) return '';
+  const who = free.length === 1 ? `Only ${free[0].handle} is free` : `Only ${free.length} of us are free`;
+  return `<p class="desk__short">${esc(NAMES.partner)}: ${esc(who)}, and every job on the board wants more hands. Rest, or take side work till the others are back. <button class="btn btn--ghost" data-action="goto" data-id="jobs:side">Side work</button></p>`;
 }
 
 /** One runner's state for the roster: null when free to work. */
@@ -613,6 +631,7 @@ export function renderDesk() {
           ${!count && !gear && !paidOut ? '<p class="muted desk__clear">A clear desk.</p>' : ''}
           ${jobs.length || rest ? `<h2 class="desk__h">On the board${state.jobs.length ? ` · ${state.jobs.length}` : ''}</h2>` : ''}
           ${jobs.length ? `<ul class="dcards">${jobs.map(deskJobCard).join('')}</ul>` : ''}
+          ${shortHandedLine(jobs)}
           ${rest ? `<button class="deskpile" data-action="goto" data-id="jobs:board">${jobs.length ? `${rest} more` : `${rest} ${rest === 1 ? 'job' : 'jobs'}`} on the board · Jobs ›</button>` : ''}
         </section>
       </div>

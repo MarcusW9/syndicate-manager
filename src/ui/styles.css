@@ -3277,6 +3277,8 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .dcard__when { flex: none; align-self: flex-start; font-family: var(--display, inherit); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .dcard.is-last .dcard__when, .dcard.is-urgent .dcard__when { color: var(--danger); }
 .dcard__pay { color: var(--accent-2); font-weight: 600; }
+.dcard__line.dcard__short { color: var(--warn, #f5b942); }
+.desk__short { margin: 8px 0; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .dcard__line { margin: 2px 0 0; color: var(--muted); font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .dcard__answers { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .dcard__answers .btn { min-height: var(--tap); }
