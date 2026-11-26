@@ -53,6 +53,16 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .stat__label { color: var(--muted); font-size: 0.75rem; margin-right: 4px; }
 .delta { font-size: 0.78rem; font-weight: 600; color: #5fe0a5; }
 .delta.is-down { color: var(--danger); }
+/* The change is a button: a tap opens the day's cash (app.js cashSheet). A 44px hit area without moving the bar. */
+.delta--btn { position: relative; background: none; border: 0; padding: 0; font: inherit; font-size: 0.78rem; font-weight: 600; color: #5fe0a5; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+.delta--btn.is-down { color: var(--danger); }
+.delta--btn::after { content: ''; position: absolute; left: -8px; right: -8px; top: 50%; height: 44px; transform: translateY(-50%); }
+.cashsheet__list { list-style: none; margin: 8px 0; padding: 0; }
+.cashsheet__list li, .cashsheet__total { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); margin: 0; }
+.cashsheet__list li b, .cashsheet__total b { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cashsheet__list li.is-up b { color: #5fe0a5; }
+.cashsheet__list li.is-down b { color: var(--danger); }
+.cashsheet__total { font-family: var(--display); font-weight: 700; border-bottom: 0; }
 /* The tong's rank is a button: tap it for what a tong is (DESIGN.md 2026-11-04). 44px tall to tap. */
 .tierbtn { min-height: 44px; display: inline-flex; align-items: center; background: none; border: 0; padding: 0; margin: -10px 0; cursor: pointer; font: inherit; color: inherit; }
 .topbar:has(> .infotext) { flex-wrap: wrap; }
@@ -869,6 +879,8 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .btn--ghost { clip-path: none; color: var(--accent-2); }
 .btn--primary { background: var(--accent); border-color: var(--accent); }
 .btn--primary:disabled { background: #2a1a20; border-color: #2a1a20; }
+/* Continue while there is work waiting (app.js renderContinue, 2026-11-26): an outline, so Today's Plan it leads. */
+.continue--quiet { background: var(--bg); border-color: var(--accent); color: var(--accent); }
 .continue__label { font-size: 1.1rem; }
 .continue__hint { font-family: var(--display); letter-spacing: 0.06em; font-size: 0.8rem; }
 
@@ -1012,7 +1024,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
    for the rest, no item names or slot hints. */
 @container board (max-width: 469px) {
   .board__mat { --cell: calc((100cqi - 41px) / 8); padding: 12px 10px 10px; background-position: 10px 12px; }
-  .board__mat::after { font-size: 2.4rem; }
+  .board__mat::after { display: none; } /* the approach word sat under the Outside slots' text; the approach is picked just above (2026-11-26) */
   .pcols { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
   .pola { padding: 4px 4px 0; }
   .pola__cap { padding: 3px 1px 5px; gap: 2px; }
@@ -1024,6 +1036,8 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
   .pcol__line { font-size: 0.62rem; } .pcol__line .icon { width: 11px; height: 11px; }
   .pcol--empty { min-height: 128px; padding: 4px; } .pcol--empty small { display: none; }
   .pcol--empty b { font-size: 0.62rem; letter-spacing: 0.08em; }
+  .board .otile { grid-template-columns: minmax(0, 1fr); padding: 5px 4px; } .board .otile__ic { display: none; }
+  .board .otile b { white-space: normal; overflow: visible; font-size: 0.6rem; letter-spacing: 0.04em; } .board .otile small { font-size: 0.62rem; } /* phones: the words need the room (.board: these come before the base rules) */
 }
 @media (prefers-reduced-motion: reduce) { .board.is-flash .board__mat, .pcol--empty.is-want { animation: none; } }
 /* Pinned dossiers: the founder pick used them until 2026-11-13, when it moved to the squad board's polaroids. */
@@ -1045,9 +1059,26 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .slotchip b { font: 700 0.78rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text); }
 .slotchip small { font-size: 0.72rem; }
 .slotchip.is-off { cursor: default; grid-template-columns: 1fr auto; column-gap: 8px; }
+/* Outside (board.js, 2026-11-26, mockup 1): three columns like the inside team's; an empty slot is a short tile, a filled one a card. */
+.otiles { align-items: start; } /* .pcols: the inside team's columns */
+.otiles.has-card { align-items: stretch; }
+.otiles.has-card > .otile { align-content: center; }
+.oslot { display: grid; gap: 3px; min-width: 0; align-content: start; }
+.oslot__name { font: 700 0.62rem var(--display); letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); text-align: center; }
+.otile { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 6px; min-height: 58px; padding: 6px 8px; text-align: left; border: 2px dashed #3a4254; background: transparent; color: var(--muted); font: inherit; cursor: pointer; }
+.otile__ic { display: grid; place-items: center; width: 24px; height: 24px; border: 1.5px solid #c9cfdb; color: #c9cfdb; }
+.otile__ic svg { width: 14px; height: 14px; }
+.otile b { display: block; font: 700 0.68rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: #c9cfdb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.otile small { display: block; font-size: 0.68rem; line-height: 1.25; }
+.otile.is-off { cursor: default; border-style: dotted; }
+.otile.is-off b, .otile.is-off .otile__ic { color: var(--muted); border-color: var(--muted); }
+.otile__link { display: inline; min-height: 0; padding: 0; border: 0; background: none; color: var(--accent-2); font: 600 0.68rem system-ui, sans-serif; cursor: pointer; }
+.otile__link::before { content: ''; position: absolute; inset: 0; } /* the whole Overwatch tile is the link's 44px+ target */
+.otile.is-off { position: relative; }
+.otile:hover:not(.is-off), .otile:focus-visible { border-color: var(--accent-2); }
 .slotchip.is-off b { color: var(--muted); }
 .slotchip.is-off small { grid-column: 1; }
-.slotchip__link { grid-column: 2; grid-row: 1 / span 2; align-self: center; min-height: 36px; padding: 0 8px; border: 0; background: none; color: var(--accent-2); font: 600 0.78rem system-ui, sans-serif; cursor: pointer; }
+.slotchip__link { grid-column: 2; grid-row: 1 / span 2; align-self: center; min-height: 44px; padding: 0 8px; border: 0; background: none; color: var(--accent-2); font: 600 0.78rem system-ui, sans-serif; cursor: pointer; }
 .jossline { margin: 8px 0 0; font-size: 0.82rem; line-height: 1.4; color: var(--text); } .jossline b { font: 700 0.74rem var(--display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); } /* Joss's reason for their picks (2026-11-05) */
 .brief--short { margin-bottom: 0; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; } /* the brief after the first read (2026-11-05) */
 .linkbtn { min-height: var(--tap, 44px); padding: 0; margin-bottom: 8px; border: 0; background: none; color: var(--accent-2); font: 600 0.8rem system-ui, sans-serif; cursor: pointer; }
@@ -1373,6 +1404,9 @@ p > .infobtn { display: inline-grid; vertical-align: 2px; margin-left: 4px; }
 .founding__bar { justify-content: space-between; flex-wrap: wrap; }
 .founding__bar .btn { flex: 1 1 200px; max-width: 420px; }
 .founding__bar p { margin: 0; }
+.founding__traitlist { margin: 8px 0 0; display: grid; gap: 8px; }
+.founding__traitlist dt { font-family: var(--display); font-weight: 700; }
+.founding__traitlist dd { margin: 2px 0 0; color: var(--muted); }
 @media (min-width: 760px) { .founders { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 /* A renewal's three numbers (owner, 2026-10-29): equal columns, labels on top, the numbers on one
@@ -3256,6 +3290,8 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .newtag { display: inline-block; margin-left: 6px; padding: 0 6px; border: 1px solid var(--accent); color: var(--accent); font: 700 0.62rem/1.4 var(--display); letter-spacing: 0.12em; text-transform: uppercase; vertical-align: middle; }
 
 /* Today's "New in the stash" line (ui/gear.js newGearLine): picture, the line, Give to · Armoury · ✕. */
+.paidout { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; margin: 8px 0; padding: 8px 10px; border-left: 3px solid var(--danger); background: color-mix(in srgb, var(--danger) 7%, transparent); }
+.paidout__text { margin: 0; flex: 1 1 200px; }
 .newgear { --tc: var(--tier-grey); display: grid; grid-template-columns: 72px 1fr; gap: 6px 10px; align-items: center; margin: 8px 0; padding: 8px 10px; border-left: 3px solid var(--tc); background: color-mix(in srgb, var(--tc) 7%, transparent); }
 .newgear--green { --tc: var(--tier-green); } .newgear--blue { --tc: var(--tier-blue); } .newgear--purple { --tc: var(--tier-purple); } .newgear--gold { --tc: var(--tier-gold); }
 .newgear .gearrow__art, .newgear .gearrow__icon { width: 72px; height: 40px; overflow: hidden; }
@@ -3301,6 +3337,8 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .dcard__when { flex: none; align-self: flex-start; font-family: var(--display, inherit); font-weight: 700; font-size: 0.75rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
 .dcard.is-last .dcard__when, .dcard.is-urgent .dcard__when { color: var(--danger); }
 .dcard__pay { color: var(--accent-2); font-weight: 600; }
+.dcard__line.dcard__short { color: var(--warn, #f5b942); }
+.desk__short { margin: 8px 0; color: var(--muted); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .dcard__line { margin: 2px 0 0; color: var(--muted); font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .dcard__answers { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
 .dcard__answers .btn { min-height: var(--tap); }

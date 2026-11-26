@@ -23,7 +23,7 @@ import { availability, crewRoll, worsenInjury, setInjury, INJURY_DAYS } from './
 import { successChance, riskLabel, rollTarget } from './risk.js';
 import { d20, hashRng } from './rng.js';
 import { gainXp } from './development.js';
-import { money } from './money.js';
+import { moveCash, money } from './money.js';
 import { noteInjury } from './earned.js';
 import { nextRng } from './random.js';
 import { COUNT_BY_THREAT, FIGHT } from '../data/fights.js';
@@ -195,7 +195,7 @@ function snag(state, e, d, crew, l, rng) {
     cost = `${who.handle}: ${who.condition.injury} injury.`;
   } else {
     const amount = Math.min(Math.max(0, state.cash), between(rng, EXPEDITION.snagCash));
-    state.cash -= amount;
+    moveCash(state, -amount, 'Lost on a trip');
     e.spent = (e.spent ?? 0) + amount;
     cost = amount ? `−${money(amount)}.` : '';
   }
@@ -209,7 +209,7 @@ function find(state, e, d, crew, rng) {
   if (kind === 'cash') {
     const amount = between(rng, EXPEDITION.findCash);
     const l = line(state, e, d, crew, 'find.cash', { extra: { cash: money(amount) } });
-    state.cash += amount;
+    moveCash(state, amount, 'Found on a trip');
     e.finds.push(`${money(amount)} found`);
     write(e, { day: d, tone: 'good', text: `${l?.text ?? `${money(amount)} turned up.`} +${money(amount)}.` });
     return;
@@ -390,7 +390,7 @@ export function closeExpedition(state, e, outcome, { text = null, fight = false 
     }
     if (e.goal === 'cash') {
       const sum = Math.round((e.prize.cash * (outcome === 'met' ? 1 : 0.5)) / 50) * 50;
-      state.cash += sum;
+      moveCash(state, sum, 'A trip paid');
       results.push({ tone: 'good', text: `Brought home ${money(sum)}.` });
     }
     if (e.goal === 'recruit') {

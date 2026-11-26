@@ -13,7 +13,7 @@ import { NAMES } from '../config/names.js';
 import { trustOf } from './clients.js';
 import { CLIENTS } from '../data/clients.js';
 import { rankForHalls } from './tong.js';
-import { money } from './money.js';
+import { moveCash, money } from './money.js';
 import { PIECES, ROOM_EFFECT } from '../data/hallBuild.js';
 import { HALLS } from '../data/sites.js';
 
@@ -80,7 +80,7 @@ export function openHall(prev, district) {
   if (!canOpenHall(prev, district).ok) return prev;
   const state = structuredClone(prev);
   const site = HALL_SITES[district];
-  state.cash -= site.deposit;
+  moveCash(state, -site.deposit, `New hall: ${site.place ?? district}`);
   state.halls = [...(state.halls ?? []), { district, beds: site.beds, rent: site.rent, level: 1, opened: state.day, build: [], owned: false }];
   syncHalls(state);
   state.inbox.unshift({
@@ -117,7 +117,7 @@ export function buyHall(prev, district) {
   if (price == null || prev.cash < price) return prev;
   const state = structuredClone(prev);
   const h = hallIn(state, district);
-  state.cash -= price;
+  moveCash(state, -price, 'Bought the hall');
   h.owned = true;
   h.rent = 0;
   syncHalls(state);
@@ -135,7 +135,7 @@ export function expandHall(prev, district) {
   if (!x || prev.cash < x.cost) return prev;
   const state = structuredClone(prev);
   const h = hallIn(state, district);
-  state.cash -= x.cost;
+  moveCash(state, -x.cost, 'Made the hall bigger');
   h.beds += x.beds;
   h.rent += x.rentIncrease;
   h.level = x.level;

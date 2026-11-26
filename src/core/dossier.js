@@ -24,7 +24,7 @@ import { levelInEffect, readOf, ageOf, changedSince, raisedRead, raisedHouseRead
 import { bookGrade } from './book.js';
 import { TONG_RANKS } from '../data/tong.js';
 import { NAMES } from '../config/names.js';
-import { money } from './money.js';
+import { moveCash, money } from './money.js';
 
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const STAT_KEYS = ['combat', 'stealth', 'tech', 'social', 'piloting', 'medical', 'cool', 'endurance'];
@@ -347,7 +347,7 @@ export function signCard(prev, ref) {
   const state = structuredClone(prev);
   const card = findCard(state, ref);
   const tong = tongOf(state.rivals, card.tongId);
-  state.cash -= a.total;
+  moveCash(state, -a.total, `Signed ${card.handle ?? 'a name'} from another tong`);
   const op = cardToOperative(state, card, { wage: a.wage });
   op.hall = hallWithRoom(state) ?? HOME_HALL;
   state.crew.push(op);

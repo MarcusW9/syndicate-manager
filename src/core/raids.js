@@ -36,7 +36,7 @@ import { rollTarget } from './risk.js';
 import { FOLLOW } from './piloting.js';
 import { setInjury } from './crew.js';
 import { recordSummary } from './record.js';
-import { money } from './money.js';
+import { moveCash, money } from './money.js';
 import { GANGS, GRUDGE, grudgeOf, addGrudge, gangsOn } from './gangs.js';
 
 const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -315,7 +315,7 @@ export function payOffRaid(prev, raidId) {
   if (prev.cash < price) return prev;
   const state = structuredClone(prev);
   const r = state.raids.find((x) => x.id === raidId);
-  state.cash -= price;
+  moveCash(state, -price, 'Paid off a raid');
   r.answer = 'paid';
   r.paid = price;
   if (isGangRaid(r)) addGrudge(state, r.by, -Math.ceil(grudgeOf(state, r.by) * (1 - GRUDGE.settleKeeps))); // settled: the grudge halves
@@ -333,7 +333,7 @@ function closeRaid(state, raid, outcome, text) {
 function withdraw(state, raid, how = 'We walked out the back before they reached the top of the stairs.') {
   const d = raid.district;
   const cost = withdrawCost(state, d);
-  state.cash -= cost.kept + cost.repairs;
+  moveCash(state, -(cost.kept + cost.repairs), 'Walked out on a raid: repairs');
   const hall = hallIn(state, d);
   if (hall) hall.shutUntil = state.day + RAID.shutDays;
   const before = heatIn(state, d);
@@ -354,7 +354,7 @@ export function RAID_RESOLVER(state, msg, optionId) {
   if (optionId === 'withdraw') withdraw(state, raid);
   else if (optionId === 'pay') {
     const price = raidPrice(state, raid, { late: true });
-    state.cash -= price;
+    moveCash(state, -price, 'Paid off a raid at the door');
     raid.answer = 'pay';
     raid.paid = price;
     if (isGangRaid(raid)) {

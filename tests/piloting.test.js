@@ -3,7 +3,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { playGetaway, getawayRead, getawayPilot, GETAWAY, homeHallOf } from '../src/core/piloting.js';
+import { playGetaway, getawayRead, getawayPilot, GETAWAY, homeHallOf, FOLLOW } from '../src/core/piloting.js';
 import { templateById } from '../src/core/jobs.js';
 import { raidThreat, followHome } from '../src/core/raids.js';
 import { createNewGame } from '../src/core/state.js';
@@ -11,7 +11,7 @@ import * as M from '../src/core/mission.js';
 import { addOffer } from '../src/core/jobs.js';
 import { MISSIONS } from '../src/data/missions.js';
 import { APPROACHES } from '../src/data/approaches.js';
-import { playMission, carefulPolicy } from './play.js';
+import { playMission, playWeeks, carefulPolicy } from './play.js';
 
 const tpl = { threat: 2, rookie: false };
 const pilot = (piloting, injury = 'healthy') => ({ id: 'p' + piloting, handle: 'P' + piloting, stats: { piloting }, condition: { injury }, traits: [] });
@@ -121,4 +121,14 @@ test('homeHallOf picks the hall most of the crew live in', () => {
   assert.equal(homeHallOf(s, crew, 'oldTown').district, 'nightMarket');
   s.halls = [{ district: 'oldTown' }];
   assert.equal(homeHallOf(s, crew, 'oldTown'), null, 'no hall where they live: nowhere to be followed to');
+});
+
+test('in the first week a bad getaway keeps the tail but nobody is followed home (FOLLOW.graceDays, 2026-11-26)', () => {
+  let lost = 0;
+  for (let seed = 1; seed <= 40; seed++) {
+    const r = playWeeks(1, seed, carefulPolicy, { startCrew: 'pick' });
+    assert.equal((r.state.raids ?? []).filter((x) => x.warnedDay <= FOLLOW.graceDays).length, 0, `seed ${seed}: no raid in the first week`);
+    lost += r.state.inbox.filter((m) => m.type === 'report' && m.timeline?.outcome?.some((o) => /lost them before our door/.test(o.text))).length;
+  }
+  assert.ok(lost > 0, 'some first-week getaways go badly, and the report says they were lost before the door');
 });

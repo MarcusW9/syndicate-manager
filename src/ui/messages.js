@@ -174,6 +174,12 @@ function reportSpoils(m) {
   return line ? spoilsCard({ esc }, state, line) : '';
 }
 
+/** The report's alert, said in plain words (first-run walkthrough, 2026-11-26): what it is and what it did. */
+function alertLine(n) {
+  if (!n) return `0 of ${ALERT_MAX}: nobody noticed them.`;
+  return `${n} of ${ALERT_MAX}: each slip that got noticed made the rest of the rolls harder${n >= ALERT_MAX ? '; at the top the crew had to choose: go loud or pull out' : ''}.`;
+}
+
 function renderReportSummary(t) {
   const sum = t?.summary;
   if (!sum) return '';
@@ -185,7 +191,7 @@ function renderReportSummary(t) {
     sum.standout && ['Standout', sum.standout.text],
     sum.hurt?.length && ['What hurt us', sum.hurt.join(' ')],
     sum.saves?.length && ['Saves', sum.saves.map((v) => `${v.by} got ${v.who} out of trouble${v.via === 'overwatch' ? ` (${v.kit ?? 'overwatch'})` : ''}.`).join(' ')],
-    sum.alert != null && ['Alert', `Reached ${sum.alert} of ${ALERT_MAX}.`],
+    sum.alert != null && ['Alert', alertLine(sum.alert)],
   ].filter(Boolean);
   return `
       <div class="reporthead">

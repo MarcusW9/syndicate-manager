@@ -11,7 +11,9 @@ export const GETAWAY = { clean: 5, shedClean: 2, shedGood: 1, bad: -5 };
 // Followed home (DESIGN.md 2026-11-08): only a bad getaway (5+ under) leads them to the crew's hall, and
 // the followers are the raid: one is warned there at once, a threat step harder. A plain miss keeps the heat
 // and nothing more. A pilot of FOLLOW.skilled or better shakes even a bad one.
-export const FOLLOW = { skilled: 14, threat: 1 };
+// graceDays (2026-11-26): in a new game's first week a bad getaway still leaves the tail (the next job there is watched),
+// but nobody follows the crew home, so the first raid can't land before the first rent day (one game in six had one).
+export const FOLLOW = { skilled: 14, threat: 1, graceDays: 7 };
 
 /** The roll to beat: 10 + the job's typical difficulty + 1 per alert point. */
 export const getawayDifficulty = (template, alert = 0) => Math.round(rollTarget(template)) + alert;

@@ -15,8 +15,9 @@ import { refreshContracts } from './contracts.js';
 import { refreshArmoury } from './looks.js';
 import { seedRivals } from './rivals.js';
 import { cleanTongName, tongNameProblem } from './tongname.js';
+import { startCashDay } from './money.js';
 
-export const SAVE_VERSION = 90;
+export const SAVE_VERSION = 91;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];
@@ -131,7 +132,7 @@ export function createNewGame({ seed = 1, difficulty = 'standard', startCrew = '
   refreshContracts(state); // the first security posts (core/contracts.js)
   refreshArmoury(state);
   state.rivals = seedRivals(state); // hashRng only: no roll moves (core/rivals.js)
-  state.dayStartCash = state.cash;
+  startCashDay(state);
   state.weekStart = weekStartOf(state); // the Sunday summary measures from here (core/week.js)
   return state;
 }

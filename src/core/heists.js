@@ -19,7 +19,7 @@
 import { HEISTS, HEIST_RULES, heistById } from '../data/heists.js';
 import { addOffer, templateById } from './jobs.js';
 import { clientById } from './clients.js';
-import { money } from './money.js';
+import { moveCash, money } from './money.js';
 
 const round50 = (n) => Math.round(n / 50) * 50;
 const stillOut = (state, jobId) => state.jobs.some((j) => j.id === jobId) || state.activeMission?.jobId === jobId || (state.awayJobs ?? []).some((j) => j.mission?.jobId === jobId);
@@ -99,7 +99,7 @@ export function buyStep(prev, heistId, stepId) {
   const state = structuredClone(prev);
   const def = heistById(heistId);
   const h = state.heists[heistId];
-  state.cash -= check.price;
+  moveCash(state, -check.price, 'Heist prep bought');
   h.steps[stepId].status = 'bought';
   refreshFinale(state, def, h);
   const step = def.prep.find((p) => p.id === stepId);
