@@ -45,7 +45,7 @@ import { intelFor } from './sidetasks.js';
 import { afterJob, noteInjury, spendSecondWind, earnedOf } from './earned.js';
 import { overwatchKit, seriousGuard, patchBonus } from './gear.js';
 import { loudFightDue } from './battle.js';
-import { playGetaway, getawayPilot, homeHallOf } from './piloting.js';
+import { playGetaway, getawayPilot, homeHallOf, FOLLOW } from './piloting.js';
 import { lineText } from './fighttext.js';
 import { HOME_HALL } from '../data/halls.js';
 import { crewOf, actors, overwatchOp, standbyOp, standbyReady, driver, onJob, opById, grow, record, takeWhy, addNeural } from './run.js';
@@ -1055,12 +1055,14 @@ function finish(state) {
     if (getaway.tail && state.heatWatched !== true) state.heatWatched = tpl.district; // a tail: the next job there is watched
     const g = getaway;
     // Followed home: the followers are the raid, on the hall most of the crew live in (core/raids.js).
-    const hall = g.followed ? homeHallOf(state, onJob(state, am).filter((o) => !deaths.includes(o)), HOME_HALL) : null;
+    // Not in the first week (FOLLOW.graceDays): the tail stays, but they lose them before the door.
+    g.lost = !!g.followed && state.day <= FOLLOW.graceDays;
+    const hall = g.followed && !g.lost ? homeHallOf(state, onJob(state, am).filter((o) => !deaths.includes(o)), HOME_HALL) : null;
     const raid = hall ? followHome(state, hall.district, jobGrudge(tpl, am.threat ?? tpl.threat)?.gang, g.followed) : null;
     g.hall = raid ? hall.district : null;
     const text = g.result === 'clean' ? `${g.pilot.handle} gets them out clean: heat −${g.shed}.`
       : g.result === 'good' ? `${g.pilot.handle} gets them out: heat −${g.shed}.`
-      : g.tail ? `${g.pilot.handle} can't shake the tail. The next job here will be watched${g.hall ? ', and someone followed them home: a raid is coming' : ''}.` : g.hall ? `${g.pilot.handle} gets them out, but someone follows them home: a raid is coming.` : `${g.pilot.handle} gets them out, but the heat stays.`;
+      : g.tail ? `${g.pilot.handle} can't shake the tail. The next job here will be watched${g.hall ? ', and someone followed them home: a raid is coming' : g.lost ? '. Whoever was on them lost them before our door, this time' : ''}.` : g.hall ? `${g.pilot.handle} gets them out, but someone follows them home: a raid is coming.` : `${g.pilot.handle} gets them out, but the heat stays.`;
     am.getaway = { handle: g.pilot.handle, result: g.result, shed: g.shed, tail: g.tail, followed: g.hall, die: g.die, value: g.value, need: g.need, text };
     am.log.push({ kind: g.tail ? 'bad' : 'good', text });
     record(am, { kind: 'getaway', stat: 'piloting', actor: { id: g.pilot.id, handle: g.pilot.handle }, die: g.die, value: g.value, need: g.need, success: g.margin >= 0, result: g.result, shed: g.shed, tail: g.tail, followed: g.hall, follow: g.followed, text, outcomeCost: {} });
