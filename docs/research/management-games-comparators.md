@@ -1,6 +1,6 @@
 # Management-game comparators: what players asked for, and where they bounced
 
-Started 2026-11-26. Sources: an r/rpg_gamers thread ("RPGs where you build up a guild or company"), Steam reviews of King of Dragon Pass (KoDP) and Steam reviews of Majesty Gold HD, all shared by the owner.
+Started 2026-11-26. Sources: an r/rpg_gamers thread asking for RPGs where you build up and run a guild or company, Steam reviews of King of Dragon Pass (KoDP) and Steam reviews of Majesty Gold HD, all shared by the owner.
 
 ## 1. The Reddit thread: games named as comparators
 
@@ -23,7 +23,7 @@ Takeaways from the thread:
 
 ## 2. King of Dragon Pass (Steam reviews)
 
-KoDP is clan-level: you run a tribe through written events. There is no individual roster to hire, grow or lose, so it informs our event and crisis writing, not our roster. For roster and growth use Battle Brothers, Wildermyth and Darkest Dungeon.
+KoDP is clan-level: you run a tribe through written events. Its only people layer is the clan ring, a council of seven nobles with skills who age, die and are replaced; there is no crew to hire, grow and send out, so it informs our event and crisis writing, not our roster. For roster and growth use Battle Brothers, Wildermyth and Darkest Dungeon.
 
 **What reviewers loved**
 - Very high replayability from a large pool of random events with almost never a clearly right or wrong choice.
@@ -58,22 +58,22 @@ Majesty is billed as a fantasy kingdom sim but plays like a conventional RTS: yo
 - The sequel gave the player more control over heroes, which pushed it toward a standard RTS and away from the sim idea that made the original distinct. A reviewer calls this a mistake.
 - Dated visuals and a primitive interface; the idea has since been expanded on by Dwarf Fortress and its descendants.
 - Technical issues on modern systems (freezes, config-file fixes).
-- It had trouble finding a publisher because nobody knew how to sell a game that withholds control.
+- Its developer struggled to find a publisher for both the original and the sequel; the review ties this, for the original, to its break from RTS convention.
 
 **Lesson:** the autonomy is the product. Do not hand the player direct control to make a hands-off system feel safer; add readable incentives instead.
 
 ## 4. How this applies to Syndicate Manager
 
 1. **Show risk, do not hide it.** The planning read (`core/squad.js`, `core/risk.js`) and the rule that deaths follow a risk the player was shown answer the "hidden information" complaint. Keep one clear read per decision; do not pile up small ones.
-2. **Visible progression in an endless game.** The sharpest negative review is "no clear progression" plus enemies that never lose ground. Rival tongs (`docs/RIVAL-TONGS.md`) need a lasting, visible effect when the player hits them, and the player needs some marker of how far they have come.
-3. **Early-game trap check.** Check the first days of a run for a spiral that a bad early streak can lock in, and confirm there is a recovery.
+2. **Visible progression in an endless game.** The sharpest negative review is "no clear progression" plus rivals the player can never really dent. We already have markers (rank and standing in words on the Tong tab, halls, the Anchor's Book), and rival tongs rise, strain and fold in the background (`docs/RIVAL-TONGS.md`). The player cannot attack a rival directly; their levers are signing, buyouts and poaching. Worth checking in a playtest: does the player feel their own moves changed a rival's fortunes, or only watch the weather?
+3. **Early-game trap check.** KoDP's starvation spiral is our "broke" spiral. This is already measured: `scripts/sim-early-game.mjs` prints the share broke at weeks 4, 13 and 26, and the tests hold careful play under bands (broke under 35%, under 10% for the three-founder start; `docs/ARCHITECTURE.md` section 10). What a sim cannot show is whether a broke player sees a way out; check the screen and Joss's lines when cash goes below zero.
 4. **No choices that are only for show.** If a crisis choice does not change the outcome, players notice.
 5. **Safe defaults.** On any screen with a risky action, the preselected one is the safe one (iOS-ready rules already say no hover-only info).
-6. **Save policy.** `save.js` autosaves. Decide whether to offer manual saves.
+6. **Save policy.** Already decided: `save.js` keeps three slots, saves as you play, makes a weekly automatic backup (not for Ironman) and reminds about backups every 28 days. KoDP's split over savescumming suggests keeping Ironman as an opt-in rather than the default.
 7. **Streamline.** Cut systems the player would only manage by hand.
-8. **Keep autonomy.** Crew who act on their own, steered by incentives (pay, approach, who is picked), are the draw; resist adding direct control mid-run. Character voice and humor in the small lines is what players remember.
+8. **Indirect control where we have it.** Main jobs are planned and played by hand, so Majesty's lesson applies only to hands-off runs (`core/autorun.js`), where standing orders price each downside as a share of the pay, much like a bounty. If those feel too loose, the Majesty lesson is to make the orders more readable, not to add hands-on control mid-run. Separately, character voice in the small lines (Majesty's catch-phrases, the advisor) is what players remember.
 
 ## 5. Open checks
 
-- First-days difficulty: play the first week of a few seeds and look for a spiral.
-- Rival tong consequences: does hitting one leave a lasting, visible mark?
+- When cash goes below zero, does the screen show a way out? (The sims already measure how often it happens.)
+- In a playtest: does the player feel their signings, buyouts and poaching changed a rival tong's fortunes?
