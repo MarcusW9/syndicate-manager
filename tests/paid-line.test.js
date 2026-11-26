@@ -6,11 +6,13 @@ import { paidLine } from '../src/core/mission.js';
 import { ratedStat } from '../src/core/crew.js';
 import { createNewGame, chooseFounders } from '../src/core/state.js';
 
-test('the Paid line names the offer when the pay moved off it', () => {
+test('the Paid line names the card price when the pay moved off it', () => {
   assert.equal(paidLine(1500, 1500), 'Paid ¥1,500.');
   assert.equal(paidLine(0, 1500), 'Paid ¥0.', 'no pay keeps the plain line (an abort says why)');
-  assert.equal(paidLine(1300, 1500), 'Paid ¥1,300 of the ¥1,500 offered: ¥200 lost to what went wrong.');
-  assert.equal(paidLine(1650, 1500), 'Paid ¥1,650: ¥150 over the ¥1,500 offered.');
+  assert.equal(paidLine(1300, 1500), 'Paid ¥1,300 (¥1,500 offered, ¥200 lost to what went wrong).');
+  assert.equal(paidLine(1650, 1500), 'Paid ¥1,650 (¥1,500 offered, +¥150 for what went right).');
+  assert.equal(paidLine(1750, 1500, 250), 'Paid ¥1,750 (¥1,500 offered, +¥250 by name).', 'the card price stays the offer; the by-name bonus is its own part');
+  assert.equal(paidLine(1500, 1500, 250), 'Paid ¥1,500 (¥1,500 offered, +¥250 by name, ¥250 lost to what went wrong).');
   assert.match(paidLine(1300, 1500), /^Paid ¥/, 'still starts with Paid (the report and old saves split on it)');
 });
 
