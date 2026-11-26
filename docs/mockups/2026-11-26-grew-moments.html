@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Growth Moments</title>
+<!-- Mockup, 2026-11-26. Owner, after the trip report's "who grew" chips shipped: another design for the person
+     growing, green plus signs or up arrows, "something that would be really satisfying". Five looks on the report's
+     crew cards, each with its motion (plays once when the report opens; Replay restarts it; still for reduced motion).
+     Same two runners: Scalpel (+1 Combat, +1 Stealth, now a pro) and Tofu (+1 Combat). Street-terminal tokens from
+     docs/UI-SKIN.md plus the game's green (#5fe0a5). Not wired to the game. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0c0f;--panel:#12151b;--panel-2:#161a21;--line:#2a303b;--text:#e9ecf1;--muted:#8a93a6;--accent:#ff3d5f;--accent-2:#3de8d8;--warn:#f2d541;--good:#5fe0a5;--cut:10px;--disp:'Rajdhani',system-ui,sans-serif}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background-image:linear-gradient(rgba(61,232,216,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(61,232,216,.025) 1px,transparent 1px);background-size:32px 32px;padding:16px max(16px,env(safe-area-inset-left)) 40px}
+.wrap{max-width:1300px;margin:0 auto}
+h1{font:700 22px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin:4px 0}
+.lede{color:var(--muted);max-width:860px;margin:0 0 12px}
+.replay{font:700 13px var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--accent-2);background:none;border:1px solid var(--accent-2);min-height:44px;padding:0 16px;cursor:pointer}
+.grid{display:grid;gap:22px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));align-items:start;margin-top:16px}
+.look{font:700 13px var(--disp);letter-spacing:.16em;color:var(--accent-2);text-transform:uppercase;margin:0 0 6px}
+.why{color:var(--muted);font-size:13px;margin:0 0 10px;min-height:54px}
+.panel{position:relative;background:linear-gradient(var(--panel-2),var(--panel));border:1px solid var(--line);clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%);padding:14px}
+.panel::before{content:"";position:absolute;top:-1px;left:14px;width:36px;height:2px;background:var(--accent-2)}
+.title{font:700 17px/1.2 var(--disp);letter-spacing:.06em;text-transform:uppercase;margin:0 0 10px}
+.cards{display:flex;gap:10px}
+.op{position:relative;flex:0 0 130px;border:1px solid var(--line);background:#141820;padding:10px 6px 8px;text-align:center;overflow:hidden}
+.face{width:44px;height:48px;margin:0 auto 4px;border-radius:2px}
+.f1{background:linear-gradient(160deg,#3a2030 0 40%,#ff3d8a 40% 55%,#1b2340 55%)}
+.f2{background:linear-gradient(160deg,#2d4a3a 0 40%,#5fe0a5 40% 55%,#1b2340 55%)}
+.nm{font:700 15px var(--disp);letter-spacing:.04em}
+.sub{font:600 11px var(--disp);letter-spacing:.06em;color:var(--muted)}
+.rows{display:grid;gap:3px;margin-top:7px}
+.st{display:flex;align-items:center;justify-content:center;gap:5px;font:700 13px var(--disp);letter-spacing:.08em;text-transform:uppercase}
+.st .k{color:var(--muted);font-weight:600;font-size:11px}
+.pro{display:inline-block;margin-top:6px;font:700 11px var(--disp);letter-spacing:.14em;color:var(--bg);background:var(--warn);padding:1px 6px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+
+/* A: green plus, floats up */
+.a .op.g{border-color:rgba(95,224,165,.55)}
+.a .plus{color:var(--good);font:700 15px var(--disp)}
+.a .float{position:absolute;left:50%;top:18px;transform:translateX(-50%);font:700 26px var(--disp);color:var(--good);text-shadow:0 0 12px rgba(95,224,165,.7);opacity:0;animation:floatup 1.4s ease-out .3s 1 both}
+.a .st{opacity:0;animation:fadein .4s ease-out both}
+.a .st:nth-child(1){animation-delay:.9s}.a .st:nth-child(2){animation-delay:1.1s}
+@keyframes floatup{0%{opacity:0;transform:translate(-50%,10px) scale(.6)}25%{opacity:1;transform:translate(-50%,-4px) scale(1.15)}100%{opacity:0;transform:translate(-50%,-34px) scale(1)}}
+@keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* B: up arrows, old number struck, new number in green */
+.b .op.g{border-color:rgba(95,224,165,.55)}
+.b .old{color:var(--muted);text-decoration:line-through;font-weight:600}
+.b .arr{color:var(--good);display:inline-block;animation:bounce .5s ease-out 3 both;animation-delay:.6s}
+.b .new{color:var(--good);font-size:16px}
+@keyframes bounce{0%{transform:translateY(4px);opacity:.3}50%{transform:translateY(-3px);opacity:1}100%{transform:none;opacity:1}}
+
+/* C: the number rolls over, the card flashes */
+.c .op.g{animation:flash 1s ease-out .5s 1 both}
+.c .roll{display:inline-block;height:20px;overflow:hidden;vertical-align:bottom;line-height:20px;font:700 18px var(--disp);color:var(--good);width:22px}
+.c .roll span{display:block;animation:odo .7s cubic-bezier(.2,.8,.2,1.2) .6s 1 both}
+.c .roll i{display:block;font-style:normal;color:var(--muted)}
+@keyframes odo{from{transform:translateY(0)}to{transform:translateY(-20px)}}
+@keyframes flash{0%{background:#141820;border-color:var(--line)}30%{background:#1d3a30;border-color:var(--good)}100%{background:#141820;border-color:rgba(95,224,165,.55)}}
+
+/* D: gauge fills, new segment lights, +1 pops */
+.d .op.g{border-color:rgba(95,224,165,.55)}
+.d .gauge{display:flex;gap:1px;height:6px;width:96px;margin:2px auto 0}
+.d .gauge i{flex:1;background:#232a35}
+.d .gauge i.on{background:#5a6478}
+.d .gauge i.new{background:#232a35;animation:segon .5s ease-out .7s 1 both}
+.d .pop{color:var(--good);font:700 13px var(--disp);opacity:0;animation:popin .4s ease-out 1.1s 1 both;margin-left:4px}
+.d .lbl{display:flex;justify-content:space-between;width:96px;margin:4px auto 0;font:600 10px var(--disp);letter-spacing:.1em;color:var(--muted);text-transform:uppercase}
+@keyframes segon{0%{background:#232a35}50%{background:#fff;box-shadow:0 0 8px var(--good)}100%{background:var(--good)}}
+@keyframes popin{0%{opacity:0;transform:scale(.4)}70%{opacity:1;transform:scale(1.3)}100%{opacity:1;transform:none}}
+
+/* E: the promotion stamp, plus green ticks */
+.e .op.g{border-color:rgba(95,224,165,.55)}
+.e .tick{color:var(--good)}
+.e .stamp{position:absolute;right:-6px;top:12px;transform:rotate(-14deg);font:700 13px var(--disp);letter-spacing:.14em;color:var(--warn);border:2px solid var(--warn);padding:1px 6px;background:rgba(10,12,15,.6);animation:slam .45s cubic-bezier(.2,1.6,.4,1) .9s 1 both}
+@keyframes slam{0%{opacity:0;transform:rotate(-14deg) scale(2.6)}100%{opacity:1;transform:rotate(-14deg) scale(1)}}
+.notes{margin-top:26px;color:var(--muted);font-size:13px;max-width:940px}.notes li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>The person growing: five looks</h1>
+  <p class="lede">On the report's crew cards, played once when the report opens. Green is new here: the game's green (#5fe0a5) already means good news in the results, so a rise reads as good news too. Yellow stays for a promotion.</p>
+  <button class="replay" onclick="document.getAnimations().forEach(a=>{a.cancel();a.play()})">Replay</button>
+  <div class="grid">
+
+    <section class="a"><p class="look">A · Green plus that floats up</p><p class="why">A big green +1 rises off the face and fades, like a damage number in reverse; the stats it came from settle in underneath.</p>
+      <div class="panel"><p class="title">A weapon: part of it</p><div class="cards">
+        <div class="op g"><span class="float">+2</span><div class="face f1"></div><div class="nm">Scalpel</div><div class="sub">On the trip</div>
+          <div class="rows"><div class="st"><span class="plus">+1</span> Combat</div><div class="st"><span class="plus">+1</span> Stealth</div></div><span class="pro">Now a pro</span></div>
+        <div class="op g"><span class="float">+1</span><div class="face f2"></div><div class="nm">Tofu</div><div class="sub">On the trip</div>
+          <div class="rows"><div class="st"><span class="plus">+1</span> Combat</div></div></div>
+      </div></div></section>
+
+    <section class="b"><p class="look">B · Up arrows, old number struck</p><p class="why">Each stat shows where it was and where it is now: the old number struck through, a green arrow bouncing up three times, the new number in green. Says exactly what changed.</p>
+      <div class="panel"><p class="title">A weapon: part of it</p><div class="cards">
+        <div class="op g"><div class="face f1"></div><div class="nm">Scalpel</div><div class="sub">On the trip</div>
+          <div class="rows"><div class="st"><span class="k">Combat</span> <span class="old">14</span><span class="arr">▲</span><span class="new">15</span></div><div class="st"><span class="k">Stealth</span> <span class="old">4</span><span class="arr">▲</span><span class="new">5</span></div></div><span class="pro">Now a pro</span></div>
+        <div class="op g"><div class="face f2"></div><div class="nm">Tofu</div><div class="sub">On the trip</div>
+          <div class="rows"><div class="st"><span class="k">Combat</span> <span class="old">2</span><span class="arr">▲</span><span class="new">3</span></div></div></div>
+      </div></div></section>
+
+    <section class="c"><p class="look">C · The number rolls over</p><p class="why">The card flashes green and each stat's number rolls up like an odometer, 14 to 15. The most "game" of the five; quick, and you watch it happen.</p>
+      <div class="panel"><p class="title">A weapon: part of it</p><div class="cards">
+        <div class="op g"><div class="face f1"></div><div class="nm">Scalpel</div><div class="sub">On the trip</div>
+          <div class="rows"><div class="st"><span class="k">Combat</span> <span class="roll"><span><i>14</i>15</span></span></div><div class="st"><span class="k">Stealth</span> <span class="roll"><span><i>4</i>5</span></span></div></div><span class="pro">Now a pro</span></div>
+        <div class="op g"><div class="face f2"></div><div class="nm">Tofu</div><div class="sub">On the trip</div>
+          <div class="rows"><div class="st"><span class="k">Combat</span> <span class="roll"><span><i>2</i>3</span></span></div></div></div>
+      </div></div></section>
+
+    <section class="d"><p class="look">D · The gauge fills</p><p class="why">Each stat as a short segmented gauge: the new segment flashes white then settles green, and a +1 pops beside it. Shows growth as part of a longer climb, which suits slow growth.</p>
+      <div class="panel"><p class="title">A weapon: part of it</p><div class="cards">
+        <div class="op g"><div class="face f1"></div><div class="nm">Scalpel</div><div class="sub">On the trip</div>
+          <div class="lbl"><span>Combat</span><span class="pop">+1</span></div><div class="gauge"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="new"></i><i></i><i></i></div>
+          <div class="lbl"><span>Stealth</span><span class="pop">+1</span></div><div class="gauge"><i class="on"></i><i class="on"></i><i class="new"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="pro">Now a pro</span></div>
+        <div class="op g"><div class="face f2"></div><div class="nm">Tofu</div><div class="sub">On the trip</div>
+          <div class="lbl"><span>Combat</span><span class="pop">+1</span></div><div class="gauge"><i class="on"></i><i class="new"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      </div></div></section>
+
+    <section class="e"><p class="look">E · The promotion stamp</p><p class="why">Rises are quiet green ticks; the big moment is saved for a promotion, a yellow PRO stamp slammed across the corner of the card (the game already stamps crews coming home). Rare, so it lands.</p>
+      <div class="panel"><p class="title">A weapon: part of it</p><div class="cards">
+        <div class="op g"><span class="stamp">PRO</span><div class="face f1"></div><div class="nm">Scalpel</div><div class="sub">On the trip</div>
+          <div class="rows"><div class="st"><span class="tick">✓</span> Combat 15</div><div class="st"><span class="tick">✓</span> Stealth 5</div></div></div>
+        <div class="op g"><div class="face f2"></div><div class="nm">Tofu</div><div class="sub">On the trip</div>
+          <div class="rows"><div class="st"><span class="tick">✓</span> Combat 3</div></div></div>
+      </div></div></section>
+  </div>
+  <ul class="notes">
+    <li><b>They combine.</b> B's numbers with C's roll, or A's float with E's stamp, are both natural pairs.</li>
+    <li>Every look plays once when the report opens and is still with reduced motion; the static end state carries the same information.</li>
+    <li>Cards are tappable (the runner's page) and at least 44px tall.</li>
+  </ul>
+</div>
+</body>
+</html>
