@@ -4,6 +4,8 @@ Written 2026-11-26, a fresh read of the research from the same day. Planning onl
 
 **Where the research lives.** The notes, mockups and the 2026-11-26 design-log rows are on the unmerged branch `claude/inspiring-mccarthy-tz3ojz`, not on `main`. That branch does not merge cleanly into `main` (conflicts in `save.js`, `CODEMAP.md`, the design log, the changelog and the screenshots README), so this review does not bring the notes over. Section 1 lists each correction for whoever merges that branch. Code line numbers below are from `main` (95e508e); the files they point to are the same on both branches.
 
+**What "trip" means here.** A crew sent away from home for several days on an **expedition** (the tong's own errand: a weapon, cash or a recruit, 4 to 6 days, no client or pay) or a **security post** (a client's guard or escort contract, usually a week). The game uses the word too (Jobs › Trips on the research branch, "trip report"). Hands-off jobs and side tasks also send people off but are *not* trips in this review: hands-off jobs run on the main job code and side tasks keep their growth, so both already say who improved.
+
 **The lens.** The owner's direction: the core feeling is roster members getting stronger and customised, and sending them off meaningfully, so they grow and also get something done. Touchstone: AC Brotherhood's recruits. Depth from who a person becomes, not from more menus.
 
 ---
