@@ -26,6 +26,7 @@ import { availability, crewRoll, worsenInjury, setInjury } from './crew.js';
 import { successChance, riskLabel } from './risk.js';
 import { d20, hashRng, pick } from './rng.js';
 import { gainXp } from './development.js';
+import { keepGrowth, sumGrowth, growthText } from './grew.js';
 import { adjustTrust } from './clients.js';
 import { addHeat } from './heat.js';
 import { moveCash, money } from './money.js';
@@ -130,7 +131,7 @@ export function takeContract(prev, offerId, crewIds) {
   const endDay = state.day + offer.days;
   for (const id of crewIds) state.crew.find((o) => o.id === id).condition.awayUntil = endDay;
   ct.offers = ct.offers.filter((o) => o.id !== offerId);
-  ct.active.push({ ...offer, crewIds: [...crewIds], startDay: state.day, endDay, owed: 0, log: [], ended: null });
+  ct.active.push({ ...offer, crewIds: [...crewIds], startDay: state.day, endDay, owed: 0, log: [], ended: null, grew: [], graduated: [] });
   state.inbox.unshift({
     id: `ct-sent-${offer.id}`, type: 'job', day: state.day,
     subject: `${names(crew)} ${crew.length > 1 ? 'are' : 'is'} on ${/^[aeiou]/i.test(kindOf(offer).name) ? 'an' : 'a'} ${kindOf(offer).name.toLowerCase()} post for ${clientName(offer.clientId)}`,
@@ -202,7 +203,7 @@ function playDay(state, c) {
   const aside = asideFor(state.seed, c.id, state.day, roll.op); // the adventure log's personality (core/advlog.js), its own hash
 
   for (const op of crew) {
-    gainXp(op, crew, stat, CONTRACT.xpPerDay, state.day);
+    keepGrowth(state, c, op, gainXp(op, crew, stat, CONTRACT.xpPerDay, state.day), `a ${k.name.toLowerCase()} post`);
     op.condition.fatigue = Math.min(100, op.condition.fatigue + CONTRACT.fatiguePerDay);
     (op.track ??= {}).lastWorked = state.day; // a post is work: no rest for Burned Out
   }
@@ -449,8 +450,9 @@ function finish(state, c) {
   state.inbox.unshift({
     id: `ct-done-${c.id}`, type: 'report', day: state.day,
     subject: `${kindOf(c).name} post for ${clientName(c.clientId)}: done`,
-    body: `${names(crew)} finished the post. ${money(round50(c.owed))} to come on Sunday.${t ? ` ${clientName(c.clientId)}: trust +${t}.` : ''}`,
+    body: `${names(crew)} finished the post. ${money(round50(c.owed))} to come on Sunday.${t ? ` ${clientName(c.clientId)}: trust +${t}.` : ''}${growthText(c.grew) ? ` Came back sharper: ${growthText(c.grew)}.` : ''}`,
     contractLog: c.log.slice(-8),
+    back: { crewIds: [...c.crewIds], post: true, growth: sumGrowth(c.grew), graduated: [...(c.graduated ?? [])] },
     blocking: false, read: false,
   });
 }

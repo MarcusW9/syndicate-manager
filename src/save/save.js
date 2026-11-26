@@ -1165,6 +1165,13 @@ function migrate(state) {
     state.cashToday = state.cashToday ?? [];
     state.version = 91;
   }
+  if (state.version === 91) {
+    // v92: who grew while away (core/grew.js, DESIGN.md 2026-11-26): an expedition and a security post keep the whole-point
+    // rises (`grew`) and who graduated (`graduated`) for their report. One out before saw nothing kept: it starts empty.
+    for (const e of state.expeditions?.active ?? []) { if (e) { e.grew ??= []; e.graduated ??= []; } }
+    for (const c of state.contracts?.active ?? []) { if (c) { c.grew ??= []; c.graduated ??= []; } }
+    state.version = 92;
+  }
   repairCrewsOut(state);
   return state;
 }
@@ -1213,6 +1220,8 @@ function repairCrewsOut(state) {
     e.log = Array.isArray(e.log) ? e.log : [];
     e.finds = Array.isArray(e.finds) ? e.finds : [];
     e.waiting ??= false;
+    e.grew = Array.isArray(e.grew) ? e.grew : [];
+    e.graduated = Array.isArray(e.graduated) ? e.graduated : [];
   }
   const highest = Math.max(0, ...ex.active.map((e) => Number(String(e.id).replace(/\D/g, '')) || 0));
   ex.seq = Math.max(Number.isFinite(ex.seq) ? ex.seq : 0, highest);

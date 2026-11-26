@@ -23,6 +23,7 @@ import { availability, crewRoll, worsenInjury, setInjury, INJURY_DAYS } from './
 import { successChance, riskLabel, rollTarget } from './risk.js';
 import { d20, hashRng } from './rng.js';
 import { gainXp } from './development.js';
+import { keepGrowth, sumGrowth, growthText } from './grew.js';
 import { moveCash, money } from './money.js';
 import { noteInjury } from './earned.js';
 import { nextRng } from './random.js';
@@ -117,7 +118,7 @@ export function sendExpedition(prev, { goal, district, crewIds }) {
   if (goal === 'weapon') prize.item = makeItem(state, weightedKey(rng(), EXPEDITION.prizeTypes), weightedKey(rng(), EXPEDITION.prizeTiers));
   if (goal === 'cash') prize.cash = EXPEDITION.cashPerPersonDay * g.days * crewIds.length;
   if (goal === 'recruit') prize.recruit = generateRecruit(state, { quality: rng() < 0.25 ? 'veteran' : 'pro' });
-  const e = { id, goal, district, crewIds: [...crewIds], startDay: state.day, days: g.days, endDay: state.day + g.days, progress: 0, prize, facts: startFacts(state.seed, id, district), log: [], finds: [], waiting: false };
+  const e = { id, goal, district, crewIds: [...crewIds], startDay: state.day, days: g.days, endDay: state.day + g.days, progress: 0, prize, facts: startFacts(state.seed, id, district), log: [], finds: [], waiting: false, grew: [], graduated: [] };
   ex.active.push(e);
   for (const opId of crewIds) state.crew.find((o) => o.id === opId).condition.awayUntil = e.endDay;
   const crew = crewOf(state, e);
@@ -165,7 +166,7 @@ function playDay(state, e, d, crew) {
   const roll = crewRoll(crew, stat, { recommended: 2, job: { side: true, solo: crew.length === 1, district: e.district } });
   const die = d20(rng);
   const success = die + roll.value >= 10 + EXPEDITION.difficulty;
-  for (const op of crew) gainXp(op, crew, stat, EXPEDITION.xpPerDay, state.day);
+  for (const op of crew) keepGrowth(state, e, op, gainXp(op, crew, stat, EXPEDITION.xpPerDay, state.day), `${g.name.toLowerCase()} expedition`);
   // A callback brings back what day 1 named (a third of the time, once there is something to call back).
   const back = rng() < 0.35 ? (e.facts.met ? 'callbackContact' : e.facts.placed ? 'callbackPlace' : null) : null;
   if (success) {
@@ -403,6 +404,8 @@ export function closeExpedition(state, e, outcome, { text = null, fight = false 
   if (e.spent) results.push({ tone: 'plain', text: `Spent on the way: ${money(e.spent)}.` });
   const hurt = crew.filter((o) => o.condition.injury !== 'healthy').map((o) => `${o.handle} (${o.condition.injury})`);
   results.push(hurt.length ? { tone: 'bad', text: `Hurt: ${hurt.join(', ')}.` } : { tone: 'good', text: 'Nobody hurt.' });
+  const sharper = growthText(e.grew);
+  if (sharper) results.push({ tone: 'good', text: `Came back sharper: ${sharper}.` });
   for (const op of crew) {
     if (!op.condition.missing) op.condition.awayUntil = Math.min(op.condition.awayUntil ?? state.day, state.day); // home today
     op.history.push(`Day ${state.day}: ${g.name.toLowerCase()} expedition in ${districtText(e.district)} (${outcome})`);
@@ -415,7 +418,7 @@ export function closeExpedition(state, e, outcome, { text = null, fight = false 
     id: `exp-${e.id}-${state.day}`, type: 'report', day: state.day,
     subject: `${g.name}, ${districtText(e.district)}: ${word}`,
     body: [...e.log.map((l) => l.text), ...results.map((r) => r.text)].join(' '),
-    back: { crewIds: [...e.crewIds], pay: 0, away: true, expedition: true },
+    back: { crewIds: [...e.crewIds], pay: 0, away: true, expedition: true, growth: sumGrowth(e.grew), graduated: [...(e.graduated ?? [])] },
     timeline: {
       result: outcome === 'met' ? 'completed' : outcome === 'partial' ? 'aborted' : 'setback',
       steps: [], outcome: results,

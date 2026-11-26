@@ -16,7 +16,7 @@ import { pieceById } from '../core/builds.js';
 import { tierTag, perkList, apexHistory, spoilsCard } from './gear.js';
 import { TIERS } from '../data/gear.js';
 import { raidWhere } from './raidcards.js';
-import { esc, face, districtName, riskBadge } from './shared.js';
+import { esc, face, districtName, riskBadge, statName } from './shared.js';
 import { cardNames } from '../core/rivals.js';
 import { state, backLabel, V } from './view.js';
 
@@ -159,9 +159,14 @@ function reportCrew(m) {
     const lost = mine.length - won;
     const hurt = events.filter((e) => e.injury?.id === id).map((e) => e.injury.severity).sort((a, b) => SEV.indexOf(b) - SEV.indexOf(a))[0];
     const gone = !state.crew.some((o) => o.id === id);
-    const line = gone ? 'Lost' : mine.length ? `${won} ✓${lost ? ` · ${lost} ✗` : ''}` : m.timeline?.expedition ? 'On the trip' : 'Backed them up';
-    return `<button class="rcrew__op ${gone ? 'is-lost' : hurt ? 'is-hurt' : ''}" data-action="op-link" data-id="${esc(id)}" ${gone ? 'disabled' : ''}>
-        ${face(op, 'sm')}<strong>${esc(op.handle)}</strong><span>${esc(line)}</span>${hurt && !gone ? `<span class="rcrew__hurt">${esc(hurt)} wound</span>` : ''}</button>`;
+    const line = gone ? 'Lost' : mine.length ? `${won} ✓${lost ? ` · ${lost} ✗` : ''}` : m.timeline?.expedition ? 'On the trip' : m.back?.post ? 'On the post' : 'Backed them up';
+    // Who grew while away (2026-11-26, core/grew.js): a chip per stat that rose a whole point, and a graduation.
+    const grew = gone ? [] : (m.back?.growth ?? []).filter((g) => g.opId === id);
+    const pro = !gone && (m.back?.graduated ?? []).includes(id);
+    const chips = grew.length || pro ? `<span class="rcrew__grew">${grew.map((g) => `<b>+${g.to - g.from} ${esc(statName(g.stat))}</b>`).join('')}${pro ? '<b class="is-tier">Now a pro</b>' : ''}</span>` : '';
+    const say = grew.length || pro ? `. Came back sharper: ${[...grew.map((g) => `${statName(g.stat)} ${g.from} to ${g.to}`), pro ? 'now a pro' : ''].filter(Boolean).join(', ')}` : '';
+    return `<button class="rcrew__op ${gone ? 'is-lost' : hurt ? 'is-hurt' : ''} ${chips ? 'is-grew' : ''}" data-action="op-link" data-id="${esc(id)}" ${gone ? 'disabled' : ''} aria-label="${esc(`${op.handle}, ${line}${say}`)}">
+        ${face(op, 'sm')}<strong>${esc(op.handle)}</strong><span>${esc(line)}</span>${hurt && !gone ? `<span class="rcrew__hurt">${esc(hurt)} wound</span>` : ''}${chips}</button>`;
   }).join('');
   return `<div class="rcrew" aria-label="Who went">${cards}</div>`;
 }
