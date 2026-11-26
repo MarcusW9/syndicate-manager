@@ -1373,6 +1373,9 @@ p > .infobtn { display: inline-grid; vertical-align: 2px; margin-left: 4px; }
 .founding__bar { justify-content: space-between; flex-wrap: wrap; }
 .founding__bar .btn { flex: 1 1 200px; max-width: 420px; }
 .founding__bar p { margin: 0; }
+.founding__traitlist { margin: 8px 0 0; display: grid; gap: 8px; }
+.founding__traitlist dt { font-family: var(--display); font-weight: 700; }
+.founding__traitlist dd { margin: 2px 0 0; color: var(--muted); }
 @media (min-width: 760px) { .founders { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
 /* A renewal's three numbers (owner, 2026-10-29): equal columns, labels on top, the numbers on one

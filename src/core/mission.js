@@ -378,6 +378,16 @@ function incidentContext(state, am, inc, diff) {
   };
 }
 
+/** The report's pay line. When the job's costs or bonuses moved the pay off what was offered, it says so,
+ *  so the number on the job card, the report and the cash in the header can be matched (first-run walkthrough, 2026-11-26).
+ *  No pay keeps the plain "Paid ¥0.": an abort or a pull-out already says why. */
+export function paidLine(pay, offered) {
+  if (pay <= 0 || pay === offered) return `Paid ${money(pay)}.`;
+  return pay < offered
+    ? `Paid ${money(pay)} of the ${money(offered)} offered: ${money(offered - pay)} lost to what went wrong.`
+    : `Paid ${money(pay)}: ${money(pay - offered)} over the ${money(offered)} offered.`;
+}
+
 /** Exit the job from a decision: everyone comes home (the death rule), the job ends. Pays nothing
  *  by default, as the button says ("Everyone comes home. No pay."); pass payCut to soften that. */
 export function exitRun(state, am, { text, choice, report, why, payCut = 1 }) {
@@ -1024,6 +1034,8 @@ function finish(state) {
   // A client who asked for someone by name pays more if they were on the job (core/jobs.js namedBonus).
   const named = namedBonus(am, onJob(state, am).map((o) => o.id));
   const pay = Math.round((basePay * (1 + named) * Math.max(0, 1 - am.payCut)) / 50) * 50;
+  // What the client offered (with any by-name bonus) before the job's costs and bonuses, for the report's Paid line (2026-11-26).
+  const offered = Math.round((basePay * (1 + named)) / 50) * 50;
   // Freelancers who make it back take their share of what was actually paid.
   const freelance = crew.filter((o) => isFreelancer(o) && !deaths.includes(o)).map((o) => ({ handle: o.handle, cut: freelanceCut(o, pay) }));
   const cuts = freelance.reduce((n, f) => n + f.cut, 0);
@@ -1178,7 +1190,7 @@ function finish(state) {
   // Each outcome line has a tone so the screen can colour it (good, bad, warn, plain).
   const steps = [...(am.report ?? [])];
   const results = [
-    { tone: pay > 0 ? 'good' : 'plain', text: `Paid ${money(pay)}.` },
+    { tone: pay > 0 ? 'good' : 'plain', text: paidLine(pay, offered) },
     ...(named ? [{ tone: 'good', text: NAMED_TEXT.report.replace('{client}', clientById(am.clientId)?.name ?? 'The client').replace('{op}', opById(state, am.askedFor)?.handle ?? state.memorial.find((m) => m.id === am.askedFor)?.handle ?? 'them').replace('{pct}', Math.round(NAMED_OFFER.payBonus * 100)) }] : []),
     ...(cuts ? [{ tone: 'plain', text: `Freelancers took ${money(cuts)}.` }] : []),
     ...(am.bribe ? [{ tone: 'plain', text: `Props and bribes cost ${money(am.bribe)} up front.` }] : []),
