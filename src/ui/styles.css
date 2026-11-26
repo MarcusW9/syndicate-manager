@@ -999,11 +999,7 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .pola__name { min-width: 0; font: 700 0.85rem var(--display); letter-spacing: 0.04em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pcol--freelance .pola { box-shadow: inset 0 -4px 0 #b48cff, 0 6px 12px rgba(0, 0, 0, 0.55); }
 /* The inventory: straight cells two across; a rifle, drone or deck spans both, as wide as the photo. */
-.inv { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: center; gap: 3px; padding: 3px; min-height: 44px; background: #0a0c10; border: 1px solid var(--line); }
-/* Nothing carried: one bar to add gear (board.js inventory, 2026-11-26). */
-.inv--empty { display: block; padding: 0; border-style: dashed; border-color: #3a4254; background: transparent; }
-.inv__add { display: grid; place-items: center; width: 100%; min-height: 44px; padding: 0 4px; border: 0; background: none; color: var(--accent-2); font: 700 0.72rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; cursor: pointer; }
-.inv__add:hover, .inv__add:focus-visible { box-shadow: inset 0 0 0 1px var(--accent-2); }
+.inv { position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; padding: 3px; background: #0a0c10; border: 1px solid var(--line); }
 .inv__cell, .inv__it { position: relative; min-width: 0; overflow: hidden; aspect-ratio: 1; background: #141821; box-shadow: inset 0 0 0 1px #1f2532; }
 .inv__it { display: grid; place-items: center; background: radial-gradient(circle at 50% 45%, #1d2330, #12151c 70%); box-shadow: inset 0 0 0 1px #2f394b; }
 .inv__it.is-long { grid-column: span 2; aspect-ratio: 2 / 1; }
@@ -1039,6 +1035,8 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
   .inv__more { display: grid; }
   .pcol__line { font-size: 0.62rem; } .pcol__line .icon { width: 11px; height: 11px; }
   .pcol--empty { min-height: 128px; padding: 4px; } .pcol--empty small { display: none; }
+  .pcol--empty.is-off small { display: block; font-size: 0.6rem; } /* what it needs stays, so the greyed slot explains itself */
+  .pcol--empty.is-off .slotchip__link { font-size: 0.66rem; }
   .pcol--empty b { font-size: 0.62rem; letter-spacing: 0.08em; }
 }
 @media (prefers-reduced-motion: reduce) { .board.is-flash .board__mat, .pcol--empty.is-want { animation: none; } }
@@ -1061,10 +1059,11 @@ h2::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg
 .slotchip b { font: 700 0.78rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--text); }
 .slotchip small { font-size: 0.72rem; }
 .slotchip.is-off { cursor: default; grid-template-columns: 1fr auto; column-gap: 8px; }
-/* Overwatch with no rifle or drone: a line, not a box (board.js, 2026-11-26). */
-.slotoff { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0 8px; margin: 6px 0 0; color: var(--muted); font-size: 0.78rem; }
-.slotoff b { font: 700 0.72rem var(--display); letter-spacing: 0.1em; text-transform: uppercase; }
-.slotoff .slotchip__link { padding: 0 2px; }
+/* Outside's slots (board.js, 2026-11-26): the inside team's columns; Overwatch with no rifle or drone is a greyed slot. */
+.pcol--empty.is-off { cursor: default; border-style: dotted; opacity: 0.85; }
+.pcol--empty.is-off b { color: var(--muted); }
+.pcol--empty.is-off .slotchip__link { grid-column: auto; grid-row: auto; padding: 0 2px; justify-self: center; }
+.pcol--empty.is-off b { white-space: normal; overflow-wrap: anywhere; }
 .slotchip.is-off b { color: var(--muted); }
 .slotchip.is-off small { grid-column: 1; }
 .slotchip__link { grid-column: 2; grid-row: 1 / span 2; align-self: center; min-height: 44px; padding: 0 8px; border: 0; background: none; color: var(--accent-2); font: 600 0.78rem system-ui, sans-serif; cursor: pointer; }

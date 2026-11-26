@@ -82,9 +82,6 @@ function invItems(op, prefer = null) {
 function inventory(ui, op, prefer) {
   const { esc } = ui;
   const items = invItems(op, prefer);
-  // Nothing carried: one 44px "+ Gear" bar instead of two small empty cells (2026-11-26, the tap-target rule). A span with
-  // role="button", like the cells: the column itself is a button, and a button can't hold another.
-  if (!items.length) return `<span class="inv inv--empty"><span class="inv__add" role="button" tabindex="0" data-action="board-gear-add" data-id="${esc(op.id)}" aria-label="Add gear to ${esc(op.handle)}">+ Gear</span></span>`;
   let cells = 0;
   let first = 0;
   const html = items.map((it) => {
@@ -215,15 +212,10 @@ export function renderBoard(ui, { plan, tpl, people, crewSize, approachName = ''
               { slot: 'wheels', op: wh, card: wheelsCard, name: 'Wheels', hint: 'takes the piloting rolls' },
               { slot: 'standby', op: sb, card: standbyCard, name: 'Standby', hint: 'called in when it goes wrong' },
             ];
-            const filled = slots.filter((x) => x.op);
-            // The slots you can fill come first, as chips; Overwatch without a rifle or drone is a quiet line under them,
-            // not a box, so it doesn't look tappable or take the widest row (2026-11-26).
-            const chip = (x) => `<button class="slotchip" data-action="pick-slot" data-id="${x.slot}" aria-label="${esc(x.name)}: empty, optional. ${esc(x.hint)}. Tap to assign."><b>+ ${esc(x.name)}</b><small>${esc(x.hint)}</small></button>`;
-            const open = slots.filter((x) => !x.op && !x.off);
-            const off = slots.find((x) => !x.op && x.off);
-            return `${filled.length ? `<div class="pcols">${filled.map((x) => x.card).join('')}</div>` : ''}
-          ${open.length ? `<div class="slotchips">${open.map(chip).join('')}</div>` : ''}
-          ${off ? `<p class="slotoff"><span><b>Overwatch</b> · needs a rifle or a drone</span><button class="slotchip__link" data-action="open-armoury" data-tab="shop">Armoury →</button></p>` : ''}`;
+            // Outside uses the same slots as the inside team (owner, 2026-11-26): a card when someone is on it, a dashed
+            // slot like "+ Extra" when empty. Overwatch without a rifle or drone is a slot too, greyed, with the way to the armoury.
+            const offSlot = `<div class="pcol pcol--empty is-off"><b>Overwatch</b><small>needs a rifle or a drone</small><button class="slotchip__link" data-action="open-armoury" data-tab="shop">Armoury →</button></div>`;
+            return `<div class="pcols pcols--outside">${slots.map((x) => (!x.op && x.off ? offSlot : x.card)).join('')}</div>`;
           })()}
         </div>
       </div></div>`;
