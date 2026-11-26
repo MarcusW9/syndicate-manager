@@ -43,7 +43,7 @@ Started 2026-11-26, at the owner's request. Darkest Dungeon (DD, Red Hook, 2016)
 2. **A breaking point that can go either way.** DD's best idea is the check at the edge: most break, a few rise. A runner pushed too far who sometimes comes out stronger (an earned trait) would make strain exciting, not only a cost. It must stay inside the death rule: a breakdown costs a job or a choice, never a life.
 3. **Taking control away is expensive.** Sigman says it was hard to balance. If a runner ever acts on their own (refuses an order, bolts), it should be rare, shown in advance as a risk, and never kill anyone.
 4. **Recovery as a money sink.** DD keeps you poor by charging to heal minds. We have rest and the Canteen. A paid way to clear a setback trait (a doctor, a temple, a week off with pay) is a sink that also tells a story.
-5. **Relationships that the player sees form.** We have one (`crew_anchor`). Wildermyth's rivals who fight better beside each other is a second, cheap, funny one. Check `drafts/earned-traits-backlog.md` first.
+5. **Relationships that the player sees form.** We have one (`crew_anchor`). Wildermyth's rivals who fight better beside each other is a second, cheap, funny one. `drafts/earned-traits-backlog.md` has no relationship traits yet (checked 2026-11-26), so this would be new.
 6. **Stories that read the people in them.** Wildermyth's events have hooks for traits and relationships. Our job crises and expedition lines could name a runner's trait or partner when they fit, the way `{partner}` already fills in.
 7. **Repetition is the slow killer.** Both games' long-run complaint. We guard lines within one trip; check repetition across trips and across a season, and keep the line pools growing.
 8. **The look can change.** Wildermyth's transformations are memorable because the picture changes. Our tattoos (`core/marks.js`) are a start; a lasting injury or a mark that shows on the runner's face would do the same.
@@ -53,7 +53,6 @@ Started 2026-11-26, at the owner's request. Darkest Dungeon (DD, Red Hook, 2016)
 
 - Does a report say when a job leaves someone shaken or close to the edge?
 - How often does a player see the same expedition or crisis line across a season?
-- Which earned traits in the backlog are relationships, and is a rivalry one there?
 
 ## Sources
 
