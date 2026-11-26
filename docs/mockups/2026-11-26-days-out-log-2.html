@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Days Out Log Round Two</title>
+<!-- Mockup round 2, 2026-11-26. Owner, after round 1 (2026-11-26-days-out-log.html): more takes on 1 (spaced) and 2 (rail),
+     no colour code for how a day went; a quiet day is a short filler line and the flavour goes on the days where
+     something happens; a bar fills as the crew works; call-ins and days you can go in and watch (an encounter on a map,
+     a fight) are marked, which is where multi-map comes in. Two places: the card while they're out, and the report.
+     Same trip throughout: a weapon hunt in the Night Market, 6 days, needs 3 leads (data/expeditions.js need).
+     Street-terminal tokens from docs/UI-SKIN.md. Not wired to the game. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c0f; --panel:#12151b; --panel-2:#161a21; --line:#2a303b;
+  --text:#e9ecf1; --muted:#8a93a6; --dim:#5d6577; --accent:#ff3d5f; --accent-2:#3de8d8; --cut:10px;
+  --disp:'Rajdhani',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background-image:linear-gradient(rgba(61,232,216,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(61,232,216,.025) 1px,transparent 1px);
+  background-size:32px 32px;padding:16px max(16px,env(safe-area-inset-left)) 40px}
+.wrap{max-width:1400px;margin:0 auto}
+h1{font:700 22px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin:4px 0}
+h2{font:700 16px var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--accent-2);margin:28px 0 4px;display:flex;gap:10px;align-items:center}
+h2::after{content:"";flex:1;height:1px;background:var(--line)}
+.lede{color:var(--muted);max-width:860px;margin:0 0 6px}
+.grid{display:grid;gap:22px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));align-items:start;margin-top:14px}
+.look{font:700 13px var(--disp);letter-spacing:.16em;color:var(--accent-2);text-transform:uppercase;margin:0 0 6px}
+.why{color:var(--muted);font-size:13px;margin:0 0 10px;min-height:72px}
+.panel{position:relative;background:linear-gradient(var(--panel-2),var(--panel));border:1px solid var(--line);
+  clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%);padding:16px}
+.panel::before{content:"";position:absolute;top:-1px;left:16px;width:36px;height:2px;background:var(--accent-2)}
+.head{font:700 13px var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+.who{text-decoration:underline dotted var(--accent-2);text-underline-offset:3px}
+.d{font:700 11px/1 var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-2)}
+.kind{font:600 11px/1 var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+ol{list-style:none;margin:0;padding:0}
+.t{font-size:14px;color:#c9cfda}
+.quiet{font-size:13px;color:var(--dim);font-style:italic}
+.small{font-size:12px;color:var(--muted)}
+
+/* the trip card header (while out) */
+.trip{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}
+.trip strong{font:700 17px var(--disp);letter-spacing:.06em;text-transform:uppercase}
+.faces{margin-left:auto;display:flex;gap:4px}
+.face{width:26px;height:28px;border-radius:2px}
+.f1{background:linear-gradient(160deg,#2d3a52 0 40%,#3de8d8 40% 55%,#1b2340 55%)}
+.f2{background:linear-gradient(160deg,#4a2a20 0 40%,#ff9a5a 40% 55%,#1b2340 55%)}
+
+/* the goal bar: leads found */
+.goal{margin:12px 0 4px}
+.goal .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.goal .k{font:700 12px var(--disp);letter-spacing:.14em;text-transform:uppercase}
+.goal .n{font:700 13px var(--disp);letter-spacing:.06em;color:var(--accent-2)}
+.seg{display:flex;gap:2px;height:10px}
+.seg i{flex:1;background:#232a35}
+.seg i.on{background:var(--accent-2)}
+.seg.thin{height:6px}
+
+/* the day strip: the bar that fills day by day */
+.strip{display:grid;grid-template-columns:repeat(6,1fr);gap:3px;margin:12px 0 4px}
+.strip span{position:relative;height:28px;background:#1b2029;border:1px solid var(--line);display:grid;place-items:center;font:700 12px var(--disp);color:var(--dim)}
+.strip span.done{background:#2a3340;color:var(--text)}
+.strip span.today{border-color:var(--accent-2);color:var(--accent-2);animation:breathe 2.4s ease-in-out infinite}
+.strip span.watch::after{content:"";position:absolute;top:-1px;right:-1px;border-style:solid;border-width:0 9px 9px 0;border-color:transparent var(--accent-2) transparent transparent}
+.strip span.call{outline:2px solid var(--accent);outline-offset:-2px;color:var(--text)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font:600 11px var(--disp);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;margin-right:5px;vertical-align:-1px;border:1px solid var(--line);background:#2a3340}
+.legend i.w{background:#1b2029;position:relative;overflow:hidden}
+.legend i.w::after{content:"";position:absolute;top:0;right:0;border-style:solid;border-width:0 6px 6px 0;border-color:transparent var(--accent-2) transparent transparent}
+.legend i.c{outline:2px solid var(--accent);outline-offset:-2px;background:#1b2029}
+@keyframes breathe{50%{box-shadow:0 0 10px rgba(61,232,216,.35)}}
+@media (prefers-reduced-motion:reduce){.strip span.today{animation:none}}
+
+/* buttons */
+.btn{display:inline-grid;place-items:center;min-height:44px;padding:0 16px;font:700 14px var(--disp);letter-spacing:.12em;text-transform:uppercase;
+  clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.btn.call{background:var(--accent);color:#fff}
+.btn.ghost{border:1px solid var(--line);color:var(--muted);clip-path:none}
+.btn.watch{border:1px solid var(--accent-2);color:var(--accent-2);clip-path:none}
+.foot{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+
+/* 1x: spaced lines */
+.s li{padding:9px 0;border-bottom:1px solid rgba(42,48,59,.7)}
+.s li:last-child{border-bottom:0}
+.s .top{display:flex;align-items:baseline;gap:8px;margin-bottom:3px}
+.s .top .kind{margin-left:auto}
+.s li.q{padding:5px 0}
+.s li.q .top{margin:0}
+.s .moment{border:1px solid var(--line);background:var(--panel);padding:8px 10px;margin-top:6px;display:flex;gap:10px;align-items:center}
+.s .moment .mk{font:700 11px var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--accent-2)}
+.s .moment .btn{margin-left:auto;min-height:40px;padding:0 12px;font-size:12px}
+.s li.future .d,.s li.future .t{color:var(--dim)}
+.s .group{color:var(--dim);font-size:13px;font-style:italic}
+
+/* 2x: rail, shape not colour */
+.r{position:relative;padding-left:24px}
+.r::before{content:"";position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:var(--line)}
+.r li{position:relative;padding:0 0 13px}
+.r li:last-child{padding-bottom:0}
+.r li::before{content:"";position:absolute;left:-23px;top:2px;width:12px;height:12px;background:var(--panel);border:2px solid var(--muted);transform:rotate(45deg)}
+.r li.q{padding-bottom:9px}
+.r li.q::before{width:6px;height:6px;left:-20px;top:5px;border-width:2px;border-color:var(--dim)}
+.r li.lead::before{background:var(--text);border-color:var(--text)}
+.r li.moment::before{width:16px;height:16px;left:-25px;top:0;border-color:var(--accent-2);background:var(--bg)}
+.r li.moment::after{content:"";position:absolute;left:-20px;top:4px;border-style:solid;border-width:4px 0 4px 7px;border-color:transparent transparent transparent var(--accent-2)}
+.r li.call::before{border-color:var(--accent)}
+.r li.call::after{border-color:transparent transparent transparent var(--accent)}
+.r li.future::before{border-style:dashed;border-color:var(--dim);background:none}
+.r li.today::before{border-color:var(--accent-2);box-shadow:0 0 8px rgba(61,232,216,.5)}
+.r .top{display:flex;gap:8px;align-items:baseline;margin-bottom:3px}
+.r .top .kind{margin-left:auto}
+.r li.future .d,.r li.future .t{color:var(--dim)}
+.r .watchrow{display:flex;align-items:center;gap:10px;margin-top:6px}
+.r .watchrow .btn{min-height:40px;padding:0 12px;font-size:12px}
+.r .fill{position:absolute;left:6px;top:6px;width:2px;background:var(--accent-2)}
+.shapes{display:flex;gap:14px;flex-wrap:wrap;font:600 11px var(--disp);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 12px}
+.shapes b{display:inline-block;transform:rotate(45deg);margin-right:6px;vertical-align:1px}
+.shapes .sq{width:5px;height:5px;border:2px solid var(--dim)}
+.shapes .ld{width:8px;height:8px;background:var(--text)}
+.shapes .mo{width:10px;height:10px;border:2px solid var(--accent-2)}
+.shapes .ca{width:10px;height:10px;border:2px solid var(--accent)}
+
+.notes{margin-top:26px;color:var(--muted);font-size:13px;max-width:940px}
+.notes li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>The days out, round two</h1>
+  <p class="lede">More takes on 1 (spaced) and 2 (rail). No colour for how a day went. Quiet days are a short filler line; the flavour goes on days where something happens. A bar fills as they work. Days you can go in and watch (an encounter on a map, a fight) and call-ins are marked, which is where multi-map comes in.</p>
+  <p class="lede">The trip: a weapon hunt in the Night Market, 6 days, needs 3 leads. Day 4 a deal went wrong and they called you; day 6 is the meet, which you can watch.</p>
+
+  <h2>While they're out (the card on Today)</h2>
+  <div class="grid">
+
+    <section>
+      <p class="look">1a · Spaced, with the goal bar</p>
+      <p class="why">The card leads with what matters: leads found, 2 of 3. Below it the days in spaced lines, newest first, a quiet day as one dim line. The day you can watch is shown ahead of time as a box with its button.</p>
+      <div class="panel">
+        <div class="trip"><strong>A weapon</strong><span class="small">day 5 of 6 · Night Market</span><span class="faces"><span class="face f1"></span><span class="face f2"></span></span></div>
+        <div class="goal"><div class="row"><span class="k">Leads</span><span class="n">2 of 3</span></div><div class="seg"><i class="on"></i><i class="on"></i><i></i></div></div>
+        <ol class="s">
+          <li class="future"><div class="top"><span class="d">Day 6 · tomorrow</span><span class="kind">The meet</span></div>
+            <div class="moment"><span><span class="mk">You can watch</span><br><span class="small">The seller's yard, on the map</span></span><span class="btn watch">Watch it</span></div></li>
+          <li><div class="top"><span class="d">Day 5</span><span class="kind">A lead</span></div><span class="t">The seller tried to make <span class="who">Lychee</span> wait all afternoon. <span class="who">Lychee</span> waited longer and got the meeting.</span></li>
+          <li><div class="top"><span class="d">Day 4</span><span class="kind">You took the call</span></div><span class="t">A middleman wanted the money up front and brought friends. <span class="who">Vector</span> talked; <span class="who">Lychee</span> didn't need to.</span></li>
+          <li class="q"><div class="top"><span class="d" style="color:var(--dim)">Day 3</span><span class="quiet">Quiet. Noodles, rain, a stall that opened late.</span></div></li>
+        </ol>
+        <div class="foot"><span class="btn ghost">Older days</span><span class="btn ghost">Pull them out</span></div>
+      </div>
+    </section>
+
+    <section>
+      <p class="look">1b · Spaced, under a day strip</p>
+      <p class="why">The bar that fills is the trip itself: six cells, one a day, filled as the days pass, today breathing. A cyan corner marks a day you can watch; a red outline a day that called you. Leads sit under it as a thin second bar. Only the latest line shows; the rest open on tap.</p>
+      <div class="panel">
+        <div class="trip"><strong>A weapon</strong><span class="small">Night Market · back Sat</span><span class="faces"><span class="face f1"></span><span class="face f2"></span></span></div>
+        <div class="strip"><span class="done">1</span><span class="done">2</span><span class="done">3</span><span class="done call">4</span><span class="today">5</span><span class="watch">6</span></div>
+        <div class="legend"><span><i></i>Done</span><span><i class="c"></i>Called you</span><span><i class="w"></i>You can watch</span></div>
+        <div class="goal"><div class="row"><span class="k">Leads</span><span class="n">2 of 3</span></div><div class="seg thin"><i class="on"></i><i class="on"></i><i></i></div></div>
+        <ol class="s">
+          <li><div class="top"><span class="d">Day 5</span><span class="kind">A lead</span></div><span class="t">The seller tried to make <span class="who">Lychee</span> wait all afternoon. <span class="who">Lychee</span> waited longer and got the meeting.</span></li>
+        </ol>
+        <div class="foot"><span class="btn ghost">The days out (5)</span><span class="btn watch">Watch day 6</span></div>
+      </div>
+    </section>
+
+    <section>
+      <p class="look">2a · Rail, with the days ahead</p>
+      <p class="why">The rail runs the whole trip, past and future. The filled part of the rail is the bar: it creeps down as days pass. Shape, not colour: a small dot is a quiet day, a solid diamond a lead, a large diamond with a play mark a moment you can watch (red edge if it called you), dashed ahead.</p>
+      <div class="panel">
+        <div class="trip"><strong>A weapon</strong><span class="small">day 5 of 6 · leads 2 of 3</span><span class="faces"><span class="face f1"></span><span class="face f2"></span></span></div>
+        <div style="height:12px"></div>
+        <ol class="r">
+          <span class="fill" style="height:78%"></span>
+          <li><div class="top"><span class="d">Day 1</span><span class="kind">Set out</span></div><span class="t">Over a shared table, <span class="who">Vector</span> mentioned the Scaled Typhoon. Kwong Wai-shun wrote a seller's name on the receipt.</span></li>
+          <li class="q"><div class="top"><span class="d" style="color:var(--dim)">Day 2</span><span class="quiet">Quiet. Two stalls, two shrugs.</span></div></li>
+          <li class="lead"><div class="top"><span class="d">Day 3</span><span class="kind">Lead 1 of 3</span></div><span class="t">A repairer laid up after an implant flare-up. <span class="who">Vector</span> kept it short and came away with a name.</span></li>
+          <li class="moment call"><div class="top"><span class="d">Day 4</span><span class="kind">Called you · watched</span></div><span class="t">A middleman wanted the money up front and brought friends. Held in the alley.</span><div class="watchrow"><span class="btn ghost" style="min-height:40px;font-size:12px">See the fight again</span></div></li>
+          <li class="lead today"><div class="top"><span class="d">Day 5 · today</span><span class="kind">Lead 2 of 3</span></div><span class="t">The seller tried to make <span class="who">Lychee</span> wait all afternoon. <span class="who">Lychee</span> waited longer and got the meeting.</span></li>
+          <li class="moment future"><div class="top"><span class="d">Day 6</span><span class="kind">The meet</span></div><span class="t">The seller's yard. You can go in and watch.</span><div class="watchrow"><span class="btn watch">Watch it</span></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section>
+      <p class="look">2b · Rail, folded quiet days</p>
+      <p class="why">Like 2a but tighter for the card: runs of quiet days collapse into one dim line ("Days 1–2 … quiet"), and only days with a lead, a call or a moment get a full entry. The shape key sits at the top once.</p>
+      <div class="panel">
+        <div class="trip"><strong>A weapon</strong><span class="small">day 5 of 6</span><span class="faces"><span class="face f1"></span><span class="face f2"></span></span></div>
+        <div class="goal"><div class="row"><span class="k">Leads</span><span class="n">2 of 3</span></div><div class="seg thin"><i class="on"></i><i class="on"></i><i></i></div></div>
+        <div class="shapes"><span><b class="sq"></b>Quiet</span><span><b class="ld"></b>Lead</span><span><b class="mo"></b>Watch</span><span><b class="ca"></b>Called you</span></div>
+        <ol class="r">
+          <li class="q"><div class="top"><span class="quiet">Days 1–2: set out, asked around. Quiet.</span></div></li>
+          <li class="lead"><div class="top"><span class="d">Day 3</span><span class="kind">Lead</span></div><span class="t">A repairer laid up after an implant flare-up gave <span class="who">Vector</span> a name.</span></li>
+          <li class="moment call"><div class="top"><span class="d">Day 4</span><span class="kind">Called you</span></div><span class="t">A middleman brought friends. Held in the alley.</span></li>
+          <li class="lead today"><div class="top"><span class="d">Day 5 · today</span><span class="kind">Lead</span></div><span class="t"><span class="who">Lychee</span> outwaited the seller and got the meeting.</span></li>
+          <li class="moment future"><div class="top"><span class="d">Day 6</span><span class="kind">The meet</span></div><div class="watchrow"><span class="btn watch">Watch it</span><span class="small">or let them handle it</span></div></li>
+        </ol>
+      </div>
+    </section>
+  </div>
+
+  <h2>The report (when they're home)</h2>
+  <div class="grid">
+
+    <section>
+      <p class="look">1c · Spaced report</p>
+      <p class="why">The full log, oldest first, spaced, each day with a plain word on the right for what it was. Quiet days stay as one dim line. Watched moments keep a link to see them again.</p>
+      <div class="panel"><p class="head">The days out · 3 of 3 leads</p>
+        <ol class="s">
+          <li><div class="top"><span class="d">Day 1</span><span class="kind">Set out</span></div><span class="t">Over a shared table, <span class="who">Vector</span> mentioned the Scaled Typhoon. Kwong Wai-shun wrote a seller's name on the receipt.</span></li>
+          <li class="q"><div class="top"><span class="d" style="color:var(--dim)">Day 2</span><span class="quiet">Quiet. Two stalls, two shrugs.</span></div></li>
+          <li><div class="top"><span class="d">Day 3</span><span class="kind">A lead</span></div><span class="t">A repairer was laid up after an implant flare-up. <span class="who">Vector</span> kept the visit short and came away with a name.</span></li>
+          <li><div class="top"><span class="d">Day 4</span><span class="kind">You took the call</span></div><span class="t">A middleman wanted the money up front and brought friends. They held in the alley.</span>
+            <div class="moment"><span class="mk">Fight · watched</span><span class="btn ghost" style="min-height:40px;font-size:12px">See it again</span></div></li>
+          <li><div class="top"><span class="d">Day 5</span><span class="kind">A lead</span></div><span class="t">The seller tried to make <span class="who">Lychee</span> wait all afternoon. <span class="who">Lychee</span> waited longer and got the meeting.</span></li>
+          <li><div class="top"><span class="d">Day 6</span><span class="kind">The meet · got it</span></div><span class="t">The Scaled Typhoon was real and close enough to take home. It made it back smelling of machine oil.</span>
+            <div class="moment"><span class="mk">The seller's yard · let them handle it</span></div></li>
+        </ol></div>
+    </section>
+
+    <section>
+      <p class="look">2c · Rail report</p>
+      <p class="why">The finished rail, filled top to bottom. The shapes tell the trip at a glance: two quiet dots, three solid leads, two big diamonds where you could have been there. Short words on the right instead of colour.</p>
+      <div class="panel"><p class="head">The days out · 3 of 3 leads</p>
+        <div class="shapes"><span><b class="sq"></b>Quiet</span><span><b class="ld"></b>Lead</span><span><b class="mo"></b>Watch</span><span><b class="ca"></b>Called you</span></div>
+        <ol class="r">
+          <span class="fill" style="height:96%"></span>
+          <li><div class="top"><span class="d">Day 1</span><span class="kind">Set out</span></div><span class="t">Over a shared table, <span class="who">Vector</span> mentioned the Scaled Typhoon. Kwong Wai-shun wrote a seller's name on the receipt.</span></li>
+          <li class="q"><div class="top"><span class="d" style="color:var(--dim)">Day 2</span><span class="quiet">Quiet. Two stalls, two shrugs.</span></div></li>
+          <li class="lead"><div class="top"><span class="d">Day 3</span><span class="kind">Lead 1</span></div><span class="t">A repairer laid up after an implant flare-up. <span class="who">Vector</span> came away with a name.</span></li>
+          <li class="moment call"><div class="top"><span class="d">Day 4</span><span class="kind">Called you</span></div><span class="t">A middleman brought friends. They held in the alley.</span><div class="watchrow"><span class="btn ghost" style="min-height:40px;font-size:12px">See the fight again</span></div></li>
+          <li class="lead"><div class="top"><span class="d">Day 5</span><span class="kind">Lead 2</span></div><span class="t"><span class="who">Lychee</span> outwaited the seller and got the meeting.</span></li>
+          <li class="moment lead"><div class="top"><span class="d">Day 6</span><span class="kind">Lead 3 · got it</span></div><span class="t">The meet in the seller's yard. The Scaled Typhoon made it back smelling of machine oil.</span></li>
+        </ol></div>
+    </section>
+  </div>
+
+  <ul class="notes">
+    <li><b>How this maps to the game.</b> The leads bar is an expedition's <code>progress</code> against its goal's <code>need</code> (<code>data/expeditions.js</code>). Quiet days are the progress rolls that miss ("Nothing moved", tone plain); they'd get their own short filler pool in <code>core/advlog.js</code>.</li>
+    <li><b>Days you can watch</b> are what long jobs already do: one stop a day, and "watch by day" calls you at a stop (<code>core/autorun.js watchByDay</code>, <code>core/prep.js</code>, multi-map in <code>core/multimap.js</code>). For expeditions it would be new: a planned day with a map (the meet) shown ahead of time, plus the existing call when a deal goes wrong (<code>startExpeditionFight</code>).</li>
+    <li><b>"See the fight again"</b> needs the fight's record kept with the trip; today a watched fight is in the fight record, not linked from the log.</li>
+    <li>The day text on days 2 and 4 is made up for the mockup.</li>
+  </ul>
+</div>
+</body>
+</html>
