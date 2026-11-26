@@ -119,7 +119,7 @@ Our nearest competitor: a solo-developer guild manager in Early Access since 202
 11. **Fights must be worth watching, or skippable.** Fallout Shelter's combat is its most criticised part. The watchable-combat work (`docs/BATTLES.md`) is the answer; hands-off fights should always offer a short report instead.
 12. **No paid shortcuts.** Not a plan here, but the reviews are unanimous: paid loot in a single-player game reads as a trap.
 
-13. **Save data for crews out is the weak spot.** GMS broke saves three times on half-written or missing expedition data. Our migrations already default missing `awayJobs` (`save.js`, from v17), but the save tests (`tests/saves.test.js`, `savefail.test.js`) do not load a save with crews out. They should include a save with jobs away, expeditions out and a pending call-in, and one with those fields missing.
+13. **Save data for crews out is the weak spot.** GMS broke saves three times on half-written or missing expedition data. Our migrations already default missing `awayJobs` (`save.js`, from v17), but the save tests (`tests/saves.test.js`, `savefail.test.js`) do not load a save with crews out. Done 2026-11-26: `tests/save-crewsout.test.js` saves mid-trip with a call waiting and plays on, and loads eleven half-written versions. It found a real bug: a call-in whose job was lost blocked the day for ever. Fixed by `save.js repairCrewsOut`.
 14. **Hands-off stop rules, said out loud.** Our hands-off crews already never push on. Each report should say why it stopped or pulled out, in one line, the way GMS's tray note does.
 15. **Explain what numbers do, on tap.** GMS kept adding text explaining its stats. Our iOS rule (tap to reveal, no hover) fits; check every stat and tag on the runner's page opens a plain line.
 
@@ -128,4 +128,3 @@ Our nearest competitor: a solo-developer guild manager in Early Access since 202
 - When cash goes below zero, does the screen show a way out? (The sims already measure how often it happens.)
 - In a playtest: does the player feel their signings, buyouts and poaching changed a rival tong's fortunes?
 - Returning after a long break: does the first screen tell the player enough to pick the run back up?
-- Do the save tests cover a save with crews away, expeditions out and a call-in waiting, and one with those fields missing?
