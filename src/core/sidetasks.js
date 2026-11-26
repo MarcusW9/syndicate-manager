@@ -228,5 +228,5 @@ export function sideTasksOut(state) {
     ? { returnDay: s.returnDay, name: `Watch ${s.houseName ?? 'a tong'}`, district: state.rivals?.tongs.find((t) => t.id === s.house)?.home ?? null, crewIds: s.crewIds }
     : s.scout
     ? { returnDay: s.returnDay, name: `Scout ${findCard(state, s.scout)?.name ?? 'a name'}`, district: findCard(state, s.scout)?.home ?? null, crewIds: s.crewIds }
-    : { returnDay: s.returnDay, name: sideTaskById(s.taskId)?.name ?? s.taskId, district: sideTaskById(s.taskId)?.district ?? null, crewIds: s.crewIds, log: s.log ?? [] }));
+    : { returnDay: s.returnDay, name: sideTaskById(s.taskId)?.name ?? s.taskId, district: sideTaskById(s.taskId)?.district ?? null, crewIds: s.crewIds, log: s.log ?? [], days: sideTaskById(s.taskId)?.days ?? null }));
 }

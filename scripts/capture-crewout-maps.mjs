@@ -59,8 +59,8 @@ try {
   await p.evaluate(() => { document.querySelector('.crewsout')?.scrollIntoView({ block: 'start' }); window.scrollBy(0, -120); });
   await p.waitForTimeout(300);
   await p.screenshot({ path: `${out}/01-out-now-mini-maps.png` });
-  await p.locator('.crewsout__job.is-call').first().screenshot({ path: `${out}/02-calling-crew-card.png` });
-  await p.locator('.crewsout__job:not(.is-call):not(.is-side)').first().screenshot({ path: `${out}/03-crew-card.png` });
+  await p.locator('.outrow.is-call').first().screenshot({ path: `${out}/02-calling-crew-card.png` });
+  await p.locator('.outrow.is-job:not(.is-call)').first().screenshot({ path: `${out}/03-crew-card.png` });
   const d = await b.newPage({ viewport: { width: 1280, height: 860 }, deviceScaleFactor: 2 });
   await load(d, busy);
   await tap(d, '[data-action="nav"][data-id="ops"]'); await d.waitForTimeout(700);
