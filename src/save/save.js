@@ -1159,5 +1159,11 @@ function migrate(state) {
     // the stash counts as seen. Nothing to change.
     state.version = 90;
   }
+  if (state.version === 90) {
+    // v91: the top bar's change can be opened (first-run walkthrough, DESIGN.md 2026-11-26): core/money.js moveCash keeps
+    // today's movements in cashToday. A save from before starts the list empty; whatever already moved today shows as "Other".
+    state.cashToday = state.cashToday ?? [];
+    state.version = 91;
+  }
   return state;
 }

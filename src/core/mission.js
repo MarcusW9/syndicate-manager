@@ -39,7 +39,7 @@ import { reactToJob, RUMOUR_CRISIS_CHANCE } from './rumours.js';
 import { CAST } from '../data/cast.js';
 import { DISTRICTS } from '../data/districts.js';
 import { NAMES } from '../config/names.js';
-import { money } from './money.js';
+import { moveCash, money } from './money.js';
 import { summariseRun, reportEvent, REPORT_LOGS_KEPT } from './report.js';
 import { intelFor } from './sidetasks.js';
 import { afterJob, noteInjury, spendSecondWind, earnedOf } from './earned.js';
@@ -231,7 +231,7 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
   // The approach's costs: time away, and props and bribes paid up front (data/approaches.js).
   const days = Math.max(1, (job.days ?? baseDays(tpl)) + (ap.days ?? 0)); // the offer's days (core/jobs.js daysRange)
   const bribe = (ap.bribePerThreat ?? 0) * view.threat;
-  state.cash -= bribe;
+  moveCash(state, -bribe, `${tpl.name}: props and bribes`);
   // A multi-map job (core/multimap.js) plays its stops first; the finale's queue waits until the route gets there.
   // A long job with no route of its own plays its prep stops (core/prep.js) the same way, from the offer's picks.
   const route = !tpl.maps && job.prep?.length ? prepRoute(job.prep, tpl, approach) : null;
@@ -825,7 +825,7 @@ export function chooseOption(prev, choiceId) {
   am.payCut += cost.payCut ?? 0;
   am.extraHeat += cost.heat ?? 0;
   am.clientTrust += cost.clientTrust ?? 0;
-  if (cost.cash) state.cash += cost.cash;
+  if (cost.cash) moveCash(state, cost.cash, `${tpl.name}: "${fill(choice.label, state, voice)}"`, { onJob: true });
 
   // What gets recorded for the full log: the facts of this choice, filled in below.
   const event = {
@@ -882,7 +882,7 @@ export function chooseOption(prev, choiceId) {
     const sc = choice.successCost ?? {};
     am.payCut += sc.payCut ?? 0;
     am.extraHeat += sc.heat ?? 0;
-    if (sc.cash) state.cash += sc.cash;
+    if (sc.cash) moveCash(state, sc.cash, `${tpl.name}: "${fill(choice.label, state, voice)}" worked`, { onJob: true });
     prepEffect(am, sc);
   } else {
     am.log.push({ kind: 'bad', text: fill(choice.failure, state, voice) });
@@ -896,7 +896,7 @@ export function chooseOption(prev, choiceId) {
       am.log.push({ kind: 'good', text: `${roller.op.handle} keeps it quieter than it could have been (Clean Professional): one less heat.` });
       event.saved = 'Clean Professional: one less heat';
     }
-    if (fc.cash) state.cash += fc.cash;
+    if (fc.cash) moveCash(state, fc.cash, `${tpl.name}: "${fill(choice.label, state, voice)}" went wrong`, { onJob: true });
     prepEffect(am, fc);
     if (choice.failureInjury && choice.failureInjury !== 'none') {
       const target = failureTarget(state, am, roller.op, choice);
@@ -1065,7 +1065,7 @@ function finish(state) {
     am.log.push({ kind: g.tail ? 'bad' : 'good', text });
     record(am, { kind: 'getaway', stat: 'piloting', actor: { id: g.pilot.id, handle: g.pilot.handle }, die: g.die, value: g.value, need: g.need, success: g.margin >= 0, result: g.result, shed: g.shed, tail: g.tail, followed: g.hall, follow: g.followed, text, outcomeCost: {} });
   }
-  state.cash += pay - cuts;
+  moveCash(state, pay - cuts, `${tpl.name}: paid${cuts ? ' (after freelancers)' : ''}`);
   addHeat(state, tpl.district, heatGain); // in the job's district (heat per district, save v39)
   // A job that hurt a gang: they remember (core/gangs.js); an aborted one doesn't count.
   const grudge = !am.aborted ? jobGrudge(tpl, threat) : null;

@@ -36,6 +36,7 @@ export const V = {
   crewFilter: 'all', // the roster's filter: 'all' | 'ready' | 'out'
   statTip: null, // the crew list's tapped stat box, '<opId>|<stat>' (2026-11-24)
   crewFilterOpen: false, // its drop menu is open
+  cashOpen: false, // the top bar's change, opened into what made it up (2026-11-26)
   crewTab: 'roster', // Crew's sub-tab: 'roster' | 'leads' | 'wall'
   hallTab: 'overview', // a hall page's tab (2026-11-21): 'overview' | 'crew' | 'build' | 'grow'; kept across halls
   hallInside: null, // inside one building of the open hall (a part's id), or null for the compound (2026-11-09; UI only, never saved)

@@ -177,6 +177,8 @@ export function onClick(e) {
     case 'crew-tab': V.crewTab = id; break;
     case 'crew-filter': V.crewFilter = id; V.crewFilterOpen = false; V.focusNext = { action: 'crew-filter-open' }; break;
     case 'crew-filter-open': V.crewFilterOpen = !V.crewFilterOpen; break;
+    case 'cash-today': V.cashOpen = !V.cashOpen; if (!V.cashOpen) V.focusNext = { action: 'cash-today' }; break;
+    case 'close-cash': V.cashOpen = false; V.focusNext = { action: 'cash-today' }; break;
     case 'stat-tip': V.statTip = V.statTip === id ? null : id; V.focusNext = { action: 'stat-tip', id }; break;
     case 'crew-filter-close': V.crewFilterOpen = false; V.focusNext = { action: 'crew-filter-open' }; break;
     // Shortcuts to a sub-tab's home from another page (a link, not a tab choice: Back returns).

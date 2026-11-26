@@ -19,7 +19,7 @@ import { d20 } from './rng.js';
 import { gainXp } from './development.js';
 import { adjustTrust } from './clients.js';
 import { clampHeat, addHeat } from './heat.js';
-import { money } from './money.js';
+import { moveCash, money } from './money.js';
 import { pick, makeRng } from './rng.js';
 import { noteInjury, earn } from './earned.js';
 import { resolveScout, resolveWatch, findCard } from './dossier.js';
@@ -159,7 +159,7 @@ function resolve(state, { taskId, crewIds, log = [] }) {
 
   if (task.purpose === 'money') {
     const pay = Math.round((SIDE_PAY_PER_DAY * task.days * crew.length * (success ? 1 : task.failPay ?? 0)) / 50) * 50;
-    state.cash += pay;
+    moveCash(state, pay, `${task.name ?? 'Side work'}: paid`);
     results.push({ tone: pay ? 'good' : 'plain', text: pay ? `Paid ${money(pay)}.` : 'No pay.' });
   }
   if (task.purpose === 'trust' && success) {

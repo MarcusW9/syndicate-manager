@@ -53,6 +53,16 @@ h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.08em; colo
 .stat__label { color: var(--muted); font-size: 0.75rem; margin-right: 4px; }
 .delta { font-size: 0.78rem; font-weight: 600; color: #5fe0a5; }
 .delta.is-down { color: var(--danger); }
+/* The change is a button: a tap opens the day's cash (app.js cashSheet). A 44px hit area without moving the bar. */
+.delta--btn { position: relative; background: none; border: 0; padding: 0; font: inherit; font-size: 0.78rem; font-weight: 600; color: #5fe0a5; cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+.delta--btn.is-down { color: var(--danger); }
+.delta--btn::after { content: ''; position: absolute; left: -8px; right: -8px; top: 50%; height: 44px; transform: translateY(-50%); }
+.cashsheet__list { list-style: none; margin: 8px 0; padding: 0; }
+.cashsheet__list li, .cashsheet__total { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); margin: 0; }
+.cashsheet__list li b, .cashsheet__total b { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cashsheet__list li.is-up b { color: #5fe0a5; }
+.cashsheet__list li.is-down b { color: var(--danger); }
+.cashsheet__total { font-family: var(--display); font-weight: 700; border-bottom: 0; }
 /* The tong's rank is a button: tap it for what a tong is (DESIGN.md 2026-11-04). 44px tall to tap. */
 .tierbtn { min-height: 44px; display: inline-flex; align-items: center; background: none; border: 0; padding: 0; margin: -10px 0; cursor: pointer; font: inherit; color: inherit; }
 .topbar:has(> .infotext) { flex-wrap: wrap; }
@@ -3220,6 +3230,8 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .newtag { display: inline-block; margin-left: 6px; padding: 0 6px; border: 1px solid var(--accent); color: var(--accent); font: 700 0.62rem/1.4 var(--display); letter-spacing: 0.12em; text-transform: uppercase; vertical-align: middle; }
 
 /* Today's "New in the stash" line (ui/gear.js newGearLine): picture, the line, Give to · Armoury · ✕. */
+.paidout { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; margin: 8px 0; padding: 8px 10px; border-left: 3px solid var(--danger); background: color-mix(in srgb, var(--danger) 7%, transparent); }
+.paidout__text { margin: 0; flex: 1 1 200px; }
 .newgear { --tc: var(--tier-grey); display: grid; grid-template-columns: 72px 1fr; gap: 6px 10px; align-items: center; margin: 8px 0; padding: 8px 10px; border-left: 3px solid var(--tc); background: color-mix(in srgb, var(--tc) 7%, transparent); }
 .newgear--green { --tc: var(--tier-green); } .newgear--blue { --tc: var(--tier-blue); } .newgear--purple { --tc: var(--tier-purple); } .newgear--gold { --tc: var(--tier-gold); }
 .newgear .gearrow__art, .newgear .gearrow__icon { width: 72px; height: 40px; overflow: hidden; }

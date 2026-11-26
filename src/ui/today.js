@@ -552,6 +552,19 @@ function deskNews() {
 }
 
 /** Today as the desk: Joss's line, what needs you (each with its answer), then the crew, Coming up and the news. */
+/** What crews still out paid from our cash today (a crisis choice: a toll, a bribe), the day it happens; the report
+ *  that explains it lands when they're back (first-run walkthrough, 2026-11-26). A tap opens the day's cash. */
+function paidOutLine() {
+  const out = (state.cashToday ?? []).filter((l) => l.onJob);
+  if (!out.length) return '';
+  const total = out.reduce((n, l) => n + l.amount, 0);
+  return `
+    <div class="paidout" role="status">
+      <p class="paidout__text"><strong>${total < 0 ? 'Paid out on jobs today' : 'Came in from jobs today'}:</strong> ${out.map((l) => `${esc(l.what)} ${l.amount < 0 ? '−' : '+'}${money(Math.abs(l.amount))}`).join('; ')}.</p>
+      <button class="btn btn--ghost" data-action="cash-today">Cash today</button>
+    </div>`;
+}
+
 export function renderDesk() {
   const { open, shown } = inboxView();
   const { list, line, opener, face: mood } = jossDay();
@@ -562,6 +575,7 @@ export function renderDesk() {
   const notes = list.filter((a) => a.kind !== 'decision' && a.kind !== 'crew-out' && a.kind !== 'job-last' && a.kind !== 'jobs-last');
   const count = decisions.length + notes.length;
   const gear = newGearLine(gearUi, state);
+  const paidOut = paidOutLine();
   const folded = V.jossFoldedDay === state.day;
   const at = open ? shown.indexOf(open) : -1;
   const reader = open ? `
@@ -594,8 +608,9 @@ export function renderDesk() {
             return text ? `<li><button class="alert alert--${a.tone}" data-action="${action}" data-id="${esc(id)}">${esc(text)} <span aria-hidden="true">›</span></button></li>` : '';
           }).join('')}</ul>` : ''}
           ${gear}
+          ${paidOut}
           ${decisions.length ? `<ul class="dcards">${decisions.map(deskCard).join('')}</ul>` : ''}
-          ${!count && !gear ? '<p class="muted desk__clear">A clear desk.</p>' : ''}
+          ${!count && !gear && !paidOut ? '<p class="muted desk__clear">A clear desk.</p>' : ''}
           ${jobs.length || rest ? `<h2 class="desk__h">On the board${state.jobs.length ? ` · ${state.jobs.length}` : ''}</h2>` : ''}
           ${jobs.length ? `<ul class="dcards">${jobs.map(deskJobCard).join('')}</ul>` : ''}
           ${rest ? `<button class="deskpile" data-action="goto" data-id="jobs:board">${jobs.length ? `${rest} more` : `${rest} ${rest === 1 ? 'job' : 'jobs'}`} on the board · Jobs ›</button>` : ''}

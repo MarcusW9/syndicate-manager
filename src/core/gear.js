@@ -18,6 +18,7 @@ import { hashRng } from './rng.js';
 import { SPECIALISATIONS } from '../data/specialisations.js';
 import { giveLook } from './looks.js';
 import { ROOM_EFFECT } from '../data/hallBuild.js';
+import { moveCash } from './money.js';
 
 export { GEAR, SLOTS, TIERS, PERKS, APEX_GEAR };
 
@@ -296,7 +297,7 @@ export const buyPrice = (state, type, tier = BASE_TIER, item = null) => {
 export function buyGear(prev, type, tier = BASE_TIER) {
   if (!GEAR[type] || !TIERS[tier]?.sold || prev.cash < buyPrice(prev, type, tier)) return prev;
   const state = structuredClone(prev);
-  state.cash -= buyPrice(prev, type, tier);
+  moveCash(state, -buyPrice(prev, type, tier), `Bought: ${GEAR[type].name ?? type}`);
   (state.stash ??= []).push(newItem(state, type, tier));
   return state;
 }
@@ -306,7 +307,7 @@ export function buyOffer(prev, oid) {
   const offer = prev.armoury?.offers?.find((o) => o.oid === oid);
   if (!offer || prev.cash < buyPrice(prev, offer.type, offer.tier, offer)) return prev;
   const state = structuredClone(prev);
-  state.cash -= buyPrice(prev, offer.type, offer.tier, offer);
+  moveCash(state, -buyPrice(prev, offer.type, offer.tier, offer), `Bought: ${offer.name ?? GEAR[offer.type]?.name ?? offer.type}`);
   state.armoury.offers = state.armoury.offers.filter((o) => o.oid !== oid);
   state.gearSeq = (state.gearSeq ?? 0) + 1;
   (state.stash ??= []).push({ uid: `g${state.gearSeq}`, type: offer.type, tier: offer.tier, look: offer.look, name: offer.name, ...(offer.quirk ? { quirk: offer.quirk } : {}) });
@@ -319,7 +320,7 @@ export function sellGear(prev, uid) {
   if (!item) return prev;
   const state = structuredClone(prev);
   state.stash = state.stash.filter((i) => i.uid !== uid);
-  state.cash += sellPrice(item);
+  moveCash(state, sellPrice(item), `Sold: ${item.name ?? GEAR[item.type]?.name ?? item.type}`);
   return state;
 }
 
@@ -329,7 +330,7 @@ export function sellMany(prev, uids) {
   if (!sold.length) return prev;
   const state = structuredClone(prev);
   state.stash = state.stash.filter((i) => !uids.includes(i.uid));
-  state.cash += sold.reduce((n, i) => n + sellPrice(i), 0);
+  moveCash(state, sold.reduce((n, i) => n + sellPrice(i), 0), `Sold ${sold.length} from the stash`);
   return state;
 }
 

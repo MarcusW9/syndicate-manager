@@ -7,7 +7,7 @@
 import { OATH, OATH_TEXT, fill } from '../data/oath.js';
 import { recordOf } from './record.js';
 import { loyaltyPoints } from './loyalty.js';
-import { money } from './money.js';
+import { moveCash, money } from './money.js';
 
 export const isSworn = (op) => !!op.sworn;
 export const oathCost = (op) => OATH.costWeeks * op.wage;
@@ -41,7 +41,7 @@ export function swearIn(prev, opId) {
   const state = structuredClone(prev);
   const sworn = state.crew.find((o) => o.id === opId);
   const cost = oathCost(sworn);
-  state.cash -= cost;
+  moveCash(state, -cost, `${sworn.handle} sworn in`);
   sworn.sworn = state.day;
   sworn.oathNotified = true;
   sworn.history.push(fill(OATH_TEXT.history, { day: state.day }));

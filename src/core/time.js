@@ -18,7 +18,7 @@ import { checkRenewal } from './renewals.js';
 import { HEAT_COOL_WEEKLY, clampHeat, checkHeatNotice, coolHeat, hottest } from './heat.js';
 import { NAMES } from '../config/names.js';
 import { rollRumour } from './rumours.js';
-import { money } from './money.js';
+import { moveCash, startCashDay, money } from './money.js';
 import { advanceAway } from './away.js';
 import { weekSummary, weekStartOf } from './week.js';
 import { refreshSideBoard, returnSideTasks } from './sidetasks.js';
@@ -76,7 +76,7 @@ export function isBlocked(state) {
 export function advanceDay(prev) {
   const state = structuredClone(prev);
   state.day += 1;
-  state.dayStartCash = state.cash; // the top bar shows today's change against this
+  startCashDay(state); // the top bar shows today's change against this, and what made it up (cashToday)
 
   for (const op of state.crew) {
     expireStatuses(op, state.day);
@@ -149,7 +149,7 @@ function settleWeek(state) {
   const posts = payContracts(state); // the security posts' pay, before the bills (core/contracts.js)
   const summary = weekSummary(state); // the week's jobs and money, before the bills (core/week.js)
   const { wages, total } = weeklyBill(state);
-  state.cash -= total;
+  moveCash(state, -total, 'Bills: wages and rent');
 
   const broke = state.cash < 0;
 
