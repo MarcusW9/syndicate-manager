@@ -166,20 +166,20 @@ export const FIGHT_JOBS = {
   kidnap: 'holdExtract', casino: 'holdHack', clinic: 'holdYard', ledger: 'holdExtract', container409: 'holdExtract', chrome: 'holdHack',
   low_water: 'holdExtract', mooring_watch: 'holdYard', count_against_paper: 'holdHack', quarter_to_two: 'holdExtract',
   manual_handling: 'holdExtract', favourite: 'holdYard', last_ticket: 'holdExtract', wrong_horse: 'holdHack',
-  // The other fifty-one jobs, moved the same way (owner, 2026-11-19): every job now plays its fights on engine 2. Type by what the job asks: technical work holds the hack, carrying or collecting gets it out, watching or keeping a place holds the yard.
-  cable: 'holdHack', eviction: 'holdHack', signal_walk: 'holdHack', house_advantage: 'holdHack', the_flat_doesnt_exist: 'holdHack',
-  the_guest_copy: 'holdHack', service_included: 'holdHack', someone_at_the_controls: 'holdHack', cover_the_late_shift: 'holdHack',
-  what_was_installed: 'holdHack', expected_upstairs: 'holdHack', the_replacement_visit: 'holdHack', after_the_applause: 'holdHack',
-  relay_cover: 'holdHack', a_steady_hand: 'holdHack',
+  // The last fifty-one jobs moved on 2026-11-19; see drafts/REVIEW-fight-types-2026-11-20.md for the review.
+  cable: 'holdHack', eviction: 'holdHack', signal_walk: 'holdExtract', house_advantage: 'holdExtract', the_flat_doesnt_exist: 'holdHack',
+  the_guest_copy: 'holdExtract', service_included: 'holdHack', someone_at_the_controls: 'holdHack', cover_the_late_shift: 'holdExtract',
+  what_was_installed: 'holdHack', expected_upstairs: 'holdHack', the_replacement_visit: 'holdHack', after_the_applause: 'holdExtract',
+  relay_cover: 'holdYard', a_steady_hand: 'holdExtract',
   courier: 'holdExtract', penthouse: 'holdExtract', herbal_run: 'holdExtract', delivery: 'holdExtract', paid_in_full: 'holdExtract',
   second_hand_heart: 'holdExtract', borrowed_glory: 'holdExtract', exit_interview: 'holdExtract', cold_chain: 'holdExtract',
-  paper_collection: 'holdExtract', clean_sheets: 'holdExtract', crate_return: 'holdExtract', kit_return: 'holdExtract', landing_hands: 'holdExtract',
-  after_hours: 'holdExtract', rent_round: 'holdExtract', back_rent: 'holdExtract', an_old_account: 'holdExtract', the_current_copy: 'holdExtract',
+  paper_collection: 'holdExtract', clean_sheets: 'holdExtract', crate_return: 'holdExtract', kit_return: 'holdExtract', landing_hands: 'holdYard',
+  after_hours: 'holdExtract', rent_round: 'holdExtract', back_rent: 'holdHack', an_old_account: 'holdExtract', the_current_copy: 'holdExtract',
   last_sitting: 'holdExtract',
   queue_duty: 'holdYard', shutter_watch: 'holdYard', fitting_room: 'holdYard', quiet_table: 'holdYard', race_night_door: 'holdYard',
   inspection_hours: 'holdYard', closing_stack: 'holdYard', closing_sweep: 'holdYard', stable_turnover: 'holdYard', clear_the_ramp: 'holdYard',
-  eyes_on_the_seal: 'holdYard', access_window: 'holdYard', tack_ledger: 'holdYard', dry_shelf: 'holdYard', still_on_the_books: 'holdYard',
-  someone_to_cover: 'holdYard',
+  eyes_on_the_seal: 'holdYard', access_window: 'holdYard', tack_ledger: 'holdYard', dry_shelf: 'holdYard', still_on_the_books: 'holdHack',
+  someone_to_cover: 'holdHack',
 };
 
 // The priority words an order's tie-breaks may use (spec 12; the grammar is core/fight.js enemyOrder).
