@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Growth Stamps And Readouts</title>
+<!-- Mockup, 2026-11-26. Owner, after 2026-11-26-grew-moments.html: the runner growing as stamps like the game's
+     "job done" stamps (ui/styles.css .sendoff__stamp, @keyframes stamp: display caps in a border, slammed in from 1.4x at
+     -4deg), and more cyberpunk looks with a ticking animation. Three stamps, three cyberpunk readouts, same two runners
+     (Scalpel: Combat 14 to 15, Stealth 4 to 5, now a pro; Tofu: Combat 2 to 3). Each plays once; Replay restarts;
+     still for reduced motion. Street-terminal tokens from docs/UI-SKIN.md. Not wired to the game. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0c0f;--panel:#12151b;--panel-2:#161a21;--line:#2a303b;--text:#e9ecf1;--muted:#8a93a6;--accent:#ff3d5f;--accent-2:#3de8d8;--warn:#f2d541;--good:#5fe0a5;--cut:10px;--disp:'Rajdhani',system-ui,sans-serif;--mono:'Share Tech Mono',ui-monospace,monospace}
+@property --n{syntax:'<integer>';inherits:false;initial-value:0}
+*{box-sizing:border-box}html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background-image:linear-gradient(rgba(61,232,216,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(61,232,216,.025) 1px,transparent 1px);background-size:32px 32px;padding:16px max(16px,env(safe-area-inset-left)) 40px}
+.wrap{max-width:1300px;margin:0 auto}
+h1{font:700 22px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin:4px 0}
+h2{font:700 15px var(--disp);letter-spacing:.16em;text-transform:uppercase;color:var(--accent-2);margin:26px 0 0;display:flex;gap:10px;align-items:center}
+h2::after{content:"";flex:1;height:1px;background:var(--line)}
+.lede{color:var(--muted);max-width:860px;margin:0 0 12px}
+.replay{font:700 13px var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--accent-2);background:none;border:1px solid var(--accent-2);min-height:44px;padding:0 16px;cursor:pointer}
+.grid{display:grid;gap:22px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));align-items:start;margin-top:14px}
+.look{font:700 13px var(--disp);letter-spacing:.16em;color:var(--accent-2);text-transform:uppercase;margin:0 0 6px}
+.why{color:var(--muted);font-size:13px;margin:0 0 10px;min-height:54px}
+.panel{position:relative;background:linear-gradient(var(--panel-2),var(--panel));border:1px solid var(--line);clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%);padding:14px}
+.panel::before{content:"";position:absolute;top:-1px;left:14px;width:36px;height:2px;background:var(--accent-2)}
+.title{font:700 17px/1.2 var(--disp);letter-spacing:.06em;text-transform:uppercase;margin:0 0 10px}
+.cards{display:flex;gap:10px}
+.op{position:relative;flex:0 0 140px;min-height:190px;border:1px solid var(--line);background:#141820;padding:10px 6px 8px;text-align:center;overflow:hidden}
+.face{width:44px;height:48px;margin:0 auto 4px;border-radius:2px;position:relative}
+.f1{background:linear-gradient(160deg,#3a2030 0 40%,#ff3d8a 40% 55%,#1b2340 55%)}
+.f2{background:linear-gradient(160deg,#2d4a3a 0 40%,#5fe0a5 40% 55%,#1b2340 55%)}
+.nm{font:700 15px var(--disp);letter-spacing:.04em}
+.sub{font:600 11px var(--disp);letter-spacing:.06em;color:var(--muted)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+@keyframes stamp{0%{opacity:0;transform:var(--rot) scale(1.9)}60%{opacity:1;transform:var(--rot) scale(.94)}100%{opacity:1;transform:var(--rot) scale(1)}}
+@keyframes shake{0%,100%{transform:none}25%{transform:translate(1px,-1px)}50%{transform:translate(-1px,1px)}75%{transform:translate(1px,1px)}}
+
+/* S1: a stamp per stat, slammed in turn, like the job-done stamp */
+.s1 .stamps{display:grid;gap:5px;justify-items:center;margin-top:8px}
+.s1 .st{--rot:rotate(-4deg);display:inline-block;font:700 13px var(--disp);letter-spacing:.12em;text-transform:uppercase;color:var(--good);border:2px solid var(--good);padding:1px 8px;opacity:0;animation:stamp .35s ease-out both}
+.s1 .st.pro{color:var(--warn);border-color:var(--warn);--rot:rotate(3deg)}
+.s1 .st:nth-child(1){animation-delay:.3s}.s1 .st:nth-child(2){animation-delay:.65s}.s1 .st:nth-child(3){animation-delay:1s}
+.s1 .op{animation:shake .12s linear 1 .5s}
+
+/* S2: one big ink stamp across the card */
+.s2 .ink{--rot:rotate(-14deg);position:absolute;left:50%;top:62px;margin-left:-62px;width:124px;text-align:center;font:700 19px/1 var(--disp);letter-spacing:.14em;color:var(--good);border:3px double var(--good);padding:5px 0 4px;background:rgba(10,12,15,.55);opacity:0;animation:stamp .4s cubic-bezier(.2,1.4,.4,1) .5s both;
+  -webkit-mask-image:radial-gradient(circle at 20% 30%,#000 60%,rgba(0,0,0,.55) 61%,#000 66%),linear-gradient(#000,#000);mask-image:radial-gradient(circle at 20% 30%,#000 60%,rgba(0,0,0,.55) 61%,#000 66%)}
+.s2 .ink small{display:block;font:700 11px var(--disp);letter-spacing:.12em;margin-top:3px}
+.s2 .ink.pro{color:var(--warn);border-color:var(--warn)}
+.s2 .lines{margin-top:58px;font:600 12px var(--disp);letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.s2 .lines b{color:var(--good)}
+
+/* S3: a round seal for the promotion, small stamps for the rises */
+.s3 .seal{--rot:rotate(-10deg);position:absolute;right:6px;top:6px;width:58px;height:58px;border-radius:50%;border:2px solid var(--warn);display:grid;place-items:center;color:var(--warn);font:700 15px/1 var(--disp);letter-spacing:.1em;background:rgba(10,12,15,.6);opacity:0;animation:stamp .45s cubic-bezier(.2,1.5,.4,1) 1.1s both}
+.s3 .seal::before{content:"";position:absolute;inset:4px;border-radius:50%;border:1px dashed var(--warn)}
+.s3 .seal small{display:block;font-size:8px;letter-spacing:.16em;margin-top:2px}
+.s3 .mini{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-top:10px}
+.s3 .mini b{--rot:rotate(-3deg);font:700 11px var(--disp);letter-spacing:.1em;color:var(--good);border:1px solid var(--good);padding:0 5px;opacity:0;animation:stamp .3s ease-out both}
+.s3 .mini b:nth-child(1){animation-delay:.3s}.s3 .mini b:nth-child(2){animation-delay:.55s}
+
+/* P1: a terminal readout that types out and ticks the number */
+.p1 .op{background:#0b0f12;border-color:#1f3a3a;text-align:left;padding:10px 8px}
+.p1 .face,.p1 .nm,.p1 .sub{margin-left:0}
+.p1 .tty{margin-top:8px;font:12px/1.5 var(--mono);color:#7fe9df}
+.p1 .ln{display:block;white-space:nowrap;overflow:hidden;width:0;animation:type .5s steps(18) both}
+.p1 .ln:nth-child(1){animation-delay:.2s}.p1 .ln:nth-child(2){animation-delay:.8s}.p1 .ln:nth-child(3){animation-delay:1.4s}
+.p1 .ok{color:var(--good)}
+.p1 .pro{color:var(--warn)}
+.p1 .cur{display:inline-block;width:7px;height:12px;background:#7fe9df;vertical-align:-1px;animation:blink 1s steps(1) infinite}
+@keyframes type{to{width:100%}}
+@keyframes blink{50%{opacity:0}}
+
+/* P2: decode: digits scramble then lock, an RGB split flash */
+.p2 .op{border-color:#1f3a3a}
+.p2 .rows{display:grid;gap:4px;margin-top:8px}
+.p2 .st{display:flex;justify-content:center;gap:6px;align-items:baseline;font:600 11px var(--disp);letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.p2 .num{display:inline-block;height:22px;overflow:hidden;font:700 20px/22px var(--mono);color:var(--good);width:26px;position:relative}
+.p2 .num span{display:block;animation:scramble .9s steps(9) .3s both}
+.p2 .num span i{display:block;font-style:normal;height:22px}
+.p2 .num::after{content:attr(data-v);position:absolute;inset:0;color:var(--accent);mix-blend-mode:screen;opacity:0;animation:rgb .25s steps(2) 1.2s 2}
+@keyframes scramble{from{transform:translateY(0)}to{transform:translateY(-198px)}}
+@keyframes rgb{0%{opacity:.9;transform:translateX(2px)}100%{opacity:0;transform:none}}
+.p2 .face::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,61,95,.5),transparent 40%,rgba(61,232,216,.5));opacity:0;animation:glitch .3s steps(3) 1.2s 1}
+@keyframes glitch{0%{opacity:1;transform:translateX(-3px)}50%{opacity:1;transform:translateX(3px)}100%{opacity:0}}
+.p2 .tag{display:inline-block;margin-top:8px;font:700 10px var(--mono);letter-spacing:.12em;color:var(--warn);border:1px solid var(--warn);padding:1px 5px;opacity:0;animation:stamp .3s ease-out 1.5s both;--rot:rotate(0)}
+
+/* P3: HUD sync: brackets close in, a percent ticks to 100, UPGRADE INSTALLED */
+.p3 .op{border-color:#1f3a3a;background:#0e1318}
+.p3 .op::after{content:"";position:absolute;left:0;right:0;top:-30%;height:30%;background:linear-gradient(transparent,rgba(61,232,216,.18),transparent);animation:sweep 1.2s ease-in-out .2s 1 both}
+@keyframes sweep{to{top:110%}}
+.p3 .br{position:absolute;width:14px;height:14px;border:2px solid var(--accent-2);animation:close .6s ease-out .2s both}
+.p3 .br.tl{left:30px;top:6px;border-right:0;border-bottom:0;--dx:-14px;--dy:-10px}
+.p3 .br.tr{right:30px;top:6px;border-left:0;border-bottom:0;--dx:14px;--dy:-10px}
+.p3 .br.bl{left:30px;top:44px;border-right:0;border-top:0;--dx:-14px;--dy:10px}
+.p3 .br.brr{right:30px;top:44px;border-left:0;border-top:0;--dx:14px;--dy:10px}
+@keyframes close{from{transform:translate(var(--dx),var(--dy));opacity:0}to{transform:none;opacity:1}}
+.p3 .sync{margin:8px auto 0;width:110px}
+.p3 .bar{height:4px;background:#1f2a33;position:relative;overflow:hidden}
+.p3 .bar::after{content:"";position:absolute;inset:0;background:var(--accent-2);transform-origin:left;animation:fill 1s steps(10) .4s both}
+@keyframes fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.p3 .pct{display:flex;justify-content:space-between;font:11px var(--mono);color:var(--accent-2);margin-top:3px}
+.p3 .pct b{counter-reset:n var(--n);animation:count 1s steps(10) .4s both;font-weight:400}
+.p3 .pct b::after{content:counter(n) "%"}
+@keyframes count{from{--n:0}to{--n:100}}
+.p3 .done{margin-top:6px;font:700 11px var(--disp);letter-spacing:.14em;color:var(--good);opacity:0;animation:fadein .3s ease-out 1.45s both}
+.p3 .done span{display:block;color:var(--text);font-size:12px;letter-spacing:.08em}
+.p3 .done .pro{color:var(--warn)}
+@keyframes fadein{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.notes{margin-top:26px;color:var(--muted);font-size:13px;max-width:940px}.notes li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>The person growing: stamps and readouts</h1>
+  <p class="lede">Three stamps in the family of the game's job-done stamps, and three cyberpunk readouts that tick. Same two runners as before. Each plays once when the report opens.</p>
+  <button class="replay" onclick="document.getAnimations().forEach(a=>{a.cancel();a.play()})">Replay</button>
+
+  <h2>Stamps</h2>
+  <div class="grid">
+    <section class="s1"><p class="look">S1 · A stamp per rise</p><p class="why">Each stat that rose is slammed onto the card in turn as a bordered green stamp, the way a job-done stamp lands; a promotion comes last in yellow, tilted the other way. The card jolts on the first hit.</p>
+      <div class="panel"><p class="title">A weapon: part of it</p><div class="cards">
+        <div class="op"><div class="face f1"></div><div class="nm">Scalpel</div><div class="sub">On the trip</div>
+          <div class="stamps"><span class="st">Combat 15</span><span class="st">Stealth 5</span><span class="st pro">Pro</span></div></div>
+        <div class="op"><div class="face f2"></div><div class="nm">Tofu</div><div class="sub">On the trip</div>
+          <div class="stamps"><span class="st">Combat 3</span></div></div>
+      </div></div></section>
+
+    <section class="s2"><p class="look">S2 · One ink stamp across the card</p><p class="why">A single big double-bordered stamp slammed diagonally across the runner, a little worn at the edge: SHARPER, or PROMOTED in yellow. The detail sits quietly underneath.</p>
+      <div class="panel"><p class="title">A weapon: part of it</p><div class="cards">
+        <div class="op"><div class="face f1"></div><div class="nm">Scalpel</div><div class="sub">On the trip</div>
+          <div class="ink pro">PROMOTED<small>NOW A PRO</small></div>
+          <div class="lines">Combat <b>15</b> · Stealth <b>5</b></div></div>
+        <div class="op"><div class="face f2"></div><div class="nm">Tofu</div><div class="sub">On the trip</div>
+          <div class="ink">SHARPER<small>+1 COMBAT</small></div>
+          <div class="lines">Combat <b>3</b></div></div>
+      </div></div></section>
+
+    <section class="s3"><p class="look">S3 · A seal for the promotion</p><p class="why">Rises are small green stamps under the name; a promotion gets a round yellow seal pressed into the card's corner, last and heaviest. The seal is rare, so it means something.</p>
+      <div class="panel"><p class="title">A weapon: part of it</p><div class="cards">
+        <div class="op"><div class="seal"><span>PRO<small>SEALED</small></span></div><div class="face f1"></div><div class="nm">Scalpel</div><div class="sub">On the trip</div>
+          <div class="mini"><b>+1 Combat</b><b>+1 Stealth</b></div></div>
+        <div class="op"><div class="face f2"></div><div class="nm">Tofu</div><div class="sub">On the trip</div>
+          <div class="mini"><b>+1 Combat</b></div></div>
+      </div></div></section>
+  </div>
+
+  <h2>Cyberpunk readouts</h2>
+  <div class="grid">
+    <section class="p1"><p class="look">P1 · Terminal readout</p><p class="why">The card turns into a terminal: lines type out one by one, "COMBAT 14 → 15 [OK]", with a blinking cursor at the end. Like Joss's feed reporting in.</p>
+      <div class="panel"><p class="title">A weapon: part of it</p><div class="cards">
+        <div class="op"><div class="face f1"></div><div class="nm">Scalpel</div><div class="sub">On the trip</div>
+          <div class="tty"><span class="ln">&gt; COMBAT 14→15 <span class="ok">OK</span></span><span class="ln">&gt; STEALTH 4→5 <span class="ok">OK</span></span><span class="ln">&gt; <span class="pro">TIER: PRO</span> <span class="cur"></span></span></div></div>
+        <div class="op"><div class="face f2"></div><div class="nm">Tofu</div><div class="sub">On the trip</div>
+          <div class="tty"><span class="ln">&gt; COMBAT 2→3 <span class="ok">OK</span></span><span class="ln">&gt; <span class="cur"></span></span></div></div>
+      </div></div></section>
+
+    <section class="p2"><p class="look">P2 · Decode and glitch</p><p class="why">Each new number scrambles through random digits and locks on, with a red-cyan split flash across the face as it lands. The ticking you asked for; reads as data being rewritten.</p>
+      <div class="panel"><p class="title">A weapon: part of it</p><div class="cards">
+        <div class="op"><div class="face f1"></div><div class="nm">Scalpel</div><div class="sub">On the trip</div>
+          <div class="rows"><div class="st">Combat <span class="num" data-v="15"><span><i>14</i><i>87</i><i>03</i><i>61</i><i>29</i><i>74</i><i>40</i><i>92</i><i>58</i><i>15</i></span></span></div>
+            <div class="st">Stealth <span class="num" data-v="5"><span><i>4</i><i>8</i><i>1</i><i>6</i><i>9</i><i>2</i><i>7</i><i>0</i><i>3</i><i>5</i></span></span></div></div>
+          <span class="tag">TIER // PRO</span></div>
+        <div class="op"><div class="face f2"></div><div class="nm">Tofu</div><div class="sub">On the trip</div>
+          <div class="rows"><div class="st">Combat <span class="num" data-v="3"><span><i>2</i><i>7</i><i>0</i><i>9</i><i>4</i><i>1</i><i>8</i><i>6</i><i>5</i><i>3</i></span></span></div></div></div>
+      </div></div></section>
+
+    <section class="p3"><p class="look">P3 · HUD sync</p><p class="why">Targeting brackets close in on the face, a scanline sweeps the card, a sync bar ticks 0% to 100% in steps, then UPGRADE INSTALLED with what changed. The most "implant being fitted" of the six.</p>
+      <div class="panel"><p class="title">A weapon: part of it</p><div class="cards">
+        <div class="op"><span class="br tl"></span><span class="br tr"></span><span class="br bl"></span><span class="br brr"></span><div class="face f1"></div><div class="nm">Scalpel</div><div class="sub">On the trip</div>
+          <div class="sync"><div class="bar"></div><div class="pct"><span>SYNC</span><b></b></div></div>
+          <div class="done">UPGRADE INSTALLED<span>Combat 15 · Stealth 5</span><span class="pro">Tier: pro</span></div></div>
+        <div class="op"><span class="br tl"></span><span class="br tr"></span><span class="br bl"></span><span class="br brr"></span><div class="face f2"></div><div class="nm">Tofu</div><div class="sub">On the trip</div>
+          <div class="sync"><div class="bar"></div><div class="pct"><span>SYNC</span><b></b></div></div>
+          <div class="done">UPGRADE INSTALLED<span>Combat 3</span></div></div>
+      </div></div></section>
+  </div>
+  <ul class="notes">
+    <li><b>Pairs well:</b> S1 or S3 for the stamps family (matches the job-done stamp), P2 or P3 for the cyberpunk family. P2's decode could also drive S1's numbers.</li>
+    <li>All play once when the report opens and are still with reduced motion; the end state carries the same information.</li>
+    <li>P1 and P2 use a monospace face (Share Tech Mono here); the game has none yet, so this would add one, or keep Rajdhani for the numbers.</li>
+  </ul>
+</div>
+</body>
+</html>
