@@ -8,6 +8,7 @@
 
 import { ECONOMY } from '../data/economy.js';
 import { NAMES } from '../config/names.js';
+import { moveCash } from './money.js';
 
 export const HEAT_MAX = 10;
 export const HEAT_COOL_WEEKLY = 2;
@@ -97,7 +98,7 @@ export function HEAT_RESOLVER(state, msg, optionId) {
   const p = msg.payload;
   if (optionId === 'pay') {
     if (state.cash < p.cost) return; // can't afford it: nothing happens, the notice stays open
-    state.cash -= p.cost;
+    moveCash(state, -p.cost, 'Paid to make the questions stop');
     const d = p.district ?? hottest(state)?.district ?? HEAT_DISTRICTS[0];
     const before = heatIn(state, d);
     setHeat(state, d, before - p.cools);

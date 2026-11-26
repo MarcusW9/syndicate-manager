@@ -11,7 +11,7 @@ import { PARTNER } from '../data/partner.js';
 import { animateMap } from './citymap.js';
 import { renderHallBuild } from './hallbuild.js';
 import { isBlocked, calendar, seasonStartDay } from '../core/time.js';
-import { money } from '../core/money.js';
+import { money, cashLines } from '../core/money.js';
 import { runBattle } from '../core/mission.js';
 import { takeFightChange } from './fightscreen.js';
 import { autoStep } from '../core/autorun.js';
@@ -31,7 +31,7 @@ import { renderRaidCallSheet } from './raidcards.js';
 import { renderFounding, renderSettings } from './settings.js';
 import { esc, districtName, hallLabel, fillLine, pickLine, face, rootBack, cityName } from './shared.js';
 import { NAMES } from '../config/names.js';
-import { renderInbox, renderDesk } from './today.js';
+import { renderInbox, renderDesk, workWaiting } from './today.js';
 import { root, setRoot, state, setGame, backLabel, V } from './view.js';
 
 export function mountApp(el, initialState) {
@@ -55,6 +55,7 @@ export function mountApp(el, initialState) {
       else if (e.key === 'Tab' || e.key === 'Escape') { e.preventDefault(); V.crewFilterOpen = false; V.focusNext = { action: 'crew-filter-open' }; render(); }
       return;
     }
+    if (e.key === 'Escape' && V.cashOpen) { V.cashOpen = false; V.focusNext = { action: 'cash-today' }; render(); return; }
     if (e.key === 'Escape' && V.crewFilterOpen) { V.crewFilterOpen = false; V.focusNext = { action: 'crew-filter-open' }; render(); return; }
     if (e.key === 'Escape' && V.pickSlot) { V.focusNext = { action: 'pick-slot', id: V.pickSlot }; V.pickSlot = null; render(); }
     else if (e.key === 'Escape' && V.screen === 'city' && V.cityTab === 'map' && V.cityDistrict && !state.activeMission) { V.cityDistrict = null; render(); }
@@ -172,6 +173,7 @@ export function render() {
     ${leaving ? renderSendOff(leaving) : ''}
     ${renderBuzz()}
     ${renderRaidCallSheet()}
+    ${cashSheet()}
   `;
   if (am) mountWatch(root.querySelector('.watch'), state, { ui: watchUi, finishing, onAuto: () => setState(autoStep(state)), onFightNext: () => setState(runBattle(state, takeFightChange(state.activeMission))) });
   warmBoard(); // Joss's board reads, in the background, so the Jobs tab opens fast
@@ -240,11 +242,31 @@ function renderWhen() {
     </div>`;
 }
 
-/** Today's cash change, e.g. "▲¥1,050". Nothing on a day the cash hasn't moved. */
+/** Today's cash change, e.g. "▲¥1,050": a tap opens what made it up (cashSheet). Nothing on a day the cash hasn't moved. */
 function cashDelta() {
   const d = state.cash - (state.dayStartCash ?? state.cash);
   if (!d) return '';
-  return ` <span class="delta ${d < 0 ? 'is-down' : ''}" aria-label="${d < 0 ? 'down' : 'up'} ${money(Math.abs(d))} today">${d < 0 ? '▼' : '▲'}${money(Math.abs(d))}</span>`;
+  return ` <button class="delta delta--btn ${d < 0 ? 'is-down' : ''}" data-action="cash-today" aria-expanded="${V.cashOpen}" aria-label="${d < 0 ? 'Down' : 'Up'} ${money(Math.abs(d))} today: what made it up">${d < 0 ? '▼' : '▲'}${money(Math.abs(d))}</button>`;
+}
+
+/** The day's cash, line by line (core/money.js cashLines), so the top bar's number can always be checked (2026-11-26). */
+function cashSheet() {
+  if (!V.cashOpen) return '';
+  const lines = cashLines(state);
+  const d = state.cash - (state.dayStartCash ?? state.cash);
+  const signed = (n) => `${n < 0 ? '−' : '+'}${money(Math.abs(n))}`;
+  return `
+    <div class="scrim" data-action="close-cash"></div>
+    <div class="sheet cashsheet" role="dialog" aria-modal="true" aria-label="Cash today">
+      <div class="sheet__head">
+        <h2 class="sheet__title">Cash today</h2>
+        <button class="btn btn--ghost sheet__x" data-action="close-cash" aria-label="Close">✕</button>
+      </div>
+      <p class="muted small">Started the day on ${money(state.dayStartCash ?? state.cash)}.</p>
+      ${lines.length ? `<ul class="cashsheet__list">${lines.map((l) => `<li class="${l.amount < 0 ? 'is-down' : 'is-up'}"><span>${esc(l.what)}</span><b>${signed(l.amount)}</b></li>`).join('')}</ul>` : '<p class="muted">Nothing moved today.</p>'}
+      <p class="cashsheet__total"><span>Today</span><b>${signed(d)}</b></p>
+      <p class="cashsheet__total"><span>Cash now</span><b>${money(state.cash)}</b></p>
+    </div>`;
 }
 
 /** Continue names the next day and lists what's still waiting; it never asks for a second tap. */
@@ -264,7 +286,9 @@ function renderContinue(blocked, resting, unread, where) {
   const warn = blocked ? '' : raidUnplanned();
   const hint = warn ? `<span class="continue__hint is-warn">${esc(warn)}</span>`
     : !blocked && waiting ? `<span class="continue__hint">${esc(waiting)}</span>` : '';
-  return `<button class="btn btn--primary continue ${where} ${resting && !blocked ? 'is-resting' : ''}" data-action="continue" ${blocked || resting ? 'disabled' : ''}>
+  // Work waiting (someone free, a job that fits): Continue steps back so Plan it leads (2026-11-26). Still one tap.
+  const quiet = !blocked && !resting && !state.activeMission && !state.founding && workWaiting();
+  return `<button class="btn ${quiet ? 'continue--quiet' : 'btn--primary'} continue ${where} ${resting && !blocked ? 'is-resting' : ''}" data-action="continue" ${blocked || resting ? 'disabled' : ''}>
       <span class="continue__label">${esc(label)}</span>${hint}
     </button>`;
 }

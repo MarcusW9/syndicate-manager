@@ -177,6 +177,8 @@ export function onClick(e) {
     case 'crew-tab': V.crewTab = id; break;
     case 'crew-filter': V.crewFilter = id; V.crewFilterOpen = false; V.focusNext = { action: 'crew-filter-open' }; break;
     case 'crew-filter-open': V.crewFilterOpen = !V.crewFilterOpen; break;
+    case 'cash-today': V.cashOpen = !V.cashOpen; if (!V.cashOpen) V.focusNext = { action: 'cash-today' }; break;
+    case 'close-cash': V.cashOpen = false; V.focusNext = { action: 'cash-today' }; break;
     case 'stat-tip': V.statTip = V.statTip === id ? null : id; V.focusNext = { action: 'stat-tip', id }; break;
     case 'crew-filter-close': V.crewFilterOpen = false; V.focusNext = { action: 'crew-filter-open' }; break;
     // Shortcuts to a sub-tab's home from another page (a link, not a tab choice: Back returns).
@@ -426,7 +428,7 @@ export function onClick(e) {
       const next = sendOnSideTask(state, V.sidePlan.taskId, V.sidePlan.crew);
       V.sidePlan = null;
       nav.clear();
-      V.screen = 'city'; V.cityTab = 'map'; V.cityDistrict = null;
+      V.screen = 'inbox'; // back to Today, where the day's work is (2026-11-26); crews out are followed on City › Map
       return setState(next);
     }
     case 'send-job': {
@@ -437,7 +439,7 @@ export function onClick(e) {
         crewIds: [...out.mission.crewIds, out.mission.overwatch?.id, out.mission.wheels, out.mission.standby?.id].filter(Boolean) };
       V.plan = null;
       nav.clear();
-      V.screen = 'city'; V.cityTab = 'map'; V.cityDistrict = null;
+      V.screen = 'inbox'; // back to Today, where the day's work is (2026-11-26); crews out are followed on City › Map
       V.openMessageId = null;
       return setState(next);
     }
@@ -451,7 +453,7 @@ export function onClick(e) {
           crewIds: [...out.mission.crewIds, out.mission.overwatch?.id, out.mission.wheels, out.mission.standby?.id].filter(Boolean) };
         V.plan = null;
         nav.clear();
-        V.screen = 'city'; V.cityTab = 'map'; V.cityDistrict = null;
+        V.screen = 'inbox'; // back to Today, where the day's work is (2026-11-26); crews out are followed on City › Map
         V.openMessageId = null;
         return setState(next);
       }

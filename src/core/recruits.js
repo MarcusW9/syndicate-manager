@@ -15,7 +15,7 @@ import { ECONOMY } from '../data/economy.js';
 import { pickTiered } from './tiered.js';
 import { CLASHES, TRAIT_TAGS } from '../data/tags.js';
 import { rollPotential, rollCeiling, rollScoutError, scoutFor, potentialRead, prepareOperative, ROLL_STATS } from './development.js';
-import { money } from './money.js';
+import { moveCash, money } from './money.js';
 import { RECRUIT_GEAR } from '../data/gear.js';
 import { loadoutOf } from './gear.js';
 
@@ -242,7 +242,7 @@ export function hire(prev, recruitId) {
   const state = structuredClone(prev);
   const r = state.recruits?.find((x) => x.id === recruitId);
   if (!r || !canHire(state, r).ok) return prev;
-  state.cash -= signingFee(r);
+  moveCash(state, -signingFee(r), `Signed ${r.handle}`);
   state.recruits = state.recruits.filter((x) => x.id !== recruitId);
   state.crew.push(recruitToOperative(r, {
     condition: { fatigue: 0, morale: 60, neuralLoad: 0, burnout: 0, injury: 'healthy', injuryDays: 0 },

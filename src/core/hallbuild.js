@@ -8,7 +8,7 @@ import { HALLS, HALL, pickSite } from '../data/sites.js';
 import { siteRects } from './fightspots.js';
 import { hallIn, residents, bedsOf, syncHalls } from './halls.js';
 import { hallShut } from './raids.js';
-import { money } from './money.js';
+import { moveCash, money } from './money.js';
 
 const C = HALL_BUILD.cell;
 const aName = (p) => `${/^[aeiou]/i.test(p.name) ? 'an' : 'a'} ${p.name.toLowerCase()}`;
@@ -207,7 +207,7 @@ export function placePost(prev, district, pieceId, slotId) {
   const n = hall.build.reduce((m, b) => Math.max(m, Number(String(b.id).split('-').at(-1)) || 0), 0) + 1;
   const [px, py] = slot.at;
   hall.build.push({ id: `${district}-${n}`, piece: pieceId, slot: slotId, px, py, x: Math.floor(px / C), y: Math.floor(py / C), rot: 0, day: state.day });
-  state.cash -= PIECES[pieceId].cost;
+  moveCash(state, -PIECES[pieceId].cost, `Built: ${PIECES[pieceId].name ?? pieceId}`);
   return state;
 }
 
@@ -219,7 +219,7 @@ export function placePiece(prev, district, pieceId, x, y, rot = 0) {
   hall.build = hall.build ?? [];
   const n = hall.build.reduce((m, b) => Math.max(m, Number(String(b.id).split('-').at(-1)) || 0), 0) + 1;
   hall.build.push({ id: `${district}-${n}`, piece: pieceId, x, y, rot: PIECES[pieceId].turns ? (rot ? 1 : 0) : 0, day: state.day });
-  state.cash -= PIECES[pieceId].cost;
+  moveCash(state, -PIECES[pieceId].cost, `Built: ${PIECES[pieceId].name ?? pieceId}`);
   syncHalls(state); // a bunk room's beds count in the roster limit
   return state;
 }
@@ -241,7 +241,7 @@ export function removePiece(prev, district, id) {
   const state = structuredClone(prev);
   const h = hallIn(state, district);
   h.build = h.build.filter((x) => x.id !== id);
-  state.cash += refundOf(b.piece);
+  moveCash(state, refundOf(b.piece), `Took down: ${PIECES[b.piece]?.name ?? b.piece}`);
   syncHalls(state);
   return state;
 }

@@ -16,7 +16,7 @@ import { hasRoom } from './halls.js';
 import { isOpeningJob } from '../data/halls.js';
 import { hallShut } from './raids.js';
 import { generateRecruit, LEAD_DAYS } from './recruits.js';
-import { money } from './money.js';
+import { moveCash, money } from './money.js';
 
 const round50 = (n) => Math.round(n / 50) * 50;
 const inText = (d) => NAMES.districtsInText?.[d] ?? NAMES.districts?.[d] ?? d;
@@ -62,6 +62,6 @@ export function brokerWeek(state) {
       });
     }
   }
-  state.cash += total;
+  moveCash(state, total, 'The broker paid');
   return { total, lines };
 }

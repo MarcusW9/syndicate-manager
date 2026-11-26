@@ -452,17 +452,42 @@ function deskJobs() {
   return { shown, rest: state.jobs.length - shown.length };
 }
 
-function deskJobCard(j) {
+/** Who could go out today (free and fit to work). */
+const freeToday = () => state.crew.filter((op) => availability(state, op).ok);
+
+/** A job the free crew can't staff at the size it asks for (2026-11-26): Today still lists it, but quietly, and
+ *  says why, so the obvious tap never sends one rookie alone into two-person work. Planning it by hand still works. */
+const shortFor = (j, free = freeToday().length) => free < (jobView(state, j).tpl.crewSize ?? 1);
+
+function deskJobCard(j, lead = false) {
   const v = jobView(state, j);
   const ends = j.expiresDay === state.day ? 'Last day' : j.expiresDay === state.day + 1 ? 'Ends tomorrow' : 'New';
+  const free = freeToday().length;
+  const short = shortFor(j, free);
   return `
-    <li class="dcard dcard--job ${j.expiresDay === state.day ? 'is-last' : ''}">
+    <li class="dcard dcard--job ${j.expiresDay === state.day ? 'is-last' : ''} ${short ? 'is-short' : ''}">
       <div class="dcard__text">
         <p class="dcard__title"><strong>${esc(v.tpl.name)}</strong> <span class="dcard__pay">${money(v.pay)}</span></p>
         <p class="dcard__line">${esc(ends)} · ${esc(v.client?.name ?? 'Walk-in job')}${v.days > 1 ? ` · ${v.days} days` : ''}</p>
+        ${short ? `<p class="dcard__line dcard__short">Wants ${v.tpl.crewSize}; ${free ? `only ${free} free` : 'nobody free'} today.</p>` : ''}
       </div>
-      <button class="btn dcard__go" data-action="open-job" data-id="${esc(j.id)}">Plan it</button>
+      <button class="btn ${short ? 'btn--ghost' : lead ? 'btn--primary' : ''} dcard__go" data-action="open-job" data-id="${esc(j.id)}">Plan it</button>
     </li>`;
+}
+
+/** Someone is free and a job on Today's list fits them (2026-11-26): Continue steps back and that job's Plan it leads,
+ *  so a new player's obvious tap is the work, not skipping the day. */
+export function workWaiting() {
+  const free = freeToday().length;
+  return free > 0 && deskJobs().shown.some((j) => !shortFor(j, free));
+}
+
+/** Joss, when someone is free but no job on the board wants that few: rest them, or side work (2026-11-26). */
+function shortHandedLine(jobs) {
+  const free = freeToday();
+  if (!free.length || !state.jobs.length || state.jobs.some((j) => !shortFor(j, free.length))) return '';
+  const who = free.length === 1 ? `Only ${free[0].handle} is free` : `Only ${free.length} of us are free`;
+  return `<p class="desk__short">${esc(NAMES.partner)}: ${esc(who)}, and every job on the board wants more hands. Rest, or take side work till the others are back. <button class="btn btn--ghost" data-action="goto" data-id="jobs:side">Side work</button></p>`;
 }
 
 /** One runner's state for the roster: null when free to work. */
@@ -552,6 +577,19 @@ function deskNews() {
 }
 
 /** Today as the desk: Joss's line, what needs you (each with its answer), then the crew, Coming up and the news. */
+/** What crews still out paid from our cash today (a crisis choice: a toll, a bribe), the day it happens; the report
+ *  that explains it lands when they're back (first-run walkthrough, 2026-11-26). A tap opens the day's cash. */
+function paidOutLine() {
+  const out = (state.cashToday ?? []).filter((l) => l.onJob);
+  if (!out.length) return '';
+  const total = out.reduce((n, l) => n + l.amount, 0);
+  return `
+    <div class="paidout" role="status">
+      <p class="paidout__text"><strong>${total < 0 ? 'Paid out on jobs today' : 'Came in from jobs today'}:</strong> ${out.map((l) => `${esc(l.what)} ${l.amount < 0 ? '−' : '+'}${money(Math.abs(l.amount))}`).join('; ')}.</p>
+      <button class="btn btn--ghost" data-action="cash-today">Cash today</button>
+    </div>`;
+}
+
 export function renderDesk() {
   const { open, shown } = inboxView();
   const { list, line, opener, face: mood } = jossDay();
@@ -562,6 +600,7 @@ export function renderDesk() {
   const notes = list.filter((a) => a.kind !== 'decision' && a.kind !== 'crew-out' && a.kind !== 'job-last' && a.kind !== 'jobs-last');
   const count = decisions.length + notes.length;
   const gear = newGearLine(gearUi, state);
+  const paidOut = paidOutLine();
   const folded = V.jossFoldedDay === state.day;
   const at = open ? shown.indexOf(open) : -1;
   const reader = open ? `
@@ -594,10 +633,12 @@ export function renderDesk() {
             return text ? `<li><button class="alert alert--${a.tone}" data-action="${action}" data-id="${esc(id)}">${esc(text)} <span aria-hidden="true">›</span></button></li>` : '';
           }).join('')}</ul>` : ''}
           ${gear}
+          ${paidOut}
           ${decisions.length ? `<ul class="dcards">${decisions.map(deskCard).join('')}</ul>` : ''}
-          ${!count && !gear ? '<p class="muted desk__clear">A clear desk.</p>' : ''}
+          ${!count && !gear && !paidOut ? '<p class="muted desk__clear">A clear desk.</p>' : ''}
           ${jobs.length || rest ? `<h2 class="desk__h">On the board${state.jobs.length ? ` · ${state.jobs.length}` : ''}</h2>` : ''}
-          ${jobs.length ? `<ul class="dcards">${jobs.map(deskJobCard).join('')}</ul>` : ''}
+          ${jobs.length ? `<ul class="dcards">${jobs.map((j, i) => deskJobCard(j, i === jobs.findIndex((x) => !shortFor(x)))).join('')}</ul>` : ''}
+          ${shortHandedLine(jobs)}
           ${rest ? `<button class="deskpile" data-action="goto" data-id="jobs:board">${jobs.length ? `${rest} more` : `${rest} ${rest === 1 ? 'job' : 'jobs'}`} on the board · Jobs ›</button>` : ''}
         </section>
       </div>

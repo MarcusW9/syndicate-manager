@@ -24,7 +24,7 @@ import { makeItem, makeApex, itemName, emptyLoadout, placeOf, firstFit, canChang
 import { GEAR } from '../data/gear.js';
 import { weaponOf, armourOf } from './battle.js';
 import { hitOf, soakOf } from './fight.js';
-import { money } from './money.js';
+import { moveCash, money } from './money.js';
 
 const LADDER = Object.keys(TIERS); // lowest to highest
 
@@ -119,7 +119,7 @@ export function lootFor(state, jobKey, { threat = null, heist = false } = {}) {
     return { tone: 'good', text: `Gear from the job: ${what}, a spare for the cupboard.`, tier: item.tier, uid: item.uid, spare: true };
   }
   if (!drop) {
-    state.cash += LOOT.scrap;
+    moveCash(state, LOOT.scrap, 'Scrap fenced');
     return { tone: 'plain', text: `No gear this time. The crew fenced scrap for ${money(LOOT.scrap)}.` };
   }
   const item = stashIt(state, drop.apex ? makeApex(state, drop.apex) : makeItem(state, drop.type, drop.tier), 'job');

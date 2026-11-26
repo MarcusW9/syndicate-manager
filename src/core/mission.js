@@ -39,13 +39,13 @@ import { reactToJob, RUMOUR_CRISIS_CHANCE } from './rumours.js';
 import { CAST } from '../data/cast.js';
 import { DISTRICTS } from '../data/districts.js';
 import { NAMES } from '../config/names.js';
-import { money } from './money.js';
+import { moveCash, money } from './money.js';
 import { summariseRun, reportEvent, REPORT_LOGS_KEPT } from './report.js';
 import { intelFor } from './sidetasks.js';
 import { afterJob, noteInjury, spendSecondWind, earnedOf } from './earned.js';
 import { overwatchKit, seriousGuard, patchBonus } from './gear.js';
 import { loudFightDue } from './battle.js';
-import { playGetaway, getawayPilot, homeHallOf } from './piloting.js';
+import { playGetaway, getawayPilot, homeHallOf, FOLLOW } from './piloting.js';
 import { lineText } from './fighttext.js';
 import { HOME_HALL } from '../data/halls.js';
 import { crewOf, actors, overwatchOp, standbyOp, standbyReady, driver, onJob, opById, grow, record, takeWhy, addNeural } from './run.js';
@@ -231,7 +231,7 @@ export function startMission(prev, jobId, crewIds, approach, opts = {}) {
   // The approach's costs: time away, and props and bribes paid up front (data/approaches.js).
   const days = Math.max(1, (job.days ?? baseDays(tpl)) + (ap.days ?? 0)); // the offer's days (core/jobs.js daysRange)
   const bribe = (ap.bribePerThreat ?? 0) * view.threat;
-  state.cash -= bribe;
+  moveCash(state, -bribe, `${tpl.name}: props and bribes`);
   // A multi-map job (core/multimap.js) plays its stops first; the finale's queue waits until the route gets there.
   // A long job with no route of its own plays its prep stops (core/prep.js) the same way, from the offer's picks.
   const route = !tpl.maps && job.prep?.length ? prepRoute(job.prep, tpl, approach) : null;
@@ -376,6 +376,20 @@ function incidentContext(state, am, inc, diff) {
     rolled: events.filter((e) => e.kind === 'roll' && e.actor).map((e) => e.actor.id),
     secondWindUsed: am.secondWind ?? [],
   };
+}
+
+/** The report's pay line. When the job's costs or bonuses moved the pay off the card's price, it says how,
+ *  so the number on the job card, the report and the cash in the header can be matched (first-run walkthrough, 2026-11-26).
+ *  offered: the card's price; bonus: the by-name bonus on it. No pay keeps the plain "Paid ¥0.": an abort or a pull-out already says why. */
+export function paidLine(pay, offered, bonus = 0) {
+  if (pay <= 0) return `Paid ${money(pay)}.`;
+  const moved = pay - offered - bonus; // what the job's own costs and bonuses did
+  const parts = [
+    bonus > 0 && `+${money(bonus)} by name`,
+    moved < 0 && `${money(-moved)} lost to what went wrong`,
+    moved > 0 && `+${money(moved)} for what went right`,
+  ].filter(Boolean);
+  return parts.length ? `Paid ${money(pay)} (${money(offered)} offered, ${parts.join(', ')}).` : `Paid ${money(pay)}.`;
 }
 
 /** Exit the job from a decision: everyone comes home (the death rule), the job ends. Pays nothing
@@ -811,7 +825,7 @@ export function chooseOption(prev, choiceId) {
   am.payCut += cost.payCut ?? 0;
   am.extraHeat += cost.heat ?? 0;
   am.clientTrust += cost.clientTrust ?? 0;
-  if (cost.cash) state.cash += cost.cash;
+  if (cost.cash) moveCash(state, cost.cash, `${tpl.name}: "${fill(choice.label, state, voice)}"`, { onJob: true });
 
   // What gets recorded for the full log: the facts of this choice, filled in below.
   const event = {
@@ -868,7 +882,7 @@ export function chooseOption(prev, choiceId) {
     const sc = choice.successCost ?? {};
     am.payCut += sc.payCut ?? 0;
     am.extraHeat += sc.heat ?? 0;
-    if (sc.cash) state.cash += sc.cash;
+    if (sc.cash) moveCash(state, sc.cash, `${tpl.name}: "${fill(choice.label, state, voice)}" worked`, { onJob: true });
     prepEffect(am, sc);
   } else {
     am.log.push({ kind: 'bad', text: fill(choice.failure, state, voice) });
@@ -882,7 +896,7 @@ export function chooseOption(prev, choiceId) {
       am.log.push({ kind: 'good', text: `${roller.op.handle} keeps it quieter than it could have been (Clean Professional): one less heat.` });
       event.saved = 'Clean Professional: one less heat';
     }
-    if (fc.cash) state.cash += fc.cash;
+    if (fc.cash) moveCash(state, fc.cash, `${tpl.name}: "${fill(choice.label, state, voice)}" went wrong`, { onJob: true });
     prepEffect(am, fc);
     if (choice.failureInjury && choice.failureInjury !== 'none') {
       const target = failureTarget(state, am, roller.op, choice);
@@ -1024,6 +1038,9 @@ function finish(state) {
   // A client who asked for someone by name pays more if they were on the job (core/jobs.js namedBonus).
   const named = namedBonus(am, onJob(state, am).map((o) => o.id));
   const pay = Math.round((basePay * (1 + named) * Math.max(0, 1 - am.payCut)) / 50) * 50;
+  // The card's price and the by-name bonus on it, before the job's costs and bonuses, for the report's Paid line (2026-11-26).
+  const offered = Math.round(basePay / 50) * 50;
+  const namedPay = Math.round((basePay * (1 + named)) / 50) * 50 - offered;
   // Freelancers who make it back take their share of what was actually paid.
   const freelance = crew.filter((o) => isFreelancer(o) && !deaths.includes(o)).map((o) => ({ handle: o.handle, cut: freelanceCut(o, pay) }));
   const cuts = freelance.reduce((n, f) => n + f.cut, 0);
@@ -1038,17 +1055,19 @@ function finish(state) {
     if (getaway.tail && state.heatWatched !== true) state.heatWatched = tpl.district; // a tail: the next job there is watched
     const g = getaway;
     // Followed home: the followers are the raid, on the hall most of the crew live in (core/raids.js).
-    const hall = g.followed ? homeHallOf(state, onJob(state, am).filter((o) => !deaths.includes(o)), HOME_HALL) : null;
+    // Not in the first week (FOLLOW.graceDays): the tail stays, but they lose them before the door.
+    g.lost = !!g.followed && state.day <= FOLLOW.graceDays;
+    const hall = g.followed && !g.lost ? homeHallOf(state, onJob(state, am).filter((o) => !deaths.includes(o)), HOME_HALL) : null;
     const raid = hall ? followHome(state, hall.district, jobGrudge(tpl, am.threat ?? tpl.threat)?.gang, g.followed) : null;
     g.hall = raid ? hall.district : null;
     const text = g.result === 'clean' ? `${g.pilot.handle} gets them out clean: heat −${g.shed}.`
       : g.result === 'good' ? `${g.pilot.handle} gets them out: heat −${g.shed}.`
-      : g.tail ? `${g.pilot.handle} can't shake the tail. The next job here will be watched${g.hall ? ', and someone followed them home: a raid is coming' : ''}.` : g.hall ? `${g.pilot.handle} gets them out, but someone follows them home: a raid is coming.` : `${g.pilot.handle} gets them out, but the heat stays.`;
+      : g.tail ? `${g.pilot.handle} can't shake the tail. The next job here will be watched${g.hall ? ', and someone followed them home: a raid is coming' : g.lost ? '. Whoever was on them lost them before our door, this time' : ''}.` : g.hall ? `${g.pilot.handle} gets them out, but someone follows them home: a raid is coming.` : `${g.pilot.handle} gets them out, but the heat stays.`;
     am.getaway = { handle: g.pilot.handle, result: g.result, shed: g.shed, tail: g.tail, followed: g.hall, die: g.die, value: g.value, need: g.need, text };
     am.log.push({ kind: g.tail ? 'bad' : 'good', text });
     record(am, { kind: 'getaway', stat: 'piloting', actor: { id: g.pilot.id, handle: g.pilot.handle }, die: g.die, value: g.value, need: g.need, success: g.margin >= 0, result: g.result, shed: g.shed, tail: g.tail, followed: g.hall, follow: g.followed, text, outcomeCost: {} });
   }
-  state.cash += pay - cuts;
+  moveCash(state, pay - cuts, `${tpl.name}: paid${cuts ? ' (after freelancers)' : ''}`);
   addHeat(state, tpl.district, heatGain); // in the job's district (heat per district, save v39)
   // A job that hurt a gang: they remember (core/gangs.js); an aborted one doesn't count.
   const grudge = !am.aborted ? jobGrudge(tpl, threat) : null;
@@ -1178,7 +1197,7 @@ function finish(state) {
   // Each outcome line has a tone so the screen can colour it (good, bad, warn, plain).
   const steps = [...(am.report ?? [])];
   const results = [
-    { tone: pay > 0 ? 'good' : 'plain', text: `Paid ${money(pay)}.` },
+    { tone: pay > 0 ? 'good' : 'plain', text: paidLine(pay, offered, namedPay) },
     ...(named ? [{ tone: 'good', text: NAMED_TEXT.report.replace('{client}', clientById(am.clientId)?.name ?? 'The client').replace('{op}', opById(state, am.askedFor)?.handle ?? state.memorial.find((m) => m.id === am.askedFor)?.handle ?? 'them').replace('{pct}', Math.round(NAMED_OFFER.payBonus * 100)) }] : []),
     ...(cuts ? [{ tone: 'plain', text: `Freelancers took ${money(cuts)}.` }] : []),
     ...(am.bribe ? [{ tone: 'plain', text: `Props and bribes cost ${money(am.bribe)} up front.` }] : []),
