@@ -7,3 +7,4 @@ Decisions themselves live in the decision log (`docs/design/`); this folder is t
 | File | Topic |
 | --- | --- |
 | [abilities-and-builds.md](abilities-and-builds.md) | Stats and skills vs broad traits; how roguelites like Hades get combinations nobody planned (2026-11-18) |
+| [management-games-comparators.md](management-games-comparators.md) | Guild and crew games players recommend (Majesty, Battle Brothers, KoDP and others), and where KoDP reviewers bounced (2026-11-26) |
