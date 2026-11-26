@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Crews Out Stack</title>
+<!-- Mockup round 3, 2026-11-26. Owner, after round 2 (2026-11-26-days-out-log-2.html): keep the bars; several crews
+     can be out at once, so each card shows only today, and past days open underneath. Owner's question: should the
+     player know how long a trip takes? Answer taken here: yes, the length and the day they're back are shown (it is a
+     planning fact); what each day brings stays blank until it happens, and a day you can watch appears on the strip
+     only when a lead uncovers it. Three crews out on Today: a weapon hunt where the meet has just appeared, a cash run
+     waiting on a call, a recruit trip setting out. The real <details> open and close. Street-terminal tokens from
+     docs/UI-SKIN.md. Not wired to the game. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c0f; --panel:#12151b; --panel-2:#161a21; --line:#2a303b;
+  --text:#e9ecf1; --muted:#8a93a6; --dim:#5d6577; --accent:#ff3d5f; --accent-2:#3de8d8; --warn:#f2d541; --cut:10px;
+  --disp:'Rajdhani',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background-image:linear-gradient(rgba(61,232,216,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(61,232,216,.025) 1px,transparent 1px);
+  background-size:32px 32px;padding:16px max(16px,env(safe-area-inset-left)) 40px}
+.wrap{max-width:1320px;margin:0 auto}
+h1{font:700 22px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin:4px 0}
+.lede{color:var(--muted);max-width:880px;margin:0 0 6px}
+.cols{display:grid;gap:28px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));align-items:start;margin-top:16px}
+.look{font:700 13px var(--disp);letter-spacing:.16em;color:var(--accent-2);text-transform:uppercase;margin:0 0 6px}
+.why{color:var(--muted);font-size:13px;margin:0 0 10px;min-height:54px}
+.phone{max-width:400px}
+
+.sect{display:flex;align-items:center;gap:10px;font:700 13px var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--accent-2);margin:0 0 10px}
+.sect::after{content:"";flex:1;height:1px;background:var(--line)}
+.sect .n{color:var(--muted)}
+.stack{display:grid;gap:12px}
+
+.card{position:relative;background:linear-gradient(var(--panel-2),var(--panel));border:1px solid var(--line);
+  clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%);padding:12px 14px}
+.card::before{content:"";position:absolute;top:-1px;left:14px;width:36px;height:2px;background:var(--accent-2)}
+.card.calling{border-color:var(--accent)}
+.card.calling::before{background:var(--accent)}
+.top{display:flex;align-items:center;gap:8px}
+.top strong{font:700 17px var(--disp);letter-spacing:.06em;text-transform:uppercase}
+.meta{font-size:12px;color:var(--muted)}
+.faces{margin-left:auto;display:flex;gap:4px;flex:none}
+.face{width:26px;height:28px;border-radius:2px}
+.f1{background:linear-gradient(160deg,#2d3a52 0 40%,#3de8d8 40% 55%,#1b2340 55%)}
+.f2{background:linear-gradient(160deg,#4a2a20 0 40%,#ff9a5a 40% 55%,#1b2340 55%)}
+.f3{background:linear-gradient(160deg,#3a2d52 0 40%,#b48cff 40% 55%,#1b2340 55%)}
+.f4{background:linear-gradient(160deg,#2d4a3a 0 40%,#5fe0a5 40% 55%,#1b2340 55%)}
+
+/* the day strip: one cell a day; the trip's length is known, what the days bring is not */
+.strip{display:grid;gap:3px;margin:10px 0 2px}
+.strip span{position:relative;height:24px;background:#1b2029;border:1px solid var(--line);display:grid;place-items:center;font:700 11px var(--disp);color:var(--dim)}
+.strip span.done{background:#2a3340;color:var(--text)}
+.strip span.today{border-color:var(--accent-2);color:var(--accent-2);animation:breathe 2.4s ease-in-out infinite}
+.strip span.watch::after{content:"";position:absolute;top:-1px;right:-1px;border-style:solid;border-width:0 9px 9px 0;border-color:transparent var(--accent-2) transparent transparent}
+.strip span.call{outline:2px solid var(--accent);outline-offset:-2px;color:var(--text)}
+.strip span.new{animation:pop 1.2s ease-out 2}
+.ends{display:flex;justify-content:space-between;font:600 11px var(--disp);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+@keyframes breathe{50%{box-shadow:0 0 10px rgba(61,232,216,.35)}}
+@keyframes pop{0%{box-shadow:0 0 0 0 rgba(61,232,216,.7)}100%{box-shadow:0 0 0 8px rgba(61,232,216,0)}}
+@media (prefers-reduced-motion:reduce){.strip span.today,.strip span.new{animation:none}}
+
+.goal{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;margin:8px 0 0}
+.goal .k{font:700 11px var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.goal .n{font:700 12px var(--disp);letter-spacing:.06em;color:var(--accent-2)}
+.seg{display:flex;gap:2px;height:6px}
+.seg i{flex:1;background:#232a35}
+.seg i.on{background:var(--accent-2)}
+
+.today-line{margin-top:10px;padding-top:8px;border-top:1px solid rgba(42,48,59,.7)}
+.today-line .d{font:700 11px/1 var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-2)}
+.today-line .kind{float:right;font:600 11px/1 var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.t{font-size:14px;color:#c9cfda;margin:4px 0 0}
+.quiet{font-size:13px;color:var(--dim);font-style:italic}
+.who{text-decoration:underline dotted var(--accent-2);text-underline-offset:3px}
+.found{margin-top:8px;border:1px solid var(--accent-2);padding:8px 10px;display:flex;gap:10px;align-items:center}
+.found .mk{font:700 11px var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--accent-2)}
+.found .s{font-size:13px;color:var(--text)}
+
+/* past days: a real disclosure */
+details.past{margin-top:8px}
+details.past summary{list-style:none;cursor:pointer;min-height:44px;display:flex;align-items:center;gap:8px;font:600 12px var(--disp);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);border-top:1px solid rgba(42,48,59,.7)}
+details.past summary::-webkit-details-marker{display:none}
+details.past summary::after{content:"+";margin-left:auto;font-size:16px}
+details.past[open] summary::after{content:"\2212"}
+details.past ol{list-style:none;margin:0 0 4px;padding:0}
+details.past li{padding:7px 0;border-bottom:1px solid rgba(42,48,59,.5)}
+details.past li:last-child{border-bottom:0}
+details.past .d{font:700 11px/1 var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-2)}
+details.past .kind{float:right;font:600 11px/1 var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+details.past li.q .d{color:var(--dim)}
+.again{display:inline-grid;place-items:center;min-height:40px;padding:0 12px;margin-top:6px;border:1px solid var(--line);font:700 12px var(--disp);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+
+.foot{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.btn{display:inline-grid;place-items:center;min-height:44px;padding:0 14px;font:700 13px var(--disp);letter-spacing:.12em;text-transform:uppercase}
+.btn.call{background:var(--accent);color:#fff;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));flex:1}
+.btn.watch{border:1px solid var(--accent-2);color:var(--accent-2)}
+.btn.ghost{border:1px solid var(--line);color:var(--muted)}
+.btn.right{margin-left:auto}
+
+.notes{margin-top:26px;color:var(--muted);font-size:13px;max-width:940px}
+.notes li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Crews out: the stack on Today</h1>
+  <p class="lede">Three crews out at once. Each card shows the trip's days as a strip (how long is known: you see the day they're back), the goal as a thin bar, and only today's line. Past days open underneath. A day you can watch appears on the strip when a lead uncovers it, not before.</p>
+
+  <div class="cols">
+
+    <!-- LEFT: as it first looks -->
+    <section class="phone">
+      <p class="look">As it opens</p>
+      <p class="why">Every card closed: only today's line. The cash run is waiting on you, so it sits first with a red edge. The weapon hunt's day 6 has just turned into the meet, and says so.</p>
+      <div class="sect">Out now <span class="n">· 3 crews</span></div>
+      <div class="stack">
+
+        <!-- cash run, calling -->
+        <article class="card calling">
+          <div class="top"><strong>Cash</strong><span class="meta">Docks · back Thu</span><span class="faces"><span class="face f3"></span></span></div>
+          <div class="strip" style="grid-template-columns:repeat(4,1fr)"><span class="done">1</span><span class="today call">2</span><span>3</span><span>4</span></div>
+          <div class="ends"><span>Left Mon</span><span>Back Thu</span></div>
+          <div class="goal"><span class="k">Money found</span><span class="seg"><i></i></span><span class="n">0 of 1</span></div>
+          <div class="today-line"><span class="kind">A deal gone wrong</span><span class="d">Day 2 · today</span>
+            <p class="t">The buyer's cousin wants a word, and two more cousins came to listen. <span class="who">Mirror</span> is asking what you want done.</p></div>
+          <div class="foot"><span class="btn call">They're calling you</span></div>
+        </article>
+
+        <!-- weapon hunt, meet just found -->
+        <article class="card">
+          <div class="top"><strong>A weapon</strong><span class="meta">Night Market · back Sat</span><span class="faces"><span class="face f1"></span><span class="face f2"></span></span></div>
+          <div class="strip" style="grid-template-columns:repeat(6,1fr)"><span class="done">1</span><span class="done">2</span><span class="done">3</span><span class="done call">4</span><span class="today">5</span><span class="watch new">6</span></div>
+          <div class="ends"><span>Left Mon</span><span>Back Sat</span></div>
+          <div class="goal"><span class="k">Leads</span><span class="seg"><i class="on"></i><i class="on"></i><i></i></span><span class="n">2 of 3</span></div>
+          <div class="today-line"><span class="kind">A lead</span><span class="d">Day 5 · today</span>
+            <p class="t">The seller tried to make <span class="who">Lychee</span> wait all afternoon. <span class="who">Lychee</span> waited longer and got the meeting.</p>
+            <div class="found"><span><span class="mk">Just found · day 6</span><br><span class="s">The meet, in the seller's yard. You can watch it.</span></span><span class="btn watch right">Watch</span></div></div>
+          <details class="past"><summary>Past days (4)</summary></details>
+        </article>
+
+        <!-- recruit, setting out -->
+        <article class="card">
+          <div class="top"><strong>A recruit</strong><span class="meta">Old Town · back Fri</span><span class="faces"><span class="face f4"></span><span class="face f2" style="filter:hue-rotate(140deg)"></span></span></div>
+          <div class="strip" style="grid-template-columns:repeat(5,1fr)"><span class="today">1</span><span>2</span><span>3</span><span>4</span><span>5</span></div>
+          <div class="ends"><span>Left today</span><span>Back Fri</span></div>
+          <div class="goal"><span class="k">Leads</span><span class="seg"><i></i><i></i></span><span class="n">0 of 2</span></div>
+          <div class="today-line"><span class="d">Day 1 · today</span><p class="quiet">They set out. The first line comes in tomorrow.</p></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- RIGHT: weapon hunt opened -->
+    <section class="phone">
+      <p class="look">The weapon hunt, opened</p>
+      <p class="why">Tapping Past days opens the earlier days under the card, newest first. Quiet days are one dim filler line. The day 4 call keeps its fight to see again. Tap again to fold.</p>
+      <div class="sect">Out now <span class="n">· 3 crews</span></div>
+      <div class="stack">
+        <article class="card">
+          <div class="top"><strong>A weapon</strong><span class="meta">Night Market · back Sat</span><span class="faces"><span class="face f1"></span><span class="face f2"></span></span></div>
+          <div class="strip" style="grid-template-columns:repeat(6,1fr)"><span class="done">1</span><span class="done">2</span><span class="done">3</span><span class="done call">4</span><span class="today">5</span><span class="watch">6</span></div>
+          <div class="ends"><span>Left Mon</span><span>Back Sat</span></div>
+          <div class="goal"><span class="k">Leads</span><span class="seg"><i class="on"></i><i class="on"></i><i></i></span><span class="n">2 of 3</span></div>
+          <div class="today-line"><span class="kind">A lead</span><span class="d">Day 5 · today</span>
+            <p class="t">The seller tried to make <span class="who">Lychee</span> wait all afternoon. <span class="who">Lychee</span> waited longer and got the meeting.</p>
+            <div class="found"><span><span class="mk">Day 6 · the meet</span><br><span class="s">The seller's yard. Watch it, or let them handle it.</span></span><span class="btn watch right">Watch</span></div></div>
+          <details class="past" open><summary>Past days (4)</summary>
+            <ol>
+              <li><span class="kind">Called you · watched</span><span class="d">Day 4</span>
+                <p class="t">A middleman wanted the money up front and brought friends. They held in the alley.</p><span class="again">See the fight again</span></li>
+              <li><span class="kind">A lead</span><span class="d">Day 3</span>
+                <p class="t">A repairer laid up after an implant flare-up. <span class="who">Vector</span> kept it short and came away with a name.</p></li>
+              <li class="q"><span class="d">Day 2</span> <span class="quiet">Quiet. Two stalls, two shrugs.</span></li>
+              <li><span class="kind">Set out</span><span class="d">Day 1</span>
+                <p class="t">Over a shared table, <span class="who">Vector</span> mentioned the Scaled Typhoon. Kwong Wai-shun wrote a seller's name on the receipt.</p></li>
+            </ol></details>
+          <div class="foot"><span class="btn ghost">Pull them out</span></div>
+        </article>
+        <article class="card calling" style="opacity:.55">
+          <div class="top"><strong>Cash</strong><span class="meta">Docks · back Thu · calling you</span></div>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <ul class="notes">
+    <li><b>Length is known; days are not.</b> The strip has one cell per day of the trip and the card says the day they're back, because a runner out can't take other work. Cells ahead stay blank until the day happens. The only thing that appears ahead of time is a day you can watch, and only once a lead uncovers it.</li>
+    <li><b>Order on Today:</b> a crew calling you first, then crews with something you can watch tomorrow, then the rest by the day they're back.</li>
+    <li><b>The report</b> when they're home is the full rail (round 2, look 2c), oldest first.</li>
+    <li><b>What exists today:</b> the trip's length and back day, the leads (<code>progress</code> / <code>need</code>), the call when a deal goes wrong, pulling out. <b>New:</b> filler lines for quiet days, a watchable meet day uncovered by a lead, and keeping a watched fight with the trip for "See the fight again".</li>
+    <li>Pull them out and the Watch button are 44px tall; the Past days row is a 44px tap.</li>
+  </ul>
+</div>
+</body>
+</html>
