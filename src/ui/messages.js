@@ -177,10 +177,12 @@ function reportCrew(m) {
     // Who grew while away (2026-11-26, core/grew.js): a chip per stat that rose a whole point, and a graduation.
     const grew = gone ? [] : (m.back?.growth ?? []).filter((g) => g.opId === id);
     const pro = !gone && (m.back?.graduated ?? []).includes(id);
-    const chips = grew.length || pro ? `<span class="rcrew__grew">${grew.map((g) => `<b>+${g.to - g.from} ${esc(statName(g.stat))}</b>`).join('')}${pro ? '<b class="is-tier">Now a pro</b>' : ''}</span>` : '';
+    // B + P3 of the growth mockups (owner, 2026-11-26): brackets close on the face and a sync bar ticks to 100%, then
+    // each stat reads old (struck) ▲ new. Plays once with the report (.report--play), still after that.
+    const chips = grew.length || pro ? `<span class="rcrew__sync" aria-hidden="true"><i></i><span>Sync</span><b></b></span><span class="rcrew__grew">${grew.map((g) => `<span class="rcrew__rise"><span>${esc(statName(g.stat))}</span> <s>${g.from}</s><em>▲</em><b>${g.to}</b></span>`).join('')}${pro ? '<span class="rcrew__pro">Now a pro</span>' : ''}</span>` : '';
     const say = grew.length || pro ? `. Came back sharper: ${[...grew.map((g) => `${statName(g.stat)} ${g.from} to ${g.to}`), pro ? 'now a pro' : ''].filter(Boolean).join(', ')}` : '';
     return `<button class="rcrew__op ${gone ? 'is-lost' : hurt ? 'is-hurt' : ''} ${chips ? 'is-grew' : ''}" data-action="op-link" data-id="${esc(id)}" ${gone ? 'disabled' : ''} aria-label="${esc(`${op.handle}, ${line}${say}`)}">
-        ${face(op, 'sm')}<strong>${esc(op.handle)}</strong><span>${esc(line)}</span>${hurt && !gone ? `<span class="rcrew__hurt">${esc(hurt)} wound</span>` : ''}${chips}</button>`;
+        ${chips ? `<span class="rcrew__aim" aria-hidden="true">${face(op, 'sm')}<i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></span>` : face(op, 'sm')}<strong>${esc(op.handle)}</strong><span>${esc(line)}</span>${hurt && !gone ? `<span class="rcrew__hurt">${esc(hurt)} wound</span>` : ''}${chips}</button>`;
   }).join('');
   return `<div class="rcrew" aria-label="Who went">${cards}</div>`;
 }

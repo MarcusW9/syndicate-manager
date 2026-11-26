@@ -2010,10 +2010,39 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .rcrew__op.is-lost > span { color: var(--danger); }
 /* Who grew while away (2026-11-26, core/grew.js; docs/mockups/2026-11-26-trip-growth.html look B): the card lights up,
    a chip per stat that rose a whole point, a sodium chip for a graduation. */
-.rcrew__op.is-grew { border-color: var(--accent-2); box-shadow: inset 0 0 0 1px rgba(61, 232, 216, 0.25); flex-basis: 96px; }
-.rcrew__grew { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; margin-top: 3px; }
-.rcrew__grew b { font: 700 0.6rem/1.3 var(--display, inherit); letter-spacing: 0.08em; text-transform: uppercase; color: var(--bg); background: var(--accent-2); padding: 0 4px; }
-.rcrew__grew b.is-tier { background: var(--warn); }
+.rcrew__op.is-grew { position: relative; overflow: hidden; border-color: rgba(95, 224, 165, 0.55); flex-basis: 128px; }
+.rcrew__aim { position: relative; display: block; padding: 4px 8px; }
+.rcrew__aim i { position: absolute; width: 9px; height: 9px; border: 2px solid var(--accent-2); }
+.rcrew__aim .tl { left: 0; top: 0; border-right: 0; border-bottom: 0; --dx: -6px; --dy: -6px; }
+.rcrew__aim .tr { right: 0; top: 0; border-left: 0; border-bottom: 0; --dx: 6px; --dy: -6px; }
+.rcrew__aim .bl { left: 0; bottom: 0; border-right: 0; border-top: 0; --dx: -6px; --dy: 6px; }
+.rcrew__aim .br { right: 0; bottom: 0; border-left: 0; border-top: 0; --dx: 6px; --dy: 6px; }
+.rcrew__sync { display: grid; grid-template-columns: 1fr auto; width: 100%; margin-top: 4px; font: 600 0.62rem/1.2 var(--display, inherit); letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); }
+.rcrew__sync i { grid-column: 1 / -1; height: 3px; background: var(--accent-2); transform-origin: left; margin-bottom: 2px; }
+.rcrew__sync b { counter-reset: n var(--n); font-weight: 600; }
+.rcrew__sync b::after { content: counter(n) "%"; }
+.rcrew__grew { display: grid; justify-items: center; gap: 1px; margin-top: 4px; }
+.rcrew__rise { font: 700 0.72rem/1.25 var(--display, inherit); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.rcrew__rise s { font-weight: 600; margin: 0 3px; }
+.rcrew__rise em { font-style: normal; color: #5fe0a5; display: inline-block; }
+.rcrew__rise b { color: #5fe0a5; font-size: 0.95rem; margin-left: 3px; }
+.rcrew__pro { margin-top: 3px; font: 700 0.62rem/1.4 var(--display, inherit); letter-spacing: 0.12em; text-transform: uppercase; color: var(--bg); background: var(--warn); padding: 0 6px; }
+@property --n { syntax: '<integer>'; inherits: false; initial-value: 100; }
+/* Played once with the report: brackets close, a scanline sweeps, the bar ticks 0 to 100%, then the rises land. */
+.report--play .rcrew__op.is-grew::after { content: ''; position: absolute; left: 0; right: 0; top: -30%; height: 30%; background: linear-gradient(transparent, rgba(61, 232, 216, 0.18), transparent); animation: grew-sweep 1.2s ease-in-out 0.2s both; pointer-events: none; }
+.report--play .rcrew__aim i { animation: grew-close 0.6s ease-out 0.2s both; }
+.report--play .rcrew__sync i { animation: grew-fill 1s steps(10) 0.4s both; }
+.report--play .rcrew__sync b { animation: grew-count 1s steps(10) 0.4s both; }
+.report--play .rcrew__rise { animation: grew-in 0.3s ease-out 1.45s both; }
+.report--play .rcrew__rise em { animation: grew-bounce 0.5s ease-out 1.6s 3 both; }
+.report--play .rcrew__pro { animation: stamp 0.35s ease-out 1.9s both; }
+@keyframes grew-sweep { to { top: 110%; } }
+@keyframes grew-close { from { transform: translate(var(--dx), var(--dy)); opacity: 0; } }
+@keyframes grew-fill { from { transform: scaleX(0); } }
+@keyframes grew-count { from { --n: 0; } to { --n: 100; } }
+@keyframes grew-in { from { opacity: 0; transform: translateY(3px); } }
+@keyframes grew-bounce { 0% { transform: translateY(3px); opacity: 0.3; } 50% { transform: translateY(-3px); opacity: 1; } 100% { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .report--play .rcrew__op.is-grew::after, .report--play .rcrew__aim i, .report--play .rcrew__sync i, .report--play .rcrew__sync b, .report--play .rcrew__rise, .report--play .rcrew__rise em, .report--play .rcrew__pro { animation: none; } }
 
 /* The face-off over the map (ui/duel.js, playtest 2026-11-07): your runner against who or what they
    face, the stat and the d20, then a hit for a win or a jolt for a loss. Durations follow --speed. */

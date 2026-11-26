@@ -137,7 +137,9 @@ test("the report's crew cards show who grew", async () => {
   app.click('open-message', 'exp-test');
   const html = app.html();
   assert.match(html, /rcrew__op[^"]*is-grew/, 'the runner who grew is lit');
-  assert.match(html, /<b>\+1 Stealth<\/b>/, 'with a chip per stat');
-  assert.match(html, /<b class="is-tier">Now a pro<\/b>/, 'and the graduation');
+  assert.match(html, /class="rcrew__rise"><span>Stealth<\/span> <s>11<\/s><em>▲<\/em><b>12<\/b>/, 'each stat as old (struck) ▲ new');
+  assert.match(html, /class="rcrew__pro">Now a pro</, 'and the graduation');
+  assert.match(html, /class="rcrew__sync"/, 'with the sync bar');
+  assert.match(html, /class="rcrew__aim"/, 'and the brackets on the face');
   assert.equal((html.match(/is-grew/g) ?? []).length, 1, 'the other runner is not lit');
 });
