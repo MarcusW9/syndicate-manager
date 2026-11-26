@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Crews Out Compact</title>
+<!-- Mockup round 4, 2026-11-26. Owner, after round 3 (2026-11-26-crews-out-stack.html): the day strip and the leads bar
+     say the same thing; one smaller element is enough. And the faces of the squad sent away should be seen. Three
+     looks, same three crews: a cash run calling you, a weapon hunt with the meet just found, a recruit trip setting out.
+     One element per trip: a thin day track (length known, days ahead blank) with a mark on each day that found a lead,
+     a call or a day you can watch. Street-terminal tokens from docs/UI-SKIN.md. Not wired to the game. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c0f; --panel:#12151b; --panel-2:#161a21; --line:#2a303b;
+  --text:#e9ecf1; --muted:#8a93a6; --dim:#5d6577; --accent:#ff3d5f; --accent-2:#3de8d8; --cut:10px;
+  --disp:'Rajdhani',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background-image:linear-gradient(rgba(61,232,216,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(61,232,216,.025) 1px,transparent 1px);
+  background-size:32px 32px;padding:16px max(16px,env(safe-area-inset-left)) 40px}
+.wrap{max-width:1360px;margin:0 auto}
+h1{font:700 22px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin:4px 0}
+.lede{color:var(--muted);max-width:880px;margin:0 0 6px}
+.cols{display:grid;gap:26px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));align-items:start;margin-top:16px}
+.look{font:700 13px var(--disp);letter-spacing:.16em;color:var(--accent-2);text-transform:uppercase;margin:0 0 6px}
+.why{color:var(--muted);font-size:13px;margin:0 0 10px;min-height:72px}
+.stack{display:grid;gap:10px}
+.card{position:relative;background:linear-gradient(var(--panel-2),var(--panel));border:1px solid var(--line);
+  clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%);padding:12px 14px}
+.card::before{content:"";position:absolute;top:-1px;left:14px;width:36px;height:2px;background:var(--accent-2)}
+.card.calling{border-color:var(--accent)} .card.calling::before{background:var(--accent)}
+strong.name{font:700 17px var(--disp);letter-spacing:.06em;text-transform:uppercase}
+.meta{font-size:12px;color:var(--muted)}
+.who{text-decoration:underline dotted var(--accent-2);text-underline-offset:3px}
+.t{font-size:14px;color:#c9cfda;margin:4px 0 0}
+.quiet{font-size:13px;color:var(--dim);font-style:italic;margin:4px 0 0}
+.d{font:700 11px/1 var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--accent-2)}
+.kind{font:600 11px/1 var(--disp);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+/* faces: drawn like the game's portraits, sized up */
+.face{border-radius:2px;flex:none;position:relative}
+.f1{background:linear-gradient(160deg,#2d3a52 0 40%,#3de8d8 40% 55%,#1b2340 55%)}
+.f2{background:linear-gradient(160deg,#4a2a20 0 40%,#ff9a5a 40% 55%,#1b2340 55%)}
+.f3{background:linear-gradient(160deg,#3a2d52 0 40%,#b48cff 40% 55%,#1b2340 55%)}
+.f4{background:linear-gradient(160deg,#2d4a3a 0 40%,#5fe0a5 40% 55%,#1b2340 55%)}
+.f5{background:linear-gradient(160deg,#52482d 0 40%,#f2d541 40% 55%,#1b2340 55%)}
+.fname{font:700 12px var(--disp);letter-spacing:.06em;text-align:center;margin-top:3px}
+
+/* the one element: a thin day track */
+.track{display:grid;gap:2px;height:8px;margin:10px 0 8px}
+.track i{position:relative;background:#232a35}
+.track i.done{background:#4a5466}
+.track i.today{background:var(--accent-2)}
+.track i.call{background:var(--accent)}
+.track i.lead::after,.track i.watch::after{content:"";position:absolute;left:50%;top:50%;width:7px;height:7px;transform:translate(-50%,-50%) rotate(45deg);background:var(--text);box-shadow:0 0 0 2px var(--panel)}
+.track i.watch::after{background:var(--panel);border:2px solid var(--accent-2);width:9px;height:9px}
+.trackline{display:flex;justify-content:space-between;align-items:baseline;font:600 11px var(--disp);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.trackline b{color:var(--accent-2);font-weight:700}
+
+.btn{display:inline-grid;place-items:center;min-height:44px;padding:0 14px;font:700 13px var(--disp);letter-spacing:.12em;text-transform:uppercase}
+.btn.call{background:var(--accent);color:#fff;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.btn.watch{border:1px solid var(--accent-2);color:var(--accent-2)}
+.past{display:flex;align-items:center;min-height:44px;margin-top:6px;border-top:1px solid rgba(42,48,59,.7);font:600 12px var(--disp);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.past::after{content:"+";margin-left:auto;font-size:16px}
+
+/* A: faces row on top */
+.a .faces{display:flex;gap:8px;margin:8px 0 2px}
+.a .face{width:48px;height:52px}
+.a .head{display:flex;align-items:baseline;gap:8px}
+.a .found{display:flex;align-items:center;gap:10px;margin-top:6px}
+.a .found .btn{margin-left:auto}
+
+/* B: faces as the card's left column */
+.b .card{display:grid;grid-template-columns:auto 1fr;gap:12px}
+.b .faces{display:grid;gap:4px;align-content:start}
+.b .face{width:52px;height:56px}
+.b .faces.two .face{width:44px;height:46px}
+.b .row{display:flex;gap:8px;align-items:center;margin-top:8px}
+.b .row .btn{margin-left:auto}
+
+/* C: one line per trip, faces + track, today's line only on tap */
+.c .card{padding:10px 12px}
+.c .line1{display:flex;align-items:center;gap:10px}
+.c .faces{display:flex}
+.c .face{width:40px;height:44px;border:2px solid var(--panel)}
+.c .face + .face{margin-left:-10px}
+.c .info{flex:1;min-width:0}
+.c .info .name{font-size:15px}
+.c .track{margin:9px 0 8px;height:6px}
+.c .cta{flex:none}
+.c .tline{margin-top:8px;border-top:1px solid rgba(42,48,59,.7);padding-top:6px}
+
+.notes{margin-top:26px;color:var(--muted);font-size:13px;max-width:940px}
+.notes li{margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Crews out, smaller</h1>
+  <p class="lede">One element per trip instead of a day strip and a leads bar: a thin track, one segment a day (filled as days pass, today lit, ahead blank), with a diamond on each day that found a lead and an outlined diamond on a day you can watch. A call is a red segment. The faces of whoever went are big enough to tell apart.</p>
+
+  <div class="cols">
+
+    <!-- A -->
+    <section class="a">
+      <p class="look">A · Faces on top</p>
+      <p class="why">The squad first, 48px faces with names, then the track and today's line. The leads count sits at the end of the track in words. Closest to round 3, about a third shorter.</p>
+      <div class="stack">
+        <article class="card calling">
+          <div class="head"><strong class="name">Cash</strong><span class="meta">Docks · back Thu</span></div>
+          <div class="faces"><div><div class="face f3" style="width:48px;height:52px"></div><div class="fname">Mirror</div></div></div>
+          <div class="track" style="grid-template-columns:repeat(4,1fr)"><i class="done"></i><i class="call"></i><i></i><i></i></div>
+          <div class="trackline"><span>Day 2 of 4</span><span>Money <b>0 of 1</b></span></div>
+          <p class="t">The buyer's cousin wants a word, and two more cousins came to listen.</p>
+          <div class="found"><span class="btn call" style="flex:1">They're calling you</span></div>
+        </article>
+        <article class="card">
+          <div class="head"><strong class="name">A weapon</strong><span class="meta">Night Market · back Sat</span></div>
+          <div class="faces"><div><div class="face f1" style="width:48px;height:52px"></div><div class="fname">Vector</div></div><div><div class="face f2" style="width:48px;height:52px"></div><div class="fname">Lychee</div></div></div>
+          <div class="track" style="grid-template-columns:repeat(6,1fr)"><i class="done"></i><i class="done"></i><i class="done lead"></i><i class="call"></i><i class="today lead"></i><i class="watch"></i></div>
+          <div class="trackline"><span>Day 5 of 6</span><span>Leads <b>2 of 3</b></span></div>
+          <p class="t"><span class="who">Lychee</span> outwaited the seller and got the meeting.</p>
+          <div class="found"><span class="kind" style="color:var(--accent-2)">Tomorrow · the meet</span><span class="btn watch">Watch</span></div>
+          <div class="past">Past days (4)</div>
+        </article>
+        <article class="card">
+          <div class="head"><strong class="name">A recruit</strong><span class="meta">Old Town · back Fri</span></div>
+          <div class="faces"><div><div class="face f4" style="width:48px;height:52px"></div><div class="fname">Pike</div></div><div><div class="face f5" style="width:48px;height:52px"></div><div class="fname">Saint</div></div></div>
+          <div class="track" style="grid-template-columns:repeat(5,1fr)"><i class="today"></i><i></i><i></i><i></i><i></i></div>
+          <div class="trackline"><span>Day 1 of 5</span><span>Leads <b>0 of 2</b></span></div>
+          <p class="quiet">They set out. The first line comes in tomorrow.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- B -->
+    <section class="b">
+      <p class="look">B · Faces down the side</p>
+      <p class="why">The faces are the card's left column, so the squad is the first thing your eye lands on and each card is shorter. Track, today's line and the action sit beside them.</p>
+      <div class="stack">
+        <article class="card calling">
+          <div class="faces"><div class="face f3"></div></div>
+          <div>
+            <strong class="name">Cash</strong> <span class="meta">Docks · back Thu</span>
+            <div class="track" style="grid-template-columns:repeat(4,1fr)"><i class="done"></i><i class="call"></i><i></i><i></i></div>
+            <div class="trackline"><span>Day 2 of 4</span><span>Money <b>0 of 1</b></span></div>
+            <p class="t"><span class="who">Mirror</span>: the buyer's cousin wants a word, and brought cousins.</p>
+            <div class="row"><span class="btn call" style="flex:1">They're calling you</span></div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="faces two"><div class="face f1"></div><div class="face f2"></div></div>
+          <div>
+            <strong class="name">A weapon</strong> <span class="meta">Night Market · back Sat</span>
+            <div class="track" style="grid-template-columns:repeat(6,1fr)"><i class="done"></i><i class="done"></i><i class="done lead"></i><i class="call"></i><i class="today lead"></i><i class="watch"></i></div>
+            <div class="trackline"><span>Day 5 of 6</span><span>Leads <b>2 of 3</b></span></div>
+            <p class="t"><span class="who">Lychee</span> outwaited the seller and got the meeting.</p>
+            <div class="row"><span class="kind" style="color:var(--accent-2)">Tomorrow · the meet</span><span class="btn watch">Watch</span></div>
+            <div class="past">Past days (4)</div>
+          </div>
+        </article>
+        <article class="card">
+          <div class="faces two"><div class="face f4"></div><div class="face f5"></div></div>
+          <div>
+            <strong class="name">A recruit</strong> <span class="meta">Old Town · back Fri</span>
+            <div class="track" style="grid-template-columns:repeat(5,1fr)"><i class="today"></i><i></i><i></i><i></i><i></i></div>
+            <div class="trackline"><span>Day 1 of 5</span><span>Leads <b>0 of 2</b></span></div>
+            <p class="quiet"><span class="who">Pike</span> and <span class="who">Saint</span> set out. First line tomorrow.</p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- C -->
+    <section class="c">
+      <p class="look">C · One row per trip</p>
+      <p class="why">The smallest: overlapping faces, the trip's name and a thin track on one row, the action on the right. Today's line shows under it only when there's something to read; tap the row for the past days.</p>
+      <div class="stack">
+        <article class="card calling">
+          <div class="line1">
+            <div class="faces"><div class="face f3"></div></div>
+            <div class="info"><strong class="name">Cash</strong> <span class="meta">· Docks · back Thu</span>
+              <div class="track" style="grid-template-columns:repeat(4,1fr)"><i class="done"></i><i class="call"></i><i></i><i></i></div>
+              <div class="trackline"><span>Day 2 of 4</span><span>Money <b>0 of 1</b></span></div></div>
+          </div>
+          <div class="tline"><p class="t" style="margin:0 0 8px">The buyer's cousin wants a word, and brought cousins.</p><span class="btn call" style="width:100%">They're calling you</span></div>
+        </article>
+        <article class="card">
+          <div class="line1">
+            <div class="faces"><div class="face f1"></div><div class="face f2"></div></div>
+            <div class="info"><strong class="name">A weapon</strong> <span class="meta">· back Sat</span>
+              <div class="track" style="grid-template-columns:repeat(6,1fr)"><i class="done"></i><i class="done"></i><i class="done lead"></i><i class="call"></i><i class="today lead"></i><i class="watch"></i></div>
+              <div class="trackline"><span>Day 5 of 6</span><span>Leads <b>2 of 3</b></span></div></div>
+            <span class="btn watch cta">Watch</span>
+          </div>
+          <div class="tline"><span class="d">Today</span><p class="t"><span class="who">Lychee</span> outwaited the seller and got the meeting. The meet is tomorrow.</p></div>
+        </article>
+        <article class="card">
+          <div class="line1">
+            <div class="faces"><div class="face f4"></div><div class="face f5"></div></div>
+            <div class="info"><strong class="name">A recruit</strong> <span class="meta">· back Fri</span>
+              <div class="track" style="grid-template-columns:repeat(5,1fr)"><i class="today"></i><i></i><i></i><i></i><i></i></div>
+              <div class="trackline"><span>Day 1 of 5</span><span>Leads <b>0 of 2</b></span></div></div>
+          </div>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <ul class="notes">
+    <li><b>Reading the track:</b> grey segments are days gone, the cyan one is today, blank ones are ahead, a red one called you. A filled diamond is a day that found a lead; an outlined diamond ahead is a day you can watch (shown only once a lead uncovers it). The words under the track ("Day 5 of 6", "Leads 2 of 3") say the same in plain text, so the marks are never the only signal.</li>
+    <li>Faces are tappable (the runner's page), at least 44px. Names under the faces in A; in B and C the names are in the text and on tap.</li>
+    <li>The faces here are placeholders; the game draws its real portraits (<code>face()</code>).</li>
+    <li>"Past days" opens underneath as in round 3; the report when they're home is the full rail (round 2, look 2c).</li>
+  </ul>
+</div>
+</body>
+</html>
