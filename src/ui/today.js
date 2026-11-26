@@ -5,8 +5,6 @@ import { mondayBrief } from '../core/week.js';
 import { NAMES } from '../config/names.js';
 import { PARTNER } from '../data/partner.js';
 import { jossIcon } from './art.js';
-import { crewOutMap } from './minimap.js';
-import { siteFor } from './siteplan.js';
 import { calendar } from '../core/time.js';
 import { templateById, jobView } from '../core/jobs.js';
 import { alerts, upcoming, outReason } from '../core/upcoming.js';
@@ -166,42 +164,6 @@ function renderOutLine() {
       <span>${onPosts} on ${posts.length === 1 ? 'a post' : `${posts.length} posts`}${postCall ? ' · <strong>a post is calling</strong>' : ''}</span>
       <span class="outnow__go">Side ›</span>
     </button>` : ''}`;
-}
-
-/** Crews out on jobs: where each is, what they did today, and a call waiting (core/away.js). */
-export function renderCrewsOut(out = crewsOut(state)) {
-  if (!out.length) return '';
-  const STATUS = { call: 'Calling you', hurt: 'Someone hurt', low: 'Lying low', on: 'On track' };
-  return `
-    <ul class="crewsout" aria-label="Crews out">
-      ${out.map((c) => {
-        const ops = c.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
-        const fill = Math.round((c.beatsDone / Math.max(1, c.beats)) * 100);
-        return `
-        <li class="crewsout__job is-${c.status}">
-          <div class="crewsout__top">
-            <span class="crewsout__light" aria-hidden="true"></span>
-            <p class="crewsout__head"><strong>${esc(c.name)}</strong> <span class="muted small">${c.day ? `day ${c.day} of ${c.days}` : 'leaving'} · back ${esc(calendar(c.returnDay).weekday)}</span></p>
-            <span class="crewsout__faces">${ops.map((op) => face(op, 'sm')).join('')}</span>
-          </div>
-          <div class="crewsout__track" role="img" aria-label="${esc(`${c.phase}: ${c.beatsDone} of ${c.beats} story beats, day ${c.day} of ${c.days}`)}" style="--fill:${fill}%; --days:${c.days}">
-            <span class="crewsout__fill"></span>
-          </div>
-          <div class="crewsout__body">
-            <div class="crewsout__map">${crewOutMap({ site: siteFor(c.district, c.jobId, c.templateId), zone: c.zone, crew: c.inside, overwatch: c.overwatch, wheels: c.wheels, calling: c.waiting, esc })}</div>
-            <div class="crewsout__text">
-              <p class="crewsout__phase small"><strong>${esc(c.phase)}</strong> · ${esc(STATUS[c.status])}</p>
-              ${c.lines.map((l) => `<p class="small">${c.day ? `Day ${c.day}: ` : ''}${crewLinks(l)}</p>`).join('')}
-              ${logDetails(c.log)}
-            </div>
-          </div>
-          <div class="crewsout__foot">
-            ${c.waiting ? `<button class="btn btn--primary" data-action="take-call" data-id="${esc(c.jobId)}">Take the call</button>` : ''}
-            ${c.district ? whereButton(c.district) : ''}
-          </div>
-        </li>`;
-      }).join('')}
-    </ul>`;
 }
 
 /**
