@@ -500,7 +500,7 @@ test('the trait badges: new this week first, then lately, then lasting newest fi
   assert.ok(shelf[0].isNew && !shelf[1].isNew, 'earned in the last week is marked new');
   assert.ok(!shelf.some((t) => t.name === 'Synergy'), 'partners have their own row');
   assert.equal(shelf.find((t) => t.name === 'Corner Fighter').when, 'For good · Back Rent, day 40');
-  assert.equal(shelf.find((t) => t.name === 'Corner Fighter').rank, 1, 'every earned trait is rank 1 until ranks exist');
+  assert.ok(shelf.every((t) => !('rank' in t)), 'traits have no ranks (DESIGN.md 2026-11-27)');
   assert.equal(TRAIT_SHELF, 6);
   assert.ok(shelf.length > TRAIT_SHELF, 'seven here, so the page shows six and "All 7"');
 });

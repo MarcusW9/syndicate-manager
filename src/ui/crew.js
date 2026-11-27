@@ -475,29 +475,30 @@ export function earnedWhere(e) {
 }
 
 // What they've become (owner, 2026-11-27; drafts/PROPOSAL-traits.md 3d; the look is O1 of
-// docs/mockups/2026-11-27-trait-octagons.html): born and earned traits as octagon badges, each with a
-// three-segment gauge for its rank, at most TRAIT_SHELF on the page and the rest behind "All". Partners
-// (Synergy) keep their own row of faces; skills are one line to the Skills tab.
+// docs/mockups/2026-11-27-trait-octagons.html): born and earned traits as octagon badges, at most TRAIT_SHELF
+// on the page and the rest behind "All". No ranks (owner, 2026-11-27): a lasting or born badge is a plain octagon;
+// only a "lately" (temporary) one keeps a segmented gauge under it, the place a time-left read can go later.
+// Partners (Synergy) keep their own row of faces; skills are one line to the Skills tab.
 export const TRAIT_SHELF = 6;
-export const TRAIT_RANKS = 3; // gauge segments. Every earned trait is rank 1 until ranks are built (the proposal's step 4).
+export const LATELY_SEGMENTS = 3; // the gauge under a temporary trait (all lit for now: time left isn't read yet)
 export const NEW_DAYS = 7; // earned this recently: a yellow corner
 
 /**
  * A runner's traits in the order the page shows them: anything earned in the last week, then what's
  * "lately" (temporary), then the other lasting ones newest first, then what they were born with.
- * Partners are left out (their own row). Pure: [{ key, kind, icon, name, desc, when, rank, setback, isNew }].
+ * Partners are left out (their own row). Pure: [{ key, kind, icon, name, desc, when, setback, isNew }].
  */
 export function traitShelf(op, today) {
   const earned = (op.earned ?? []).map((e, i) => ({ e, i, def: EARNED_TRAITS[e.id] })).filter((x) => x.def && x.e.id !== 'crew_anchor');
   const item = ({ e, i, def }) => ({
     key: `e:${i}`, kind: def.kind === 'temporary' ? 'lately' : 'earned', icon: def.icon, name: def.name, desc: earnedText(state, e),
-    when: `${def.kind === 'temporary' ? 'For now' : 'For good'} · ${earnedWhere(e)}`, rank: def.kind === 'temporary' ? TRAIT_RANKS : 1,
+    when: `${def.kind === 'temporary' ? 'For now' : 'For good'} · ${earnedWhere(e)}`,
     setback: !!def.setback, isNew: e.day >= today - NEW_DAYS, day: e.day,
   });
   const fresh = earned.filter((x) => x.e.day >= today - NEW_DAYS).sort((a, b) => b.e.day - a.e.day);
   const lately = earned.filter((x) => !fresh.includes(x) && x.def.kind === 'temporary').sort((a, b) => b.e.day - a.e.day);
   const lasting = earned.filter((x) => !fresh.includes(x) && x.def.kind !== 'temporary').sort((a, b) => b.e.day - a.e.day);
-  const born = op.traits.map((t) => ({ ...bornChip(t), kind: 'born', when: 'Born with it', rank: 0, setback: false, isNew: false }));
+  const born = op.traits.map((t) => ({ ...bornChip(t), kind: 'born', when: 'Born with it', setback: false, isNew: false }));
   return [...fresh, ...lately, ...lasting].map(item).concat(born);
 }
 
@@ -509,12 +510,12 @@ function traitBadges(op) {
   const open = all.find((it) => V.traitTip === `${op.id}|${it.key}`);
   const more = all.length > TRAIT_SHELF
     ? `<button class="h2link" data-action="traits-all" data-id="${esc(op.id)}" aria-expanded="${showAll}">${showAll ? 'Fewer' : `All ${all.length} ›`}</button>` : '';
-  const gauge = (it) => (it.kind === 'born' ? '<span class="tbadge__gauge tbadge__gauge--none"></span>'
-    : `<span class="tbadge__gauge" aria-hidden="true">${Array.from({ length: TRAIT_RANKS }, (_, j) => `<i${j < it.rank ? ' class="on"' : ''}></i>`).join('')}</span>`);
+  const gauge = (it) => (it.kind !== 'lately' ? ''
+    : `<span class="tbadge__gauge" aria-hidden="true">${'<i class="on"></i>'.repeat(LATELY_SEGMENTS)}</span>`);
   return `<div class="h2row"><h2>What they've become</h2>${more}</div>
       <ul class="tbadges">${list.map((it) => {
         const on = it === open;
-        const sub = it.kind === 'born' ? 'Born' : it.kind === 'lately' ? 'Lately' : `Rank ${it.rank}`;
+        const sub = it.kind === 'born' ? 'Born' : it.kind === 'lately' ? 'Lately' : 'For good';
         return `<li><button class="tbadge tbadge--${it.kind}${it.setback ? ' tbadge--setback' : ''}${it.isNew ? ' is-new' : ''}${on ? ' is-open' : ''}" data-action="trait-tip" data-id="${esc(`${op.id}|${it.key}`)}" aria-expanded="${on}">`
           + `<span class="tbadge__oct">${traitGlyph(it.icon)}</span>${gauge(it)}<span class="tbadge__name">${esc(it.name)}</span><span class="tbadge__sub">${sub}${it.isNew ? ' · new' : ''}</span></button></li>`;
       }).join('')}</ul>
