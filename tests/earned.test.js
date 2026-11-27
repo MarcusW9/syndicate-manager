@@ -184,9 +184,11 @@ test("Client's Favourite: the note names the client; a save with the client stor
   assert.deepEqual(line(up), m);
 });
 
-test('Synergy (crew_anchor): five jobs together, both unhurt; +1 cool together; shaken for a job after the partner goes critical', () => {
+test('Synergy (crew_anchor): twelve jobs together, both unhurt; +1 cool together; shaken for a job after the partner goes critical', () => {
   const s = game(12); const [a, b] = s.crew;
-  for (let i = 0; i < 5; i++) job(s, [], [a, b]);
+  for (let i = 0; i < E.NEEDS.crewAnchor - 1; i++) job(s, [], [a, b]);
+  assert.ok(!E.earnedOf(a, 'crew_anchor', { partner: b.id }), 'not one job early');
+  job(s, [], [a, b]);
   assert.ok(E.earnedOf(a, 'crew_anchor', { partner: b.id }) && E.earnedOf(b, 'crew_anchor', { partner: a.id }));
   assert.match(effectiveStat(a, 'cool', { crew: [a, b] }).notes.join(), /synergy with/); // shown as Synergy since 2026-11-03 (was Crew Anchor)
   assert.doesNotMatch(effectiveStat(a, 'cool', { crew: [a] }).notes.join(), /synergy with/);
@@ -443,4 +445,73 @@ test('a v23 save with two messages sharing an id upgrades to two ids', async () 
   const up = await importSave({ text: async () => JSON.stringify(s) });
   assert.equal(up.version, SAVE_VERSION);
   assert.equal(new Set(up.inbox.map((m) => m.id)).size, up.inbox.length, 'every id unique');
+});
+
+// --- a trait remembers its job (save v92; DESIGN.md 2026-11-27, drafts/PROPOSAL-traits.md 3c) ---------------------------
+
+test('a trait earned on a job remembers the job; off a job it has none; the job never makes a second copy', () => {
+  const s = game(); const [a] = s.crew;
+  for (let i = 0; i < 3; i++) job(s, [roll(a, 'medical', true)], [a], { jobId: 'container409' });
+  assert.equal(E.earnedOf(a, 'clinic_hands')?.job, 'container409');
+  for (let i = 0; i < 3; i++) job(s, [roll(a, 'medical', true)], [a], { jobId: 'backrent' });
+  assert.equal((a.earned ?? []).filter((e) => e.id === 'clinic_hands').length, 1, 'a lasting trait is held once, whatever job comes next');
+  const [, b] = s.crew;
+  for (let i = 0; i < 3; i++) job(s, [roll(b, 'medical', true)], [b]);
+  assert.ok(has(b, 'clinic_hands'));
+  assert.equal('job' in E.earnedOf(b, 'clinic_hands'), false, 'no job given, none kept');
+});
+
+test('in play, earned traits name real jobs, and the runner page says which', async () => {
+  const { templateById } = await import('../src/core/jobs.js');
+  const { earnedWhere } = await import('../src/ui/crew.js');
+  const { state } = playWeeks(16, 21, carefulPolicy, { startCrew: 'fresh' });
+  const withJob = state.crew.flatMap((o) => o.earned ?? []).filter((e) => e.job);
+  assert.ok(withJob.length > 0, 'some trait came from a job');
+  for (const e of withJob) {
+    const tpl = templateById(e.job);
+    assert.ok(tpl, `${e.id} names a job that exists: ${e.job}`);
+    assert.equal(earnedWhere(e), `${tpl.name}, day ${e.day}`);
+  }
+  assert.equal(earnedWhere({ id: 'clinic_hands', day: 52 }), 'since day 52');
+});
+
+test('a v91 save upgrades to v92 and keeps its traits as they were, with no job', async () => {
+  const s = game(17); const [a] = s.crew;
+  a.earned = [{ id: 'corner_fighter', day: 52 }];
+  s.version = 91;
+  const loaded = await importSave({ text: async () => JSON.stringify(s) });
+  assert.equal(loaded.version, SAVE_VERSION);
+  assert.deepEqual(loaded.crew.find((o) => o.id === a.id).earned, [{ id: 'corner_fighter', day: 52 }]);
+});
+
+// --- what they've become: the badges on a runner's page (DESIGN.md 2026-11-27, drafts/PROPOSAL-traits.md 3d) -------------
+
+test('the trait badges: new this week first, then lately, then lasting newest first, then born; partners left out', async () => {
+  const { traitShelf, TRAIT_SHELF } = await import('../src/ui/crew.js');
+  const s = game(); const [a, b] = s.crew;
+  a.traits = ['hothead', 'loyal'];
+  a.earned = [
+    { id: 'clean_professional', day: 10 }, { id: 'corner_fighter', day: 40, job: 'back_rent' }, { id: 'crowd_reader', day: 20 },
+    { id: 'short_fuse', day: 30 }, { id: 'crew_anchor', day: 15, partner: b.id }, { id: 'wirewise', day: 58 },
+  ];
+  const shelf = traitShelf(a, 60);
+  assert.deepEqual(shelf.map((t) => t.name), ['Wirewise', 'Short Fuse', 'Corner Fighter', 'Crowd Reader', 'Clean Professional', 'Hothead', 'Loyal']);
+  assert.deepEqual(shelf.map((t) => t.kind), ['earned', 'lately', 'earned', 'earned', 'earned', 'born', 'born']);
+  assert.ok(shelf[0].isNew && !shelf[1].isNew, 'earned in the last week is marked new');
+  assert.ok(!shelf.some((t) => t.name === 'Synergy'), 'partners have their own row');
+  assert.equal(shelf.find((t) => t.name === 'Corner Fighter').when, 'For good · Back Rent, day 40');
+  assert.ok(shelf.every((t) => !('rank' in t)), 'traits have no ranks (DESIGN.md 2026-11-27)');
+  assert.equal(TRAIT_SHELF, 6);
+  assert.ok(shelf.length > TRAIT_SHELF, 'seven here, so the page shows six and "All 7"');
+});
+
+test('Synergy takes twelve jobs, and partners never stack: one +1 cool however many are along (DESIGN.md 2026-11-27)', () => {
+  assert.equal(E.NEEDS.crewAnchor, 12);
+  const s = game(12); const [a, b, c, d] = s.crew;
+  a.earned = [{ id: 'crew_anchor', day: 1, partner: b.id }, { id: 'crew_anchor', day: 2, partner: c.id }, { id: 'crew_anchor', day: 3, partner: d.id }];
+  const mods = E.ownMods(a, { stat: 'cool', crew: [a, b, c, d] }).filter((m) => /synergy/.test(m.note));
+  assert.equal(mods.length, 1);
+  assert.equal(mods[0].value, 1);
+  assert.match(mods[0].note, new RegExp(`synergy with ${b.handle} and ${c.handle} and ${d.handle} \\+1`));
+  assert.deepEqual(E.ownMods(a, { stat: 'cool', crew: [a] }).filter((m) => /synergy/.test(m.note)), [], 'no partner along, no bonus');
 });

@@ -65,6 +65,7 @@ export const V = {
   skillTab: 'all', // the skills list's filter on a runner's page: 'all' | 'held' | 'ready' | 'locked'
   skillOpen: null, // 'opId|skillId': the skill row whose full text is open (one at a time)
   traitTip: null, // 'pageId|key': the trait chip or synergy whose card is open (one at a time)
+  traitsAll: null, // a runner's id: their page shows every trait, not just the first six (ui/crew.js traitBadges)
   raidCardDue: null, // scroll to this district's raid card after the next render (heat chip, Today, the map)
   scrollDue: null, // scroll to this after the next render (Back restores where you were)
   founderPick: [], // candidate ids picked so far on a new game's first screen (renderFounding)

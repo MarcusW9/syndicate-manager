@@ -20,7 +20,7 @@ Started 2026-11-26, at the owner's request. Darkest Dungeon (DD, Red Hook, 2016)
 
 **Handwritten and generated, in layers.** Nate Austin: the game "alternates layers of handcrafted and procedural content." Written story events have hooks that read a character's traits and relationships, so the same event plays differently for different heroes. Shown as comic-panel scenes between fights. (Wikipedia, PC Gamer, reviews)
 
-**Relationships with effects.** Friends, lovers and rivals form from events, and they change fights: two heroes who dislike each other score more critical hits, trying to outdo each other. (review via search)
+**Relationships with effects.** Friends, lovers and rivals form from events, and they change fights: after a hero's rival lands a stunt (Wildermyth's critical hit), the hero's own stunt chance rises, from +25% at the first level of rivalry to +100% at full Rival, until they land one. ([Wildermyth wiki: Relationship](https://wildermyth.com/wiki/Relationship))
 
 **Bodies change.** From general knowledge: heroes gain lasting transformations (a wolf's head, a crystal arm, a wooden limb) from events, each with a power and a look. They age across chapters and retire; a legacy system lets a favourite come back in a later campaign. A death or a loss is a scene, not a line.
 

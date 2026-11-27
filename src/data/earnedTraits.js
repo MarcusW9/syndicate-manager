@@ -40,7 +40,7 @@ export const EARNED_TRAITS = {
   },
   crew_anchor: {
     name: 'Synergy', kind: 'lasting', icon: 'person',
-    desc: '+1 cool on jobs with {partner}; shaken (−1 cool) for a job after {partner} is critically hurt.',
+    desc: '+1 cool on jobs with {partner} (one +1, however many partners are along); shaken (−1 cool) for a job after {partner} is critically hurt.',
     note: '{op} and {partner} have learned each other\'s pauses, bad habits and emergency signals. That is almost trust.',
     history: 'Formed a dependable partnership with {partner}.',
   },

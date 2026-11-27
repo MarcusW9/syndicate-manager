@@ -10,7 +10,7 @@ Started 2026-11-26, at the owner's request. Football Manager (FM) is the stated 
 
 **Mental stats as the gamble.** Miles Jacobson (studio director): some players have mental stats that make them sure things; others are uncertain, "may work out or they may not." Hidden attributes (consistency, big matches, professionalism and others, on the same 1 to 20 scale) shape how a player performs. (PC Gamer, videogamer)
 
-**The inbox is the game.** SI's own manual calls the inbox "the central point around which the whole experience is built", and many tasks are done straight from a message. For FM26 the developers said their data showed most play time was spent in the inbox. When a later redesign moved the inbox off the main screen, the press reported that players would need to "relearn" how to play. (SI manual, PCGamesN, footballmanager.com, Dexerto)
+**The inbox is the game.** SI's own manual calls the inbox "the central point around which the whole experience is built", and many tasks are done straight from a message. For FM26 the developers said their data showed most play time was spent in the inbox. When a later redesign moved the inbox off the main screen, the press reported that players would need to "relearn" how to play (the redesign was announced for FM25, which was cancelled, and shipped in FM26). (SI manual, PCGamesN, footballmanager.com, Dexerto)
 
 **People problems are the stories.** Morale, promises (playing time, signings) and squad dynamics. Over-promising makes a player unhappy, unhappiness spreads, and broken promises make the AI doubt you in contract talks. FM2018 made it clearer when a player's demand is reasonable and when pushing back risks a revolt. Some players find the morale system the most frustrating part of a save. A review's view of the strength: it removes the barriers between you and the stories the players generate. (Game Informer, videogamer, fmprojects, PC Gamer)
 
@@ -20,11 +20,11 @@ Started 2026-11-26, at the owner's request. Football Manager (FM) is the stated 
 
 **A business first.** You run a mercenary company. Wages are paid daily; food runs out; if you do nothing, the men "starve and desert." Higher-level men demand higher wages. Contracts are the main income for the whole game, and pay scales with the contract and a random factor. (sevastromo, gametyrant, BB wiki)
 
-**Morale on two levels.** Company mood falls with deaths, hunger and unpaid wages; low mood causes desertion and lowers attributes in battle by up to 30%. In a fight, men and enemies break and flee when it goes badly. (sevastromo, moddb)
+**Morale on two levels.** Each brother's mood falls with deaths, hunger and unpaid wages; low mood causes desertion and lowers attributes in battle by up to 30%. In a fight, men and enemies break and flee when it goes badly. (sevastromo, moddb)
 
 **People are disposable and precious at once.** Common knowledge of the game rather than a source here: recruits come with a background (farmhand, sellsword, noble) that sets cost, wage and stat ranges, plus random traits, and talent stars on a few attributes that show where they will grow. Injuries heal only with medical supplies; some are permanent. Losing two or three good men is "devastating," and players report saving constantly because of it. (sevastromo, GOG forum)
 
-**Hard, and proud of it.** Reviewers call the difficulty the defining feature: one took six restarts to find a foothold, and most players lose many brothers. Late-game crises (around days 50 to 100) are a huge spike; some players say one ruined the run; they cannot be turned off, though difficulty and the first crisis can be set at the start. A critic: lots of lethality and roster shuffling, without a big enough reward for the risk. Others: it gives the achievement of a Dark Souls without its cheap deaths. Weak tutorial, clunky inventory. (RPGamer, KeenGamer, GOG forum, RPG Codex, Wikipedia, PC Gamer 84)
+**Hard, and proud of it.** Reviewers call the difficulty the defining feature: one took six restarts to find a foothold, and most players lose many brothers. Late-game crises (around days 50 to 100) are a huge spike; some players say one ruined the run. Which crisis comes can be picked when a campaign starts, and an early-access patch added an option for none ([Dev Blog #92](https://battlebrothersgame.com/?p=18285)); the timing above is not from a source found here. A critic: lots of lethality and roster shuffling, without a big enough reward for the risk. Others: it gives the achievement of a Dark Souls without its cheap deaths. Weak tutorial, clunky inventory. (RPGamer, KeenGamer, GOG forum, RPG Codex, Wikipedia, PC Gamer 84)
 
 ## 3. What we already took from them
 
@@ -38,7 +38,7 @@ Started 2026-11-26, at the owner's request. Football Manager (FM) is the stated 
 
 1. **Show who is judging, and how sure they are.** FM's best idea is that a read comes from a person whose skill sets how close it is, and the doubt is drawn (black stars). Our scout's read is already a person's words, but the player can't tell a sure read from a guess. Worth a look: a word for the scout's certainty, and a better scout giving a closer read.
 2. **Keep the truth hidden, and keep it consistent.** FM players complain when two equal players read a full star apart. Our reads should come from one rule so equal runners read the same from the same scout.
-3. **Words over numbers.** FM players are told to trust the written report over the stars. We already write reads in words (`core/risk.js`: labels with a short reason, no percentages). Keep that.
+3. **Words over numbers.** FM players are told to trust the written report over the stars. Main jobs already read in words (`core/risk.js`: labels with a short reason, no percentages); the expedition plan shows a percentage ("About 41% to get it", `ui/expeditions.js`). Keep words, and decide on the expedition plan on purpose.
 4. **The inbox stays the home.** FM's own data says most time is spent there, and moving it cost players. Today is our inbox; don't bury it.
 5. **Promises are cheap drama.** FM's promises (and breaking them) make stories from nothing. A runner asking for something (a cut, a job, a day off), the player agreeing, and the run remembering, is a candidate system. Check with `core/loyalty.js` before building.
 6. **No crisis you can't see coming or turn down.** BB's late crises are the most-cited complaint. Our pressure (rivals, raids, heat) should build where the player can see it, and our difficulty setting should say what it changes.
@@ -49,7 +49,7 @@ Started 2026-11-26, at the owner's request. Football Manager (FM) is the stated 
 
 ## 5. Open checks
 
-- Does a scout's read get closer with a better scout, and does the screen say how sure the read is?
+- Does a scout's read get closer with a better scout, and does the screen say how sure the read is? (Checked 2026-11-27: not for our recruits, whose error is rolled once per recruit whoever scouts, `core/recruits.js`; yes for other tongs' runners, by scouting level, `core/dossier.js scoutErrorAt`.)
 - Do two runners with the same hidden potential read the same from the same scout?
 - Does the recruit page say where a recruit will grow?
 
@@ -78,5 +78,5 @@ Started 2026-11-26, at the owner's request. Football Manager (FM) is the stated 
 - [KeenGamer: Battle Brothers review](https://www.keengamer.com/articles/reviews/battle-brothers-review/)
 - [RPG Codex: Battle Brothers review](https://rpgcodex.net/article.php?id=10629)
 - [GOG forum: how hard is Battle Brothers](https://www.gog.com/forum/general/how_hard_is_battle_brothers)
-- [Wikipedia: Battle Brothers](https://en.wikipedia.com/wiki/Battle_Brothers)
+- [Wikipedia: Battle Brothers](https://en.wikipedia.org/wiki/Battle_Brothers)
 - [PC Gamer: Battle Brothers review](https://www.pcgamer.com/au/battle-brothers-review/)

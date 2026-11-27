@@ -1,0 +1,682 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Trait Octagons</title>
+<!-- Mockup, 2026-11-27: the traits plan (decision log 2026-11-27) redrawn without round shapes, after the owner noted the rings ran
+     counter to the sharp skin. O1 octagon with a segmented gauge under it (recommended), O2 octagon with a lit edge, then states,
+     the opened card, the full list and the rank news on O1's look. Portraits (ui/art.js), trait icons (ui/icons.js) and skill
+     badges (ui/skillicons.js) are the game's own. Not wired to the game; ranks and the partner rule aren't built. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c0f; --panel:#12151b; --panel-2:#161a21; --line:#2a303b;
+  --text:#e9ecf1; --muted:#8a93a6; --accent:#ff3d5f; --accent-2:#3de8d8;
+  --warn:#f2d541; --danger:#ff4a4a; --good:#5fe0a5; --violet:#b48cff; --cut:10px;
+  --disp:'Rajdhani',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background-image:linear-gradient(rgba(61,232,216,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(61,232,216,.025) 1px,transparent 1px);
+  background-size:32px 32px;padding:16px max(16px,env(safe-area-inset-left)) 40px}
+.wrap{max-width:1400px;margin:0 auto}
+h1{font:700 22px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin:4px 0}
+h2{font:700 16px var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--warn);margin:30px 0 4px}
+.lede{color:var(--muted);max-width:820px;margin:0 0 18px}
+.grid{display:grid;gap:22px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));align-items:start}
+.look{font:700 13px var(--disp);letter-spacing:.16em;color:var(--accent-2);text-transform:uppercase;margin:0 0 6px}
+.why{color:var(--muted);font-size:13px;margin:0 0 10px;min-height:72px}
+.panel{position:relative;background:linear-gradient(var(--panel-2),var(--panel));border:1px solid var(--line);
+  clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%);padding:16px}
+.panel::before{content:"";position:absolute;top:-1px;left:16px;width:36px;height:2px;background:var(--accent-2)}
+.back{font:600 14px var(--disp);letter-spacing:.12em;color:var(--accent-2);text-transform:uppercase;min-height:24px}
+.title{font:700 24px/1.15 var(--disp);letter-spacing:.06em;text-transform:uppercase;margin:0}
+.k{font:700 11px var(--disp);letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+.label{font:700 12px var(--disp);letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin:18px 0 8px;display:flex;align-items:center;gap:10px}
+.label::after{content:"";flex:1;height:1px;background:var(--line)}
+.label.cy{color:var(--accent-2)}
+.small{font-size:12px;color:var(--muted)}
+.joss{color:var(--accent-2);font-style:italic}
+.cut7{clip-path:polygon(0 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%)}
+.face{border-radius:2px;flex:none}
+.fL{background:linear-gradient(160deg,#4a2a20 0 40%,#ff9a5a 40% 55%,#1b2340 55%)}
+.fV{background:linear-gradient(160deg,#2d3a52 0 40%,#3de8d8 40% 55%,#1b2340 55%)}
+.fM{background:linear-gradient(160deg,#2a2440 0 40%,#b48cff 40% 55%,#1b2340 55%)}
+.role{font:600 12px var(--disp);letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+/* segmented bars */
+.bar{display:flex;gap:1px;height:8px}
+.bar i{flex:1;background:#232a35}
+.bar i.on{background:#5a6478}.bar i.new{background:var(--accent-2)}.bar i.y{background:var(--warn)}
+.bar.thin{height:4px}
+.barline{display:flex;justify-content:space-between;font:600 12px var(--disp);letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-top:4px}
+.barline em{font-style:normal;color:var(--accent-2)}.barline strong{color:var(--warn)}
+.chip{display:inline-flex;align-items:center;gap:6px;font:700 12px var(--disp);letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);padding:4px 8px;min-height:30px}
+.chip.cy{border-color:var(--accent-2);color:var(--accent-2)}
+.chip.y{border-color:var(--warn);color:var(--warn)}
+.chip.r{border-color:#ff9a5a;color:#ff9a5a}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.btn{background:var(--accent);color:#fff;font:700 15px var(--disp);letter-spacing:.12em;padding:0 18px;min-height:44px;display:grid;place-items:center;margin-top:12px;text-transform:uppercase;
+  clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.btn.ghost{background:none;border:1px solid var(--accent-2);color:var(--accent-2)}
+.notes{margin-top:26px;color:var(--muted);font-size:13px;max-width:900px}
+.notes li{margin:4px 0}
+
+/* R1 runner page */
+.lvchip{display:inline-flex;align-items:baseline;gap:4px;font:700 13px var(--disp);letter-spacing:.12em;color:var(--accent-2)}
+.lvchip b{font-size:22px;letter-spacing:.02em}
+.who{display:flex;gap:12px;align-items:flex-start;margin-top:10px}
+.who .meta{flex:1;min-width:0}
+.oneline{margin:10px 0 0;font-size:15px;line-height:1.45}
+.become{display:grid;gap:6px}
+.brow{display:flex;gap:10px;align-items:center;min-height:44px;border:1px solid var(--line);background:var(--panel);padding:6px 10px}
+.brow .ic{width:24px;height:24px;border:1.5px solid currentColor;border-radius:50%;flex:none;opacity:.8}
+.brow .t{flex:1;font-size:14px}.brow .t b{display:block;font:700 14px var(--disp);letter-spacing:.08em;text-transform:uppercase}
+.brow.skill{color:var(--accent-2)}.brow.trait{color:var(--good)}.brow.pair{color:var(--violet)}.brow.set{color:#ff9a5a}
+.brow .t span{color:#c9cfda}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}
+.st{display:grid;grid-template-columns:1fr auto;align-items:end;min-height:44px;padding:4px 0;border-bottom:1px solid rgba(42,48,59,.6)}
+.st .n{font:700 20px/1 var(--disp)}
+.st .nm{font:600 12px var(--disp);letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.st .bar{grid-column:1/-1;margin-top:4px}
+.st.main .nm{color:var(--accent-2)}
+.road{border-left:2px solid var(--line);padding-left:12px;display:grid;gap:8px}
+.road div{position:relative;font-size:14px}
+.road div::before{content:"";position:absolute;left:-17px;top:6px;width:8px;height:8px;background:var(--line)}
+.road div.hi::before{background:var(--accent-2)}
+.road b{font:700 11px var(--disp);letter-spacing:.12em;color:var(--muted);margin-right:6px}
+
+/* R2 report */
+.came{border:1px solid var(--line);background:var(--panel);padding:12px;margin-top:8px}
+.came .top{display:flex;gap:10px;align-items:center}
+.came .top .nm{flex:1;font:700 17px var(--disp);letter-spacing:.04em}
+.came .say{margin:8px 0 6px;font-size:14px;color:#c9cfda}
+.ticks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.came.lv{border-color:var(--warn)}
+
+/* R3 roster */
+.rr{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;min-height:64px;padding:8px 0;border-bottom:1px solid rgba(42,48,59,.6)}
+.rr .nm{font:700 16px var(--disp);letter-spacing:.04em}
+.rr .line{font-size:13px;color:#c9cfda}
+.rr .lvn{font:700 13px var(--disp);letter-spacing:.1em;color:var(--accent-2);text-align:right}
+.rr .lvn b{display:block;font-size:22px;line-height:1}
+.rr .lvn.y{color:var(--warn)}
+
+/* V1 dossier */
+.dossier{font:15px/1.6 Georgia,'Times New Roman',serif;color:#d6dae2}
+.dossier p{margin:0 0 10px}
+.dossier .hl{color:var(--accent-2)}
+.fold{display:flex;justify-content:space-between;align-items:center;min-height:44px;border-top:1px solid var(--line);margin-top:8px;font:700 13px var(--disp);letter-spacing:.14em;color:var(--accent-2);text-transform:uppercase}
+
+/* V2 path */
+.path{position:relative;margin-left:22px;border-left:2px solid var(--line);padding-left:18px}
+.node{position:relative;margin-bottom:12px;min-height:44px}
+.node .dot{position:absolute;left:-31px;top:2px;width:24px;height:24px;display:grid;place-items:center;background:var(--bg);border:2px solid var(--line);font:700 12px var(--disp)}
+.node.done .dot{border-color:#5a6478;color:var(--text)}
+.node.now .dot{border-color:var(--accent-2);color:var(--accent-2)}
+.node.next .dot{border-color:var(--warn);color:var(--warn);border-style:dashed}
+.node .what{font:700 14px var(--disp);letter-spacing:.08em;text-transform:uppercase}
+.node .where{font-size:13px;color:var(--muted)}
+.node.big .what{color:var(--accent-2)}
+
+/* V3 HUD */
+.hud{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.ring{width:120px;height:120px;border-radius:50%;display:grid;place-items:center;text-align:center;
+  background:conic-gradient(var(--accent-2) 0 62%,var(--violet) 62% 74%,#232a35 74% 100%);position:relative}
+.ring::after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--panel)}
+.ring div{position:relative;z-index:1}
+.ring b{display:block;font:700 28px/1 var(--disp)}
+.ring small{font:700 10px var(--disp);letter-spacing:.14em;color:var(--muted)}
+.hbar{display:grid;grid-template-columns:44px 1fr 26px;gap:8px;align-items:center;font:700 12px var(--disp);letter-spacing:.1em;color:var(--muted);margin-top:6px}
+.hbar .t{height:10px;background:#232a35;position:relative}
+.hbar .t i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#5a6478,var(--accent-2))}
+.hbar .t s{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--warn)}
+.hbar span:last-child{color:var(--text);text-align:right}
+
+/* V4 card */
+.tcard{position:relative;width:100%;max-width:300px;margin:0 auto;border:1px solid var(--warn);background:linear-gradient(170deg,#1c1a12,#12151b 50%);padding:0 0 12px;
+  clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}
+.tcard .art{height:200px;background:linear-gradient(160deg,#4a2a20 0 38%,#ff9a5a 38% 52%,#1b2340 52%)}
+.tcard .lvbig{position:absolute;top:10px;left:12px;font:700 40px/1 var(--disp);color:var(--warn);text-shadow:0 2px 0 #000}
+.tcard .lvbig small{display:block;font-size:11px;letter-spacing:.16em}
+.tcard .rl{position:absolute;top:10px;right:16px;font:700 12px var(--disp);letter-spacing:.14em;color:var(--warn)}
+.tcard .nm{text-align:center;font:700 26px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin-top:8px}
+.tcard .ttl{text-align:center;font:700 11px var(--disp);letter-spacing:.16em;color:var(--warn);text-transform:uppercase}
+.tcard .six{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 6px;padding:10px 14px 0;text-align:center}
+.tcard .six div{font:700 20px/1 var(--disp)}.tcard .six small{display:block;font:700 10px var(--disp);letter-spacing:.14em;color:var(--muted)}
+.tcard .sig{margin:10px 14px 0;font-size:13px;color:#c9cfda;text-align:center}
+.minis{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px}
+.mini{border:1px solid var(--line);background:var(--panel);text-align:center;padding:0 0 6px;min-height:44px}
+.mini .a{height:54px}.mini b{display:block;font:700 13px var(--disp);letter-spacing:.06em;margin-top:4px}
+.mini span{font:700 11px var(--disp);color:var(--accent-2)}
+.chead{display:flex;gap:14px;align-items:flex-start;margin-top:10px}
+.chead .meta{flex:1;min-width:0}
+.pwrap{position:relative;width:96px;height:96px;flex:none;border:1px solid var(--line);background:#0d1016}
+.pwrap svg,.fwrap svg,.art2 svg{width:100%;height:100%;display:block}
+.lvtag{position:absolute;right:-6px;bottom:-6px;min-width:34px;height:34px;padding:0 4px;display:grid;place-items:center;align-content:center;background:var(--accent-2);color:var(--bg);font:700 18px/1 var(--disp);
+  clip-path:polygon(0 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%)}
+.lvtag small{font-size:8px;letter-spacing:.14em}
+.jline{margin:6px 0 0;font-size:14px;line-height:1.4}
+.chips .chip{min-height:44px}
+.chip.g{border-color:var(--good);color:var(--good)}.chip.v{border-color:var(--violet);color:var(--violet)}.chip.m{color:var(--muted)}
+.sgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.sc{border:1px solid var(--line);background:var(--panel);padding:6px 6px 7px;min-height:56px;display:grid;align-content:start}
+.sc b{font:700 20px/1 var(--disp)}.sc small{font:700 10px var(--disp);letter-spacing:.14em;color:var(--muted);margin:2px 0 4px}
+.sc.main{border-color:var(--accent-2)}.sc.main small{color:var(--accent-2)}
+.label .more{order:3;font:700 12px var(--disp);letter-spacing:.12em;color:var(--accent-2)}
+.fwrap{width:44px;height:44px;border:1px solid var(--line);background:#0d1016}
+.tcard2{position:relative;max-width:300px;margin:0 auto;border:1px solid var(--warn);background:linear-gradient(170deg,#1c1a12,#12151b 50%);padding:0 0 12px;
+  clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}
+.art2{height:230px;background:#0d1016;overflow:hidden}
+.tcard2 .lvbig{position:absolute;top:10px;left:12px;font:700 40px/1 var(--disp);color:var(--warn);text-shadow:0 2px 0 #000}
+.tcard2 .lvbig small{display:block;font-size:11px;letter-spacing:.16em}
+.tcard2 .rl{position:absolute;top:12px;right:18px;font:700 12px var(--disp);letter-spacing:.14em;color:var(--warn)}
+.tcard2 .nm{text-align:center;font:700 26px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin-top:8px}
+.tcard2 .ttl{text-align:center;font:700 11px var(--disp);letter-spacing:.16em;color:var(--warn);text-transform:uppercase}
+.tcard2 .six{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 6px;padding:10px 14px 0;text-align:center}
+.tcard2 .six div{font:700 20px/1 var(--disp)}.tcard2 .six small{display:block;font:700 10px var(--disp);letter-spacing:.14em;color:var(--muted)}
+.tcard2 .sig{margin:10px 14px 0;font-size:13px;color:#c9cfda;text-align:center}
+
+.earned{--c:var(--good)}.lately{--c:#ff9a5a}.born{--c:#8a93a6}.nature{--c:#f2d541}
+.tgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px 6px}
+.tb{display:grid;justify-items:center;gap:4px;background:none;border:0;color:var(--text);padding:4px 0;min-height:44px;font:inherit;cursor:pointer}
+.tb .nm{font:700 11px/1.1 var(--disp);letter-spacing:.06em;text-transform:uppercase;text-align:center}
+.tb .sb{font:600 10px var(--disp);letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.oc{position:relative;display:grid;place-items:center;flex:none;color:var(--c);background:color-mix(in srgb,var(--c) 13%,var(--panel));
+  clip-path:polygon(25% 0,75% 0,100% 25%,100% 75%,75% 100%,25% 100%,0 75%,0 25%)}
+.oc::before{content:"";position:absolute;inset:0;background:var(--c);clip-path:polygon(25% 0,75% 0,100% 25%,100% 75%,75% 100%,25% 100%,0 75%,0 25%,0 25%,2px calc(25% + 1px),2px calc(75% - 1px),calc(25% + 1px) calc(100% - 2px),calc(75% - 1px) calc(100% - 2px),calc(100% - 2px) calc(75% - 1px),calc(100% - 2px) calc(25% + 1px),calc(75% - 1px) 2px,calc(25% + 1px) 2px,2px calc(25% + 1px))}
+.oc svg{position:relative}
+.oc.born{color:#c9cfda}
+.oc.nature{background:radial-gradient(circle,#f7d35a,#c99a1a);color:#1a1405}.oc.nature::before{display:none}
+.new{filter:drop-shadow(0 0 0 transparent)}
+.tb .oc.new,.stack .oc.new{box-shadow:none}
+.new::after{content:"";position:absolute;top:0;right:22%;width:9px;height:9px;background:var(--warn)}
+.gg{display:flex;gap:2px;width:48px;height:6px}.gg i{flex:1;background:#2a303b}.gg i.on{background:var(--c,var(--good))}
+.gg.none{height:5px}
+.gg.wide{width:110px;margin:6px 0 2px}
+.oe{position:relative;display:grid;place-items:center;flex:none}
+.oe > svg{position:absolute;inset:0;width:100%;height:100%}
+.oe polygon{fill:color-mix(in srgb,var(--c) 10%,transparent);stroke-width:7;stroke-linejoin:round}
+.oe polygon.on{stroke:var(--c);fill:none}.oe polygon.off{stroke:#232a35;fill:none}.oe polygon.full{stroke:var(--c);fill:color-mix(in srgb,var(--c) 10%,transparent)}
+.oe polygon:first-child{fill:color-mix(in srgb,var(--c) 10%,transparent)}
+.oe .ic{position:relative;color:var(--c);display:grid;place-items:center}.oe.born .ic{color:#c9cfda}
+.tb.on .oc{outline:2px solid var(--good);outline-offset:3px}
+.pairs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pair{display:flex;gap:8px;align-items:center;min-height:52px;padding:4px 8px;border:1px solid var(--violet);background:var(--panel);color:var(--text);font:inherit;text-align:left}
+.pair b{display:block;font:700 14px var(--disp);letter-spacing:.06em;text-transform:uppercase}.pair small{font-size:11px;color:var(--muted)}
+.skline{display:flex;gap:8px;align-items:center;width:100%;min-height:52px;padding:4px 10px;border:1px solid var(--line);background:var(--panel);color:var(--text);font:inherit;text-align:left}
+.sk-ic svg{width:36px;height:36px;display:block}.skline .t{flex:1;font:700 13px var(--disp);letter-spacing:.06em;text-transform:uppercase}.skline .ar{color:var(--accent-2)}
+.sheet2{margin-top:10px;border:1px solid var(--good);border-left:3px solid var(--good);background:var(--panel);padding:12px}
+.sh-top{display:flex;gap:12px;align-items:center}.sh-top .gg i.on{background:var(--good)}
+.what{font-size:15px;line-height:1.45;margin:10px 0}
+.ranklog{display:grid;gap:8px}
+.ranklog > div{display:grid;grid-template-columns:28px 1fr;gap:8px;font-size:14px;color:#c9cfda}
+.ranklog b{color:var(--text);font:700 13px var(--disp);letter-spacing:.06em;text-transform:uppercase}
+.rk{font:700 14px var(--disp);color:var(--good);border:1px solid var(--good);height:24px;display:grid;place-items:center}
+.ranklog .next{color:var(--muted)}.ranklog .next .rk{color:var(--muted);border:1px dashed var(--line)}
+.allrow{display:flex;gap:10px;align-items:center;min-height:52px;border-bottom:1px solid rgba(42,48,59,.6)}
+.allrow .rt{flex:1}.allrow b{display:block;font:700 14px var(--disp);letter-spacing:.06em;text-transform:uppercase}.allrow small{font-size:12px;color:var(--muted)}
+.msg{border:1px solid var(--line);border-left:3px solid var(--good);background:var(--panel);padding:10px 12px;margin-bottom:10px}
+.msg.gold{border-left-color:var(--warn)}
+.msg-k{font:700 11px var(--disp);letter-spacing:.16em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.mrow{display:flex;gap:12px;align-items:flex-start}.mrow b{font:700 15px var(--disp);letter-spacing:.04em}.mrow p{margin:4px 0 0;font-size:14px}
+.stack{display:grid;justify-items:center;gap:4px;flex:none}.stack .gg{width:40px}.stack .gg i.on{background:var(--good)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Traits, in octagons</h1>
+<p class="lede">The same plan as the ring mockup, with no round shapes. The octagon is the badge you picked; the rank is a segmented gauge, as every gauge in the game is. Jax a year in: six badges on the page, the rest behind "All 9".</p>
+<div class="grid"><section><p class="look">O1 · Octagon with a gauge (recommended)</p><p class="why">The octagon stays plain; the rank is a three-segment gauge under it, the same segmented gauge the rest of the game uses. Born traits have no gauge. Two pieces the game already has, nothing new to learn.</p><div class="panel"><div class="chead"><div class="pwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf2bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf2h"><path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z"/></clipPath>
+    <clipPath id="pf2s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf2t"><path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z"/></clipPath>
+    <clipPath id="pf2b"><path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf2bg)"/>
+  
+
+  <g >
+  <path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z" fill="#7f5428"/>
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf2s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.7036 37 L27.7036 48 Q32 51 36.2964 48 L36.2964 37 Z" fill="#86685f"/><path d="M34.4964 38 L36.2964 37 L36.2964 48 L34.4964 49 Z" fill="#9bb89b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.380799999999997" cy="30" rx="2.062545" ry="3.69087" fill="#86685f"/>
+  <ellipse cx="43.619200000000006" cy="30" rx="2.062545" ry="3.69087" fill="#d49a76"/><path d="M44.519200000000005 27.286125 Q45.547525 30 44.3192 33.25665" stroke="#9bb89b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z" fill="#d49a76"/>
+  <g clip-path="url(#pf2h)">
+    <path d="M0 0 L30.594848 9 C25.55972 20 26.379392 31 30.5 48 L0 64 Z" fill="#86685f"/>
+    <path d="M34.9274 33 L42.909600000000005 29.8 L38.748 37.6 Z" fill="#af826b" opacity="0.75"/>
+    <path d="M64 0 L41.909600000000005 12 L42.409600000000005 30 L37.448 40.5 L64 64 Z" fill="#9bb89b"/>
+        
+    
+    
+    <g transform="translate(0 0.15670000000000073)"><path d="M22.290399999999998 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#af826b"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.1567 L29.44784 34.4699 L32.7 35.2699 L31.6 33.9699 Z" fill="#86685f"/>
+    <path d="M32.9 32.569900000000004 L33.5 34.569900000000004 L32.7 35.2699 Z" fill="#9bb89b" opacity="0.7"/>
+    <path d="M29.973200000000002 35.3699 Q32 35.7199 33.80144 35.3699" stroke="#7f5643" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf2e-1"><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z"/></clipPath><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z" fill="#e3d0c0"/><circle cx="27.677500000000002" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e-1)"/><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.927500000000002" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf2e1"><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z"/></clipPath><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z" fill="#e3d0c0"/><circle cx="36.9225" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e1)"/><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1725" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.677500000000002 25.103300000000004 Q27.0375 24.892920000000007 24.8775 25.684620000000006 L24.8775 26.326380000000004 Q27.0375 26.336880000000004 29.677500000000002 26.707700000000003 Z" fill="#4c331a"/><path d="M34.322500000000005 25.103300000000004 Q36.962500000000006 24.892920000000007 39.1225 25.684620000000006 L39.1225 26.326380000000004 Q36.962500000000006 26.336880000000004 34.322500000000005 26.707700000000003 Z" fill="#4c331a"/><path d="M29.4175 40.841499999999996 Q32 41.741499999999995 34.5825 40.841499999999996" stroke="#7f5643" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.2175 41.5415 Q32 43.102199999999996 33.782500000000006 41.5415 Z" fill="#c48769"/>
+  <g transform="translate(0 0.84)"></g>
+  <path d="M22.790399999999998 22 L24.290399999999998 24 L23.490399999999998 25.2 L25.290399999999998 28" stroke="#e3af97" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z" fill="#7f5428" />
+    <g clip-path="url(#pf2t)"><path d="M34.9274 0 L64 0 L64 30 L39.02576 30 Z" fill="#5e9e80" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  <path d="M19.290399999999998 26.2 L44.7096 25.8 L44.3096 31.2 L19.690399999999997 31.6 Z" fill="#0b0f14"/><path d="M19.8904 27.2 L44.1096 26.8" stroke="#3de8d8" stroke-width="0.6" opacity="0.85"/><path d="M36.7096 29.6 h2 M39.3096 29.6 h1" stroke="#3de8d8" stroke-width="0.5" opacity="0.6"/>
+  <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35 L43.1096 33 Z" fill="#d1ab95" opacity="0.85"/>
+        <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35" stroke="#6a4d3b" stroke-width="0.45" fill="none"/>
+        <circle cx="38.2096" cy="24.5" r="0.65" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg><div class="lvtag"><small>LV</small>6</div></div>
+<div class="meta"><div class="title">Jax</div><div class="role">Pro · muscle · 27</div><p class="jline joss">"Swings first. Would walk into fire for any of you, and has."</p></div></div><div class="label cy">What they've become <span class="more">All 9 ›</span></div><div class="tgrid"><button class="tb earned"><span class="oc earned new" style="width:54px;height:54px"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l9-9M14 5l5 5M12 7l5 5M5 15l4 4M3 21l3-3"/></g></svg></span><span class="gg"><i class="on"></i><i class="on"></i><i class=""></i></span><span class="nm">Corner Fighter</span><span class="sb">Rank 2</span></button><button class="tb earned"><span class="oc earned" style="width:54px;height:54px"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4 0-6-2.6-6-5.6 0-3.4 3-5 3.5-9 2 1.5 3 3.2 3 5 1-1 1.5-2.2 1.5-3.4 2.5 2 4 4.6 4 7.4 0 3-2 5.6-6 5.6z"/></g></svg></span><span class="gg"><i class="on"></i><i class=""></i><i class=""></i></span><span class="nm">Clean Pro</span><span class="sb">Rank 1</span></button><button class="tb earned"><span class="oc earned" style="width:54px;height:54px"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H10l-4 4v-4H4z"/></g></svg></span><span class="gg"><i class="on"></i><i class=""></i><i class=""></i></span><span class="nm">Crowd Reader</span><span class="sb">Rank 1</span></button><button class="tb lately"><span class="oc lately" style="width:54px;height:54px"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></g></svg></span><span class="gg"><i class="on"></i><i class="on"></i><i class=""></i></span><span class="nm">Short Fuse</span><span class="sb">2 jobs left</span></button><button class="tb born"><span class="oc born" style="width:54px;height:54px"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></g></svg></span><span class="gg none"></span><span class="nm">Hothead</span><span class="sb">Born</span></button><button class="tb born"><span class="oc born" style="width:54px;height:54px"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></g></svg></span><span class="gg none"></span><span class="nm">Loyal</span><span class="sb">Born</span></button></div><div class="label">Partners <span class="more">2 of 2</span></div>
+<div class="pairs"><button class="pair"><div class="fwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf3bg" x1="1" x2="0"><stop offset="0" stop-color="#f2b544" stop-opacity="0.28"/><stop offset="0.65" stop-color="#f2b544" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf3h"><path d="M32 11 C40.226600000000005 11 42.9688 16 42.9688 24 C42.9688 30 42.3688 33 39.82 38 L34.7254 45.04 Q32 46.74 29.2746 45.04 L24.18 38 C21.6312 33 21.0312 30 21.0312 24 C21.0312 16 23.7734 11 32 11 Z"/></clipPath>
+    <clipPath id="pf3s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf3bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf3s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#6f5f34"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.5216 37 L27.5216 48 Q32 51 36.4784 48 L36.4784 37 Z" fill="#654741"/><path d="M34.6784 38 L36.4784 37 L36.4784 48 L34.6784 49 Z" fill="#bb8143" opacity="0.8"/>
+  
+
+  <ellipse cx="20.711199999999998" cy="30" rx="1.8803349999999999" ry="3.36481" fill="#654741"/>
+  <ellipse cx="43.2888" cy="30" rx="1.8803349999999999" ry="3.36481" fill="#9a6142"/><path d="M44.1888 27.525875 Q45.073275 30 43.9888 32.96895" stroke="#bb8143" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.226600000000005 11 42.9688 16 42.9688 24 C42.9688 30 42.3688 33 39.82 38 L34.7254 45.04 Q32 46.74 29.2746 45.04 L24.18 38 C21.6312 33 21.0312 30 21.0312 24 C21.0312 16 23.7734 11 32 11 Z" fill="#9a6142"/>
+  <g clip-path="url(#pf3h)">
+    <path d="M0 0 L30.683744 9 C25.96716 20 26.734976 31 30.5 48 L0 64 Z" fill="#654741"/>
+    <path d="M35.29064 34.5 L42.168800000000005 31.5 L39.32 39 Z" fill="#815542" opacity="0.3"/>
+    <path d="M64 0 L41.168800000000005 12 L41.668800000000005 30 L38.02 40.5 L64 64 Z" fill="#bb8143"/>
+        <path d="M21.0312 36 Q32 50 42.9688 36 L42.9688 50 L21.0312 50 Z" fill="#563820" opacity="0.28"/>
+    
+    
+    <g transform="translate(0 0.24690000000000012)"><path d="M23.0312 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#815542"/></g>
+    <circle cx="26" cy="34" r="0.45" fill="#5c3722"/>
+    
+  </g>
+
+  <path d="M31.5 30.2469 L29.75384 36.1871 L32.7 36.9871 L31.6 35.6871 Z" fill="#654741"/>
+    <path d="M32.9 34.2871 L33.5 36.2871 L32.7 36.9871 Z" fill="#bb8143" opacity="0.7"/>
+    <path d="M30.2282 37.0871 Q32 37.4371 33.59744 37.0871" stroke="#623a29" stroke-width="0.7" fill="none" stroke-linecap="round"/><path d="M24.8572 28.75274 Q27.077199999999998 27.47918 29.297199999999997 29.41162 Q27.077199999999998 30.182930000000002 24.8572 28.75274 Z" fill="#120d0b"/><circle cx="27.6272" cy="28.886225" r="0.45" fill="#fff" opacity="0.85"/><path d="M34.7028 29.41162 Q36.9228 27.47918 39.1428 28.75274 Q36.9228 30.182930000000002 34.7028 29.41162 Z" fill="#120d0b"/><circle cx="37.4728" cy="28.886225" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.3772 24.083250000000003 Q26.643699999999995 23.011555000000005 24.407199999999996 24.780280000000005 L24.407199999999996 25.576320000000003 Q26.643699999999995 24.802645000000002 29.3772 26.07335 Z" fill="#352316"/><path d="M34.622800000000005 24.083250000000003 Q37.356300000000005 23.011555000000005 39.592800000000004 24.780280000000005 L39.592800000000004 25.576320000000003 Q37.356300000000005 24.802645000000002 34.622800000000005 26.07335 Z" fill="#352316"/><path d="M30.1965 40.8445 Q31 40.09439999999999 32 40.431945 Q33 40.09439999999999 33.8035 40.8445 Z" fill="#92543d" opacity="0.8"/><path d="M29.6965 40.8445 Q32 41.744499999999995 34.3035 40.8445" stroke="#623a29" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.4965 41.5445 Q32 42.2844 33.5035 41.5445 Z" fill="#94583f"/>
+  
+  <path d="M23.5312 22 L25.0312 24 L24.231199999999998 25.2 L26.0312 28" stroke="#bd8a75" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  <path d="M23.231199999999998 34.2 L20.431199999999997 31.5 M40.7688 34.2 L43.5688 31.5" stroke="#15181d" stroke-width="0.9"/>
+      <path d="M23.5312 34.4 Q32 31.6 40.4688 34.4 L38.32 41.5 Q32 47 25.68 41.5 Z" fill="#101318"/>
+      <path d="M32.5 32.8 Q38.9688 33 40.4688 34.4 L38.32 41.5 Q34 45.4 32.5 45.8 Z" fill="#423722"/>
+      <path d="M29.8 40.2 Q32 41 34.2 40.2" stroke="#3de8d8" stroke-width="0.8" fill="none" stroke-linecap="round" />
+  
+
+  <g >
+  
+  
+  
+  <path d="M34.19376 12.5 Q41.9688 14 42.3688 21" stroke="#bb8143" stroke-width="1" fill="none" opacity="0.6"/>
+  </g>
+  
+
+  
+  <path d="M41.3688 19 L39.4688 21.5 L39.4688 24.5 L39.8 25.2 M39.4688 22.6 L41.5688 23.6" stroke="#3de8d8" stroke-width="0.55" fill="none" stroke-linejoin="round" opacity="0.5"/>
+        <circle cx="39.8" cy="25.2" r="0.6" fill="#3de8d8" opacity="0.5"/>
+  
+  
+</svg></div><span><b>Static</b><small>38 jobs together</small></span></button>
+<button class="pair"><div class="fwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf4bg" x1="1" x2="0"><stop offset="0" stop-color="#9b8cff" stop-opacity="0.28"/><stop offset="0.65" stop-color="#9b8cff" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf4h"><path d="M32 11 C40.052 11 42.736000000000004 16 42.736000000000004 24 C42.736000000000004 30 42.136 33 41.028 38 L34.4 45.652 Q32 47.352000000000004 29.6 45.652 L22.972 38 C21.864 33 21.264 30 21.264 24 C21.264 16 23.948 11 32 11 Z"/></clipPath>
+    <clipPath id="pf4s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf4t"><path d="M20.464 27 C19.464 17 22.264 8 32 7.5 C41.736000000000004 8 44.536 16 43.536 26 C42.136 22 40.736000000000004 19.5 38.736000000000004 18.6 C33 18 30 20 28 19 C25 18.5 23.264 20 20.464 27 Z"/></clipPath>
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf4bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#33291f"/>
+  <g clip-path="url(#pf4s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#5b4f74"/><path d="M27 46 L32 54 L37 46 Z" fill="#211b14"/></g>
+  
+  <path d="M27.0974 37 L27.0974 48 Q32 51 36.9026 48 L36.9026 37 Z" fill="#9a8b8c"/><path d="M35.1026 38 L36.9026 37 L36.9026 48 L35.1026 49 Z" fill="#d3bbda" opacity="0.8"/>
+  
+
+  <ellipse cx="21.4392" cy="30" rx="2.22946" ry="3.98956" fill="#9a8b8c"/>
+  <ellipse cx="42.56080000000001" cy="30" rx="2.22946" ry="3.98956" fill="#f6d7c3"/><path d="M43.460800000000006 27.0665 Q44.620900000000006 30 43.2608 33.5202" stroke="#d3bbda" stroke-width="0.9" fill="none"/>
+  <circle cx="42.736000000000004" cy="34" r="0.9" fill="#f2b544"/>
+
+  <path d="M32 11 C40.052 11 42.736000000000004 16 42.736000000000004 24 C42.736000000000004 30 42.136 33 41.028 38 L34.4 45.652 Q32 47.352000000000004 29.6 45.652 L22.972 38 C21.864 33 21.264 30 21.264 24 C21.264 16 23.948 11 32 11 Z" fill="#f6d7c3"/>
+  <g clip-path="url(#pf4h)">
+    <path d="M0 0 L30.71168 9 C26.0952 20 26.846719999999998 31 30.5 48 L0 64 Z" fill="#9a8b8c"/>
+    <path d="M35.2208 34.5 L41.93600000000001 31.5 L40.528 39 Z" fill="#cab3a9" opacity="0.55"/>
+    <path d="M64 0 L40.93600000000001 12 L41.43600000000001 30 L39.228 40.5 L64 64 Z" fill="#d3bbda"/>
+        
+    
+    
+    <g transform="translate(0 0.45810000000000173)"><path d="M23.264 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#cab3a9"/></g>
+    <g stroke="#cab3a9" stroke-width="0.5" fill="none" opacity="0.43333333333333335">
+      <path d="M29.9019 36.98929999999999 Q28.123 39.5235 28.723000000000003 42.323499999999996"/>
+      <path d="M33.77848 36.98929999999999 Q35.877 39.5235 35.277 42.323499999999996"/></g>
+    
+  </g>
+
+  <path d="M31.5 30.4581 L30.08228 36.689299999999996 L32.7 37.48929999999999 L31.6 36.189299999999996 Z" fill="#9a8b8c"/>
+    <path d="M32.9 34.7893 L33.5 36.7893 L32.7 37.48929999999999 Z" fill="#d3bbda" opacity="0.7"/>
+    <path d="M30.501900000000003 37.589299999999994 Q32 37.939299999999996 33.37848 37.589299999999994" stroke="#90756a" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf4e-1"><path d="M24.6914 29.597900000000003 Q26.9254 26.9574 29.159399999999998 29.4115 Q26.9254 30.841525 24.6914 29.597900000000003 Z"/></clipPath><path d="M24.6914 29.597900000000003 Q26.9254 26.9574 29.159399999999998 29.4115 Q26.9254 30.841525 24.6914 29.597900000000003 Z" fill="#ecdfd3"/><circle cx="27.2254" cy="29.267052500000002" r="1.38508" fill="#120d0b" clip-path="url(#pf4e-1)"/><path d="M24.6914 29.597900000000003 Q26.9254 26.9574 29.159399999999998 29.4115" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.4754" cy="28.884957500000002" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf4e1"><path d="M34.8406 29.4115 Q37.074600000000004 26.9574 39.308600000000006 29.597900000000003 Q37.074600000000004 30.841525 34.8406 29.4115 Z"/></clipPath><path d="M34.8406 29.4115 Q37.074600000000004 26.9574 39.308600000000006 29.597900000000003 Q37.074600000000004 30.841525 34.8406 29.4115 Z" fill="#ecdfd3"/><circle cx="37.3746" cy="29.267052500000002" r="1.38508" fill="#120d0b" clip-path="url(#pf4e1)"/><path d="M34.8406 29.4115 Q37.074600000000004 26.9574 39.308600000000006 29.597900000000003" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.6246" cy="28.884957500000002" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.2254 25.10225 Q26.4842 25.349315000000004 24.2414 25.541640000000005 L24.2414 25.994160000000004 Q26.4842 26.367485000000002 29.2254 26.233550000000005 Z" fill="#1a1412"/><path d="M34.77460000000001 25.10225 Q37.515800000000006 25.349315000000004 39.7586 25.541640000000005 L39.7586 25.994160000000004 Q37.515800000000006 26.367485000000002 34.77460000000001 26.233550000000005 Z" fill="#1a1412"/><path d="M30.123 40.5235 Q31 40.02245 32 40.2479225 Q33 40.02245 33.877 40.5235 Z" fill="#d6ac9d" opacity="0.8"/><path d="M29.623 40.5235 Q32 41.4235 34.377 40.5235" stroke="#90756a" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.423000000000002 41.2235 Q32 42.4574 33.577000000000005 41.2235 Z" fill="#e0b9a9"/>
+  <g transform="translate(0 0.52)"></g>
+  <path d="M24.264 22.5 L27.264 27" stroke="#f9d6c9" stroke-width="0.7"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M20.464 27 C19.464 17 22.264 8 32 7.5 C41.736000000000004 8 44.536 16 43.536 26 C42.136 22 40.736000000000004 19.5 38.736000000000004 18.6 C33 18 30 20 28 19 C25 18.5 23.264 20 20.464 27 Z" fill="#241c19" />
+    <g clip-path="url(#pf4t)"><path d="M34.684 0 L64 0 L64 30 L38.4416 30 Z" fill="#60548c" opacity="0.75"/>
+    </g>
+  
+  <circle cx="33" cy="4.5" r="4.4" fill="#241c19"/><path d="M34 0.6 A4.4 4.4 0 0 1 37.3 5.4 L34.5 4.5 Z" fill="#60548c" opacity="0.7"/>
+  
+  </g>
+  
+
+  
+  <path d="M29.3 27.4 L31 28.6 L33 28.6 L34.7 27.4 M32 28.6 V31" stroke="#ff3d5f" stroke-width="0.55" fill="none" stroke-linejoin="round" opacity="0.5"/>
+        <circle cx="32" cy="31" r="0.6" fill="#ff3d5f" opacity="0.5"/>
+  
+  
+</svg></div><span><b>Wheels</b><small>21 jobs together</small></span></button></div><div class="label">Skills</div><button class="skline"><span class="sk-ic"><svg class="skillbadge" viewBox="0 0 48 48" width="40" height="40" aria-hidden="true" focusable="false" style="--sk:#3de8d8"><defs><linearGradient id="c-ricochet" gradientUnits="userSpaceOnUse" x1="6" y1="0" x2="42" y2="0"><stop offset="0" stop-color="#2a7c84"/><stop offset=".45" stop-color="#2a7c84"/><stop offset=".45" stop-color="#3de8d8"/><stop offset=".82" stop-color="#3de8d8"/><stop offset=".82" stop-color="#94f2ea"/><stop offset="1" stop-color="#94f2ea"/></linearGradient><linearGradient id="m-ricochet" gradientUnits="userSpaceOnUse" x1="6" y1="0" x2="42" y2="0"><stop offset="0" stop-color="#48536e"/><stop offset=".45" stop-color="#48536e"/><stop offset=".45" stop-color="#6a7790"/><stop offset=".82" stop-color="#6a7790"/><stop offset=".82" stop-color="#61c5c7"/><stop offset="1" stop-color="#61c5c7"/></linearGradient><linearGradient id="k-ricochet" gradientUnits="userSpaceOnUse" x1="6" y1="0" x2="42" y2="0"><stop offset="0" stop-color="#122629"/><stop offset=".45" stop-color="#122629"/><stop offset=".45" stop-color="#173b3d"/><stop offset=".82" stop-color="#173b3d"/><stop offset=".82" stop-color="#23716d"/><stop offset="1" stop-color="#23716d"/></linearGradient><linearGradient id="bg-ricochet" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#0d1016"/><stop offset=".35" stop-color="#0d1016"/><stop offset="1" stop-color="#3de8d8" stop-opacity=".30"/></linearGradient><clipPath id="cp-ricochet"><path d="M3 3h33l9 9v33H3z"/></clipPath></defs><g clip-path="url(#cp-ricochet)"><rect width="48" height="48" fill="url(#bg-ricochet)"/><g transform="translate(3 3) scale(.875)"><path d="M8 38 19 17l10 19 9-15" fill="none" stroke="url(#c-ricochet)" stroke-width="3.600" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="19" cy="17" r="5.200" fill="url(#m-ricochet)"/><circle cx="29" cy="36" r="5.200" fill="url(#m-ricochet)"/><circle cx="38" cy="21" r="5.200" fill="url(#m-ricochet)"/>
+      <circle cx="19" cy="17" r="2.200" fill="url(#c-ricochet)"/><circle cx="29" cy="36" r="2.200" fill="url(#c-ricochet)"/><circle cx="38" cy="21" r="2.200" fill="url(#c-ricochet)"/></g></g><path d="M3 3h33l9 9v33H3z" fill="none" stroke="var(--sk)" stroke-width="1.6"/></svg></span><span class="sk-ic"><svg class="skillbadge" viewBox="0 0 48 48" width="40" height="40" aria-hidden="true" focusable="false" style="--sk:#ff8a3d"><defs><linearGradient id="c-incendiary" gradientUnits="userSpaceOnUse" x1="6" y1="0" x2="42" y2="0"><stop offset="0" stop-color="#82513f"/><stop offset=".45" stop-color="#82513f"/><stop offset=".45" stop-color="#ff8a3d"/><stop offset=".82" stop-color="#ff8a3d"/><stop offset=".82" stop-color="#ffbf94"/><stop offset="1" stop-color="#ffbf94"/></linearGradient><linearGradient id="m-incendiary" gradientUnits="userSpaceOnUse" x1="6" y1="0" x2="42" y2="0"><stop offset="0" stop-color="#48536e"/><stop offset=".45" stop-color="#48536e"/><stop offset=".45" stop-color="#6a7790"/><stop offset=".82" stop-color="#6a7790"/><stop offset=".82" stop-color="#cb9272"/><stop offset="1" stop-color="#cb9272"/></linearGradient><linearGradient id="k-incendiary" gradientUnits="userSpaceOnUse" x1="6" y1="0" x2="42" y2="0"><stop offset="0" stop-color="#251c1a"/><stop offset=".45" stop-color="#251c1a"/><stop offset=".45" stop-color="#3d281e"/><stop offset=".82" stop-color="#3d281e"/><stop offset=".82" stop-color="#7a4728"/><stop offset="1" stop-color="#7a4728"/></linearGradient><linearGradient id="bg-incendiary" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#0d1016"/><stop offset=".35" stop-color="#0d1016"/><stop offset="1" stop-color="#ff8a3d" stop-opacity=".30"/></linearGradient><clipPath id="cp-incendiary"><path d="M3 3h33l9 9v33H3z"/></clipPath></defs><g clip-path="url(#cp-incendiary)"><rect width="48" height="48" fill="url(#bg-incendiary)"/><g transform="translate(3 3) scale(.875)"><path d="M24 5c1.500 7 10 10 10 20a10 10 0 0 1-20 0c0-5 2.500-7.500 4.500-10 .500 3 2 4.500 3.500 5C22 17 22.500 11 24 5z" fill="url(#c-incendiary)"/>
+      <path d="M24 5c1.500 7 10 10 10 20a10 10 0 0 1-4.500 8.300C33 24 28 14 24 5z" fill="#ffbf94" opacity=".5"/>
+      <path d="M24 24c4 3 4.500 8 0 11.500-4.500-3.500-4-8.500 0-11.500z" fill="#ffe07a"/>
+      <rect x="18" y="39" width="12" height="5" rx="1.200" fill="url(#m-incendiary)"/><path d="M20 39v-2.500h8V39z" fill="#d6a050"/></g></g><path d="M3 3h33l9 9v33H3z" fill="none" stroke="var(--sk)" stroke-width="1.6"/></svg></span><span class="t">Skills: Ricochet · Incendiary Rounds</span><span class="ar">›</span></button></div></section><section><p class="look">O2 · Octagon with a lit edge</p><p class="why">The alternative: the octagon's own outline is split into three runs that light up with rank. Same information, one piece instead of two, slightly harder to read at a glance on a small badge.</p><div class="panel"><div class="chead"><div class="pwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf2bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf2h"><path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z"/></clipPath>
+    <clipPath id="pf2s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf2t"><path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z"/></clipPath>
+    <clipPath id="pf2b"><path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf2bg)"/>
+  
+
+  <g >
+  <path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z" fill="#7f5428"/>
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf2s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.7036 37 L27.7036 48 Q32 51 36.2964 48 L36.2964 37 Z" fill="#86685f"/><path d="M34.4964 38 L36.2964 37 L36.2964 48 L34.4964 49 Z" fill="#9bb89b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.380799999999997" cy="30" rx="2.062545" ry="3.69087" fill="#86685f"/>
+  <ellipse cx="43.619200000000006" cy="30" rx="2.062545" ry="3.69087" fill="#d49a76"/><path d="M44.519200000000005 27.286125 Q45.547525 30 44.3192 33.25665" stroke="#9bb89b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z" fill="#d49a76"/>
+  <g clip-path="url(#pf2h)">
+    <path d="M0 0 L30.594848 9 C25.55972 20 26.379392 31 30.5 48 L0 64 Z" fill="#86685f"/>
+    <path d="M34.9274 33 L42.909600000000005 29.8 L38.748 37.6 Z" fill="#af826b" opacity="0.75"/>
+    <path d="M64 0 L41.909600000000005 12 L42.409600000000005 30 L37.448 40.5 L64 64 Z" fill="#9bb89b"/>
+        
+    
+    
+    <g transform="translate(0 0.15670000000000073)"><path d="M22.290399999999998 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#af826b"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.1567 L29.44784 34.4699 L32.7 35.2699 L31.6 33.9699 Z" fill="#86685f"/>
+    <path d="M32.9 32.569900000000004 L33.5 34.569900000000004 L32.7 35.2699 Z" fill="#9bb89b" opacity="0.7"/>
+    <path d="M29.973200000000002 35.3699 Q32 35.7199 33.80144 35.3699" stroke="#7f5643" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf2e-1"><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z"/></clipPath><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z" fill="#e3d0c0"/><circle cx="27.677500000000002" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e-1)"/><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.927500000000002" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf2e1"><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z"/></clipPath><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z" fill="#e3d0c0"/><circle cx="36.9225" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e1)"/><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1725" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.677500000000002 25.103300000000004 Q27.0375 24.892920000000007 24.8775 25.684620000000006 L24.8775 26.326380000000004 Q27.0375 26.336880000000004 29.677500000000002 26.707700000000003 Z" fill="#4c331a"/><path d="M34.322500000000005 25.103300000000004 Q36.962500000000006 24.892920000000007 39.1225 25.684620000000006 L39.1225 26.326380000000004 Q36.962500000000006 26.336880000000004 34.322500000000005 26.707700000000003 Z" fill="#4c331a"/><path d="M29.4175 40.841499999999996 Q32 41.741499999999995 34.5825 40.841499999999996" stroke="#7f5643" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.2175 41.5415 Q32 43.102199999999996 33.782500000000006 41.5415 Z" fill="#c48769"/>
+  <g transform="translate(0 0.84)"></g>
+  <path d="M22.790399999999998 22 L24.290399999999998 24 L23.490399999999998 25.2 L25.290399999999998 28" stroke="#e3af97" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z" fill="#7f5428" />
+    <g clip-path="url(#pf2t)"><path d="M34.9274 0 L64 0 L64 30 L39.02576 30 Z" fill="#5e9e80" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  <path d="M19.290399999999998 26.2 L44.7096 25.8 L44.3096 31.2 L19.690399999999997 31.6 Z" fill="#0b0f14"/><path d="M19.8904 27.2 L44.1096 26.8" stroke="#3de8d8" stroke-width="0.6" opacity="0.85"/><path d="M36.7096 29.6 h2 M39.3096 29.6 h1" stroke="#3de8d8" stroke-width="0.5" opacity="0.6"/>
+  <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35 L43.1096 33 Z" fill="#d1ab95" opacity="0.85"/>
+        <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35" stroke="#6a4d3b" stroke-width="0.45" fill="none"/>
+        <circle cx="38.2096" cy="24.5" r="0.65" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg><div class="lvtag"><small>LV</small>6</div></div>
+<div class="meta"><div class="title">Jax</div><div class="role">Pro · muscle · 27</div><p class="jline joss">"Swings first. Would walk into fire for any of you, and has."</p></div></div><div class="label cy">What they've become <span class="more">All 9 ›</span></div><div class="tgrid"><button class="tb earned"><span class="oe earned new" style="width:54px;height:54px"><svg viewBox="-4 -4 108 108"><polygon points="25,0 75,0 100,25 100,75 75,100 25,100 0,75 0,25" pathLength="300" class="on" style="stroke-dasharray:90 210;stroke-dashoffset:-5"/><polygon points="25,0 75,0 100,25 100,75 75,100 25,100 0,75 0,25" pathLength="300" class="on" style="stroke-dasharray:90 210;stroke-dashoffset:-105"/><polygon points="25,0 75,0 100,25 100,75 75,100 25,100 0,75 0,25" pathLength="300" class="off" style="stroke-dasharray:90 210;stroke-dashoffset:-205"/></svg><span class="ic"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l9-9M14 5l5 5M12 7l5 5M5 15l4 4M3 21l3-3"/></g></svg></span></span><span class="nm">Corner Fighter</span><span class="sb">Rank 2</span></button><button class="tb earned"><span class="oe earned" style="width:54px;height:54px"><svg viewBox="-4 -4 108 108"><polygon points="25,0 75,0 100,25 100,75 75,100 25,100 0,75 0,25" pathLength="300" class="on" style="stroke-dasharray:90 210;stroke-dashoffset:-5"/><polygon points="25,0 75,0 100,25 100,75 75,100 25,100 0,75 0,25" pathLength="300" class="off" style="stroke-dasharray:90 210;stroke-dashoffset:-105"/><polygon points="25,0 75,0 100,25 100,75 75,100 25,100 0,75 0,25" pathLength="300" class="off" style="stroke-dasharray:90 210;stroke-dashoffset:-205"/></svg><span class="ic"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4 0-6-2.6-6-5.6 0-3.4 3-5 3.5-9 2 1.5 3 3.2 3 5 1-1 1.5-2.2 1.5-3.4 2.5 2 4 4.6 4 7.4 0 3-2 5.6-6 5.6z"/></g></svg></span></span><span class="nm">Clean Pro</span><span class="sb">Rank 1</span></button><button class="tb earned"><span class="oe earned" style="width:54px;height:54px"><svg viewBox="-4 -4 108 108"><polygon points="25,0 75,0 100,25 100,75 75,100 25,100 0,75 0,25" pathLength="300" class="on" style="stroke-dasharray:90 210;stroke-dashoffset:-5"/><polygon points="25,0 75,0 100,25 100,75 75,100 25,100 0,75 0,25" pathLength="300" class="off" style="stroke-dasharray:90 210;stroke-dashoffset:-105"/><polygon points="25,0 75,0 100,25 100,75 75,100 25,100 0,75 0,25" pathLength="300" class="off" style="stroke-dasharray:90 210;stroke-dashoffset:-205"/></svg><span class="ic"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H10l-4 4v-4H4z"/></g></svg></span></span><span class="nm">Crowd Reader</span><span class="sb">Rank 1</span></button><button class="tb lately"><span class="oe lately" style="width:54px;height:54px"><svg viewBox="-4 -4 108 108"><polygon points="25,0 75,0 100,25 100,75 75,100 25,100 0,75 0,25" pathLength="300" class="on" style="stroke-dasharray:90 210;stroke-dashoffset:-5"/><polygon points="25,0 75,0 100,25 100,75 75,100 25,100 0,75 0,25" pathLength="300" class="on" style="stroke-dasharray:90 210;stroke-dashoffset:-105"/><polygon points="25,0 75,0 100,25 100,75 75,100 25,100 0,75 0,25" pathLength="300" class="off" style="stroke-dasharray:90 210;stroke-dashoffset:-205"/></svg><span class="ic"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></g></svg></span></span><span class="nm">Short Fuse</span><span class="sb">2 jobs left</span></button><button class="tb born"><span class="oe born" style="width:54px;height:54px"><svg viewBox="-4 -4 108 108"><polygon points="25,0 75,0 100,25 100,75 75,100 25,100 0,75 0,25" class="full"/></svg><span class="ic"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></g></svg></span></span><span class="nm">Hothead</span><span class="sb">Born</span></button><button class="tb born"><span class="oe born" style="width:54px;height:54px"><svg viewBox="-4 -4 108 108"><polygon points="25,0 75,0 100,25 100,75 75,100 25,100 0,75 0,25" class="full"/></svg><span class="ic"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></g></svg></span></span><span class="nm">Loyal</span><span class="sb">Born</span></button></div><div class="label">Partners <span class="more">2 of 2</span></div>
+<div class="pairs"><button class="pair"><div class="fwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf3bg" x1="1" x2="0"><stop offset="0" stop-color="#f2b544" stop-opacity="0.28"/><stop offset="0.65" stop-color="#f2b544" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf3h"><path d="M32 11 C40.226600000000005 11 42.9688 16 42.9688 24 C42.9688 30 42.3688 33 39.82 38 L34.7254 45.04 Q32 46.74 29.2746 45.04 L24.18 38 C21.6312 33 21.0312 30 21.0312 24 C21.0312 16 23.7734 11 32 11 Z"/></clipPath>
+    <clipPath id="pf3s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf3bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf3s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#6f5f34"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.5216 37 L27.5216 48 Q32 51 36.4784 48 L36.4784 37 Z" fill="#654741"/><path d="M34.6784 38 L36.4784 37 L36.4784 48 L34.6784 49 Z" fill="#bb8143" opacity="0.8"/>
+  
+
+  <ellipse cx="20.711199999999998" cy="30" rx="1.8803349999999999" ry="3.36481" fill="#654741"/>
+  <ellipse cx="43.2888" cy="30" rx="1.8803349999999999" ry="3.36481" fill="#9a6142"/><path d="M44.1888 27.525875 Q45.073275 30 43.9888 32.96895" stroke="#bb8143" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.226600000000005 11 42.9688 16 42.9688 24 C42.9688 30 42.3688 33 39.82 38 L34.7254 45.04 Q32 46.74 29.2746 45.04 L24.18 38 C21.6312 33 21.0312 30 21.0312 24 C21.0312 16 23.7734 11 32 11 Z" fill="#9a6142"/>
+  <g clip-path="url(#pf3h)">
+    <path d="M0 0 L30.683744 9 C25.96716 20 26.734976 31 30.5 48 L0 64 Z" fill="#654741"/>
+    <path d="M35.29064 34.5 L42.168800000000005 31.5 L39.32 39 Z" fill="#815542" opacity="0.3"/>
+    <path d="M64 0 L41.168800000000005 12 L41.668800000000005 30 L38.02 40.5 L64 64 Z" fill="#bb8143"/>
+        <path d="M21.0312 36 Q32 50 42.9688 36 L42.9688 50 L21.0312 50 Z" fill="#563820" opacity="0.28"/>
+    
+    
+    <g transform="translate(0 0.24690000000000012)"><path d="M23.0312 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#815542"/></g>
+    <circle cx="26" cy="34" r="0.45" fill="#5c3722"/>
+    
+  </g>
+
+  <path d="M31.5 30.2469 L29.75384 36.1871 L32.7 36.9871 L31.6 35.6871 Z" fill="#654741"/>
+    <path d="M32.9 34.2871 L33.5 36.2871 L32.7 36.9871 Z" fill="#bb8143" opacity="0.7"/>
+    <path d="M30.2282 37.0871 Q32 37.4371 33.59744 37.0871" stroke="#623a29" stroke-width="0.7" fill="none" stroke-linecap="round"/><path d="M24.8572 28.75274 Q27.077199999999998 27.47918 29.297199999999997 29.41162 Q27.077199999999998 30.182930000000002 24.8572 28.75274 Z" fill="#120d0b"/><circle cx="27.6272" cy="28.886225" r="0.45" fill="#fff" opacity="0.85"/><path d="M34.7028 29.41162 Q36.9228 27.47918 39.1428 28.75274 Q36.9228 30.182930000000002 34.7028 29.41162 Z" fill="#120d0b"/><circle cx="37.4728" cy="28.886225" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.3772 24.083250000000003 Q26.643699999999995 23.011555000000005 24.407199999999996 24.780280000000005 L24.407199999999996 25.576320000000003 Q26.643699999999995 24.802645000000002 29.3772 26.07335 Z" fill="#352316"/><path d="M34.622800000000005 24.083250000000003 Q37.356300000000005 23.011555000000005 39.592800000000004 24.780280000000005 L39.592800000000004 25.576320000000003 Q37.356300000000005 24.802645000000002 34.622800000000005 26.07335 Z" fill="#352316"/><path d="M30.1965 40.8445 Q31 40.09439999999999 32 40.431945 Q33 40.09439999999999 33.8035 40.8445 Z" fill="#92543d" opacity="0.8"/><path d="M29.6965 40.8445 Q32 41.744499999999995 34.3035 40.8445" stroke="#623a29" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.4965 41.5445 Q32 42.2844 33.5035 41.5445 Z" fill="#94583f"/>
+  
+  <path d="M23.5312 22 L25.0312 24 L24.231199999999998 25.2 L26.0312 28" stroke="#bd8a75" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  <path d="M23.231199999999998 34.2 L20.431199999999997 31.5 M40.7688 34.2 L43.5688 31.5" stroke="#15181d" stroke-width="0.9"/>
+      <path d="M23.5312 34.4 Q32 31.6 40.4688 34.4 L38.32 41.5 Q32 47 25.68 41.5 Z" fill="#101318"/>
+      <path d="M32.5 32.8 Q38.9688 33 40.4688 34.4 L38.32 41.5 Q34 45.4 32.5 45.8 Z" fill="#423722"/>
+      <path d="M29.8 40.2 Q32 41 34.2 40.2" stroke="#3de8d8" stroke-width="0.8" fill="none" stroke-linecap="round" />
+  
+
+  <g >
+  
+  
+  
+  <path d="M34.19376 12.5 Q41.9688 14 42.3688 21" stroke="#bb8143" stroke-width="1" fill="none" opacity="0.6"/>
+  </g>
+  
+
+  
+  <path d="M41.3688 19 L39.4688 21.5 L39.4688 24.5 L39.8 25.2 M39.4688 22.6 L41.5688 23.6" stroke="#3de8d8" stroke-width="0.55" fill="none" stroke-linejoin="round" opacity="0.5"/>
+        <circle cx="39.8" cy="25.2" r="0.6" fill="#3de8d8" opacity="0.5"/>
+  
+  
+</svg></div><span><b>Static</b><small>38 jobs together</small></span></button>
+<button class="pair"><div class="fwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf4bg" x1="1" x2="0"><stop offset="0" stop-color="#9b8cff" stop-opacity="0.28"/><stop offset="0.65" stop-color="#9b8cff" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf4h"><path d="M32 11 C40.052 11 42.736000000000004 16 42.736000000000004 24 C42.736000000000004 30 42.136 33 41.028 38 L34.4 45.652 Q32 47.352000000000004 29.6 45.652 L22.972 38 C21.864 33 21.264 30 21.264 24 C21.264 16 23.948 11 32 11 Z"/></clipPath>
+    <clipPath id="pf4s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf4t"><path d="M20.464 27 C19.464 17 22.264 8 32 7.5 C41.736000000000004 8 44.536 16 43.536 26 C42.136 22 40.736000000000004 19.5 38.736000000000004 18.6 C33 18 30 20 28 19 C25 18.5 23.264 20 20.464 27 Z"/></clipPath>
+    
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf4bg)"/>
+  
+
+  <g >
+  
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#33291f"/>
+  <g clip-path="url(#pf4s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#5b4f74"/><path d="M27 46 L32 54 L37 46 Z" fill="#211b14"/></g>
+  
+  <path d="M27.0974 37 L27.0974 48 Q32 51 36.9026 48 L36.9026 37 Z" fill="#9a8b8c"/><path d="M35.1026 38 L36.9026 37 L36.9026 48 L35.1026 49 Z" fill="#d3bbda" opacity="0.8"/>
+  
+
+  <ellipse cx="21.4392" cy="30" rx="2.22946" ry="3.98956" fill="#9a8b8c"/>
+  <ellipse cx="42.56080000000001" cy="30" rx="2.22946" ry="3.98956" fill="#f6d7c3"/><path d="M43.460800000000006 27.0665 Q44.620900000000006 30 43.2608 33.5202" stroke="#d3bbda" stroke-width="0.9" fill="none"/>
+  <circle cx="42.736000000000004" cy="34" r="0.9" fill="#f2b544"/>
+
+  <path d="M32 11 C40.052 11 42.736000000000004 16 42.736000000000004 24 C42.736000000000004 30 42.136 33 41.028 38 L34.4 45.652 Q32 47.352000000000004 29.6 45.652 L22.972 38 C21.864 33 21.264 30 21.264 24 C21.264 16 23.948 11 32 11 Z" fill="#f6d7c3"/>
+  <g clip-path="url(#pf4h)">
+    <path d="M0 0 L30.71168 9 C26.0952 20 26.846719999999998 31 30.5 48 L0 64 Z" fill="#9a8b8c"/>
+    <path d="M35.2208 34.5 L41.93600000000001 31.5 L40.528 39 Z" fill="#cab3a9" opacity="0.55"/>
+    <path d="M64 0 L40.93600000000001 12 L41.43600000000001 30 L39.228 40.5 L64 64 Z" fill="#d3bbda"/>
+        
+    
+    
+    <g transform="translate(0 0.45810000000000173)"><path d="M23.264 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#cab3a9"/></g>
+    <g stroke="#cab3a9" stroke-width="0.5" fill="none" opacity="0.43333333333333335">
+      <path d="M29.9019 36.98929999999999 Q28.123 39.5235 28.723000000000003 42.323499999999996"/>
+      <path d="M33.77848 36.98929999999999 Q35.877 39.5235 35.277 42.323499999999996"/></g>
+    
+  </g>
+
+  <path d="M31.5 30.4581 L30.08228 36.689299999999996 L32.7 37.48929999999999 L31.6 36.189299999999996 Z" fill="#9a8b8c"/>
+    <path d="M32.9 34.7893 L33.5 36.7893 L32.7 37.48929999999999 Z" fill="#d3bbda" opacity="0.7"/>
+    <path d="M30.501900000000003 37.589299999999994 Q32 37.939299999999996 33.37848 37.589299999999994" stroke="#90756a" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf4e-1"><path d="M24.6914 29.597900000000003 Q26.9254 26.9574 29.159399999999998 29.4115 Q26.9254 30.841525 24.6914 29.597900000000003 Z"/></clipPath><path d="M24.6914 29.597900000000003 Q26.9254 26.9574 29.159399999999998 29.4115 Q26.9254 30.841525 24.6914 29.597900000000003 Z" fill="#ecdfd3"/><circle cx="27.2254" cy="29.267052500000002" r="1.38508" fill="#120d0b" clip-path="url(#pf4e-1)"/><path d="M24.6914 29.597900000000003 Q26.9254 26.9574 29.159399999999998 29.4115" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.4754" cy="28.884957500000002" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf4e1"><path d="M34.8406 29.4115 Q37.074600000000004 26.9574 39.308600000000006 29.597900000000003 Q37.074600000000004 30.841525 34.8406 29.4115 Z"/></clipPath><path d="M34.8406 29.4115 Q37.074600000000004 26.9574 39.308600000000006 29.597900000000003 Q37.074600000000004 30.841525 34.8406 29.4115 Z" fill="#ecdfd3"/><circle cx="37.3746" cy="29.267052500000002" r="1.38508" fill="#120d0b" clip-path="url(#pf4e1)"/><path d="M34.8406 29.4115 Q37.074600000000004 26.9574 39.308600000000006 29.597900000000003" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.6246" cy="28.884957500000002" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.2254 25.10225 Q26.4842 25.349315000000004 24.2414 25.541640000000005 L24.2414 25.994160000000004 Q26.4842 26.367485000000002 29.2254 26.233550000000005 Z" fill="#1a1412"/><path d="M34.77460000000001 25.10225 Q37.515800000000006 25.349315000000004 39.7586 25.541640000000005 L39.7586 25.994160000000004 Q37.515800000000006 26.367485000000002 34.77460000000001 26.233550000000005 Z" fill="#1a1412"/><path d="M30.123 40.5235 Q31 40.02245 32 40.2479225 Q33 40.02245 33.877 40.5235 Z" fill="#d6ac9d" opacity="0.8"/><path d="M29.623 40.5235 Q32 41.4235 34.377 40.5235" stroke="#90756a" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.423000000000002 41.2235 Q32 42.4574 33.577000000000005 41.2235 Z" fill="#e0b9a9"/>
+  <g transform="translate(0 0.52)"></g>
+  <path d="M24.264 22.5 L27.264 27" stroke="#f9d6c9" stroke-width="0.7"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M20.464 27 C19.464 17 22.264 8 32 7.5 C41.736000000000004 8 44.536 16 43.536 26 C42.136 22 40.736000000000004 19.5 38.736000000000004 18.6 C33 18 30 20 28 19 C25 18.5 23.264 20 20.464 27 Z" fill="#241c19" />
+    <g clip-path="url(#pf4t)"><path d="M34.684 0 L64 0 L64 30 L38.4416 30 Z" fill="#60548c" opacity="0.75"/>
+    </g>
+  
+  <circle cx="33" cy="4.5" r="4.4" fill="#241c19"/><path d="M34 0.6 A4.4 4.4 0 0 1 37.3 5.4 L34.5 4.5 Z" fill="#60548c" opacity="0.7"/>
+  
+  </g>
+  
+
+  
+  <path d="M29.3 27.4 L31 28.6 L33 28.6 L34.7 27.4 M32 28.6 V31" stroke="#ff3d5f" stroke-width="0.55" fill="none" stroke-linejoin="round" opacity="0.5"/>
+        <circle cx="32" cy="31" r="0.6" fill="#ff3d5f" opacity="0.5"/>
+  
+  
+</svg></div><span><b>Wheels</b><small>21 jobs together</small></span></button></div><div class="label">Skills</div><button class="skline"><span class="sk-ic"><svg class="skillbadge" viewBox="0 0 48 48" width="40" height="40" aria-hidden="true" focusable="false" style="--sk:#3de8d8"><defs><linearGradient id="c-ricochet" gradientUnits="userSpaceOnUse" x1="6" y1="0" x2="42" y2="0"><stop offset="0" stop-color="#2a7c84"/><stop offset=".45" stop-color="#2a7c84"/><stop offset=".45" stop-color="#3de8d8"/><stop offset=".82" stop-color="#3de8d8"/><stop offset=".82" stop-color="#94f2ea"/><stop offset="1" stop-color="#94f2ea"/></linearGradient><linearGradient id="m-ricochet" gradientUnits="userSpaceOnUse" x1="6" y1="0" x2="42" y2="0"><stop offset="0" stop-color="#48536e"/><stop offset=".45" stop-color="#48536e"/><stop offset=".45" stop-color="#6a7790"/><stop offset=".82" stop-color="#6a7790"/><stop offset=".82" stop-color="#61c5c7"/><stop offset="1" stop-color="#61c5c7"/></linearGradient><linearGradient id="k-ricochet" gradientUnits="userSpaceOnUse" x1="6" y1="0" x2="42" y2="0"><stop offset="0" stop-color="#122629"/><stop offset=".45" stop-color="#122629"/><stop offset=".45" stop-color="#173b3d"/><stop offset=".82" stop-color="#173b3d"/><stop offset=".82" stop-color="#23716d"/><stop offset="1" stop-color="#23716d"/></linearGradient><linearGradient id="bg-ricochet" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#0d1016"/><stop offset=".35" stop-color="#0d1016"/><stop offset="1" stop-color="#3de8d8" stop-opacity=".30"/></linearGradient><clipPath id="cp-ricochet"><path d="M3 3h33l9 9v33H3z"/></clipPath></defs><g clip-path="url(#cp-ricochet)"><rect width="48" height="48" fill="url(#bg-ricochet)"/><g transform="translate(3 3) scale(.875)"><path d="M8 38 19 17l10 19 9-15" fill="none" stroke="url(#c-ricochet)" stroke-width="3.600" stroke-linejoin="round" stroke-linecap="round"/>
+      <circle cx="19" cy="17" r="5.200" fill="url(#m-ricochet)"/><circle cx="29" cy="36" r="5.200" fill="url(#m-ricochet)"/><circle cx="38" cy="21" r="5.200" fill="url(#m-ricochet)"/>
+      <circle cx="19" cy="17" r="2.200" fill="url(#c-ricochet)"/><circle cx="29" cy="36" r="2.200" fill="url(#c-ricochet)"/><circle cx="38" cy="21" r="2.200" fill="url(#c-ricochet)"/></g></g><path d="M3 3h33l9 9v33H3z" fill="none" stroke="var(--sk)" stroke-width="1.6"/></svg></span><span class="sk-ic"><svg class="skillbadge" viewBox="0 0 48 48" width="40" height="40" aria-hidden="true" focusable="false" style="--sk:#ff8a3d"><defs><linearGradient id="c-incendiary" gradientUnits="userSpaceOnUse" x1="6" y1="0" x2="42" y2="0"><stop offset="0" stop-color="#82513f"/><stop offset=".45" stop-color="#82513f"/><stop offset=".45" stop-color="#ff8a3d"/><stop offset=".82" stop-color="#ff8a3d"/><stop offset=".82" stop-color="#ffbf94"/><stop offset="1" stop-color="#ffbf94"/></linearGradient><linearGradient id="m-incendiary" gradientUnits="userSpaceOnUse" x1="6" y1="0" x2="42" y2="0"><stop offset="0" stop-color="#48536e"/><stop offset=".45" stop-color="#48536e"/><stop offset=".45" stop-color="#6a7790"/><stop offset=".82" stop-color="#6a7790"/><stop offset=".82" stop-color="#cb9272"/><stop offset="1" stop-color="#cb9272"/></linearGradient><linearGradient id="k-incendiary" gradientUnits="userSpaceOnUse" x1="6" y1="0" x2="42" y2="0"><stop offset="0" stop-color="#251c1a"/><stop offset=".45" stop-color="#251c1a"/><stop offset=".45" stop-color="#3d281e"/><stop offset=".82" stop-color="#3d281e"/><stop offset=".82" stop-color="#7a4728"/><stop offset="1" stop-color="#7a4728"/></linearGradient><linearGradient id="bg-incendiary" x1="0" x2="1" y1="0" y2="0"><stop offset="0" stop-color="#0d1016"/><stop offset=".35" stop-color="#0d1016"/><stop offset="1" stop-color="#ff8a3d" stop-opacity=".30"/></linearGradient><clipPath id="cp-incendiary"><path d="M3 3h33l9 9v33H3z"/></clipPath></defs><g clip-path="url(#cp-incendiary)"><rect width="48" height="48" fill="url(#bg-incendiary)"/><g transform="translate(3 3) scale(.875)"><path d="M24 5c1.500 7 10 10 10 20a10 10 0 0 1-20 0c0-5 2.500-7.500 4.500-10 .500 3 2 4.500 3.500 5C22 17 22.500 11 24 5z" fill="url(#c-incendiary)"/>
+      <path d="M24 5c1.500 7 10 10 10 20a10 10 0 0 1-4.500 8.300C33 24 28 14 24 5z" fill="#ffbf94" opacity=".5"/>
+      <path d="M24 24c4 3 4.500 8 0 11.500-4.500-3.500-4-8.500 0-11.500z" fill="#ffe07a"/>
+      <rect x="18" y="39" width="12" height="5" rx="1.200" fill="url(#m-incendiary)"/><path d="M20 39v-2.500h8V39z" fill="#d6a050"/></g></g><path d="M3 3h33l9 9v33H3z" fill="none" stroke="var(--sk)" stroke-width="1.6"/></svg></span><span class="t">Skills: Ricochet · Incendiary Rounds</span><span class="ar">›</span></button></div></section><section><p class="look">O3 · States, on the recommended look</p><p class="why">Rank 1 to 3 fills the gauge left to right. "Lately" uses the same gauge as time left, draining right to left. Born has none. When rank 3 turns into the runner's nature it becomes gold, like the specialisations, and loses the gauge: it isn't going anywhere.</p><div class="panel"><div class="tgrid"><button class="tb earned"><span class="oc earned" style="width:54px;height:54px"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l9-9M14 5l5 5M12 7l5 5M5 15l4 4M3 21l3-3"/></g></svg></span><span class="gg"><i class="on"></i><i class=""></i><i class=""></i></span><span class="nm">Rank 1</span><span class="sb">a new trait</span></button><button class="tb earned"><span class="oc earned new" style="width:54px;height:54px"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l9-9M14 5l5 5M12 7l5 5M5 15l4 4M3 21l3-3"/></g></svg></span><span class="gg"><i class="on"></i><i class="on"></i><i class=""></i></span><span class="nm">Rank 2</span><span class="sb">deepened</span></button><button class="tb earned"><span class="oc earned" style="width:54px;height:54px"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l9-9M14 5l5 5M12 7l5 5M5 15l4 4M3 21l3-3"/></g></svg></span><span class="gg"><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="nm">Rank 3</span><span class="sb">about to change</span></button><button class="tb lately"><span class="oc lately" style="width:54px;height:54px"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></g></svg></span><span class="gg"><i class="on"></i><i class="on"></i><i class=""></i></span><span class="nm">Lately</span><span class="sb">2 jobs left</span></button><button class="tb born"><span class="oc born" style="width:54px;height:54px"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></g></svg></span><span class="gg none"></span><span class="nm">Born</span><span class="sb">no rank</span></button><button class="tb nature"><span class="oc nature" style="width:54px;height:54px"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l9-9M14 5l5 5M12 7l5 5M5 15l4 4M3 21l3-3"/></g></svg></span><span class="gg none"></span><span class="nm">Nature</span><span class="sb">Stands Ground</span></button></div><p class="small" style="margin-top:8px">Yellow corner: new or deepened this week. Rank arrives as news; nothing shows how close the next one is.</p></div></section><section><p class="look">O4 · A trait opened</p><p class="why">Tap a badge: it gets an outline, and the card opens under the grid (as trait chips do today). The gauge repeats beside the name, then each rank with the job it came from, the line built today.</p><div class="panel"><div class="tgrid"><button class="tb earned on"><span class="oc earned new" style="width:54px;height:54px"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l9-9M14 5l5 5M12 7l5 5M5 15l4 4M3 21l3-3"/></g></svg></span><span class="gg"><i class="on"></i><i class="on"></i><i class=""></i></span><span class="nm">Corner Fighter</span><span class="sb">Rank 2</span></button><button class="tb earned"><span class="oc earned" style="width:54px;height:54px"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4 0-6-2.6-6-5.6 0-3.4 3-5 3.5-9 2 1.5 3 3.2 3 5 1-1 1.5-2.2 1.5-3.4 2.5 2 4 4.6 4 7.4 0 3-2 5.6-6 5.6z"/></g></svg></span><span class="gg"><i class="on"></i><i class=""></i><i class=""></i></span><span class="nm">Clean Pro</span><span class="sb">Rank 1</span></button><button class="tb earned"><span class="oc earned" style="width:54px;height:54px"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H10l-4 4v-4H4z"/></g></svg></span><span class="gg"><i class="on"></i><i class=""></i><i class=""></i></span><span class="nm">Crowd Reader</span><span class="sb">Rank 1</span></button><button class="tb lately"><span class="oc lately" style="width:54px;height:54px"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></g></svg></span><span class="gg"><i class="on"></i><i class="on"></i><i class=""></i></span><span class="nm">Short Fuse</span><span class="sb">2 jobs left</span></button><button class="tb born"><span class="oc born" style="width:54px;height:54px"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></g></svg></span><span class="gg none"></span><span class="nm">Hothead</span><span class="sb">Born</span></button><button class="tb born"><span class="oc born" style="width:54px;height:54px"><svg class="icon " viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></g></svg></span><span class="gg none"></span><span class="nm">Loyal</span><span class="sb">Born</span></button></div>
+<div class="sheet2">
+<div class="sh-top"><span class="oc earned" style="width:70px;height:70px"><svg class="icon " viewBox="0 0 24 24" width="28" height="28" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l9-9M14 5l5 5M12 7l5 5M5 15l4 4M3 21l3-3"/></g></svg></span><div><div class="k" style="color:var(--good)">Earned · lasting</div><div class="title" style="font-size:22px">Corner Fighter</div><span class="gg wide"><i class="on"></i><i class="on"></i><i class=""></i></span><div class="small">Rank 2 of 3</div></div></div>
+<p class="what">+1 combat in a fight once someone on the crew is hurt. <b>Rank 2:</b> also from the first round when the crew is outnumbered.</p>
+<div class="ranklog">
+<div><span class="rk">I</span><span><b>Back Rent, day 52</b><br>Held the stairwell while the others got out.</span></div>
+<div><span class="rk">II</span><span><b>Clear the Ramp, day 74</b><br><span class="joss">"Jax doesn't just hold the stairwell now. Jax picks the stairwell."</span></span></div>
+<div class="next"><span class="rk">III</span><span>Not yet.</span></div>
+</div></div></div></section><section><p class="look">O5 · "All 9", the full list</p><p class="why">The same octagon small, the name and where it came from, and the gauge on the right where the eye can run down the column to compare ranks.</p><div class="panel"><div class="title" style="font-size:20px;margin-bottom:6px">Jax: all nine</div>
+<div class="k" style="color:var(--good);margin:8px 0 4px">Earned</div>
+<div class="allrow earned"><span class="oc earned" style="width:40px;height:40px"><svg class="icon " viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l9-9M14 5l5 5M12 7l5 5M5 15l4 4M3 21l3-3"/></g></svg></span><span class="rt"><b>Corner Fighter</b><small>Rank 2 · Clear the Ramp, day 74</small></span><span class="gg"><i class="on"></i><i class="on"></i><i class=""></i></span></div>
+<div class="allrow earned"><span class="oc earned" style="width:40px;height:40px"><svg class="icon " viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4 0-6-2.6-6-5.6 0-3.4 3-5 3.5-9 2 1.5 3 3.2 3 5 1-1 1.5-2.2 1.5-3.4 2.5 2 4 4.6 4 7.4 0 3-2 5.6-6 5.6z"/></g></svg></span><span class="rt"><b>Clean Professional</b><small>Rank 1 · Clean Sheets, day 31</small></span><span class="gg"><i class="on"></i><i class=""></i><i class=""></i></span></div>
+<div class="allrow earned"><span class="oc earned" style="width:40px;height:40px"><svg class="icon " viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H10l-4 4v-4H4z"/></g></svg></span><span class="rt"><b>Crowd Reader</b><small>Rank 1 · After the Applause, day 44</small></span><span class="gg"><i class="on"></i><i class=""></i><i class=""></i></span></div>
+<div class="allrow earned"><span class="oc earned" style="width:40px;height:40px"><svg class="icon " viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12c2.5-4 5.5-6 9-6s6.5 2 9 6c-2.5 4-5.5 6-9 6s-6.5-2-9-6z"/><path d="M4 4l16 16"/></g></svg></span><span class="rt"><b>Light-Fingered</b><small>Rank 1 · Dry Shelf, day 60</small></span><span class="gg"><i class="on"></i><i class=""></i><i class=""></i></span></div>
+<div class="allrow earned"><span class="oc earned" style="width:40px;height:40px"><svg class="icon " viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="7" width="10" height="10" rx="1"/><path d="M10 4v3M14 4v3M10 17v3M14 17v3M4 10h3M4 14h3M17 10h3M17 14h3"/></g></svg></span><span class="rt"><b>Wirewise</b><small>Rank 1 · Submerged Cable, day 88</small></span><span class="gg"><i class="on"></i><i class=""></i><i class=""></i></span></div>
+<div class="k" style="color:#ff9a5a;margin:10px 0 4px">Lately</div>
+<div class="allrow lately"><span class="oc lately" style="width:40px;height:40px"><svg class="icon " viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></g></svg></span><span class="rt"><b>Short Fuse</b><small>Fades after 2 more calm jobs</small></span><span class="gg"><i class="on"></i><i class="on"></i><i class=""></i></span></div>
+<div class="k" style="margin:10px 0 4px">Born</div>
+<div class="allrow born"><span class="oc born" style="width:40px;height:40px"><svg class="icon " viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></g></svg></span><span class="rt"><b>Hothead</b><small>+2 combat, −2 cool. May act without orders.</small></span><span class="gg none"></span></div>
+<div class="allrow born"><span class="oc born" style="width:40px;height:40px"><svg class="icon " viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/></g></svg></span><span class="rt"><b>Loyal</b><small>Ignores buyout offers while trust is above 0.</small></span><span class="gg none"></span></div></div></section><section><p class="look">O6 · When a rank arrives</p><p class="why">The news in the day's crew updates, with the same badge and gauge so the player sees which segment just lit. Rank 3 into nature turns the badge gold.</p><div class="panel"><div class="msg"><div class="msg-k">Crew update · day 74</div>
+<div class="mrow"><div class="stack"><span class="oc earned new" style="width:48px;height:48px"><svg class="icon " viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l9-9M14 5l5 5M12 7l5 5M5 15l4 4M3 21l3-3"/></g></svg></span><span class="gg"><i class="on"></i><i class="on"></i><i class=""></i></span></div><div><b>Jax: Corner Fighter, rank 2</b><p class="joss">"Jax doesn't just hold the stairwell now. Jax picks the stairwell."</p><p class="small">Also from the first round when the crew is outnumbered.</p></div></div></div>
+<div class="msg gold"><div class="msg-k">Crew update · day 140</div>
+<div class="mrow"><div class="stack"><span class="oc nature" style="width:48px;height:48px"><svg class="icon " viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l9-9M14 5l5 5M12 7l5 5M5 15l4 4M3 21l3-3"/></g></svg></span></div><div><b>Jax: Stands Ground</b><p class="joss">"All those stairwells. It isn't something Jax does any more. It's who Jax is."</p><p class="small">Corner Fighter III becomes part of Jax's nature, kept for good.</p></div></div></div></div></section></div>
+<ul class="notes">
+<li>Built (step 1): the job a trait came from, so "Back Rent, day 52" is what the game can say now. Ranks, rank news and the partner rule are steps 3 and 4.</li>
+<li>Traits are octagons and skills keep their cut-square badges, so the two never look alike.</li>
+<li>Gold for a trait that has become the runner's nature borrows the specialisations' gold: both mean "for good, and earned". Worth a check that it doesn't confuse.</li>
+<li>Every badge, partner and row is 44px tall or more. Nothing is on hover only.</li>
+</ul></div>
+</body>
+</html>

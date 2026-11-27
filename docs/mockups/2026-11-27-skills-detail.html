@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Skills In Detail</title>
+<!-- Mockup, 2026-11-27, after the owner shared a perk-tree screen as inspiration: Jax's real skills as a board (slots, needs, links),
+     one skill and one trait opened in detail, satellites for picks past level 10, and a level-and-fame header. Our own skin and
+     icons (ui/icons.js), not a copy of the reference. Proposal, not decided. Not wired to the game. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c0f; --panel:#12151b; --panel-2:#161a21; --line:#2a303b;
+  --text:#e9ecf1; --muted:#8a93a6; --accent:#ff3d5f; --accent-2:#3de8d8;
+  --warn:#f2d541; --danger:#ff4a4a; --good:#5fe0a5; --violet:#b48cff; --cut:10px;
+  --disp:'Rajdhani',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  background-image:linear-gradient(rgba(61,232,216,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(61,232,216,.025) 1px,transparent 1px);
+  background-size:32px 32px;padding:16px max(16px,env(safe-area-inset-left)) 40px}
+.wrap{max-width:1400px;margin:0 auto}
+h1{font:700 22px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin:4px 0}
+h2{font:700 16px var(--disp);letter-spacing:.14em;text-transform:uppercase;color:var(--warn);margin:30px 0 4px}
+.lede{color:var(--muted);max-width:820px;margin:0 0 18px}
+.grid{display:grid;gap:22px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));align-items:start}
+.look{font:700 13px var(--disp);letter-spacing:.16em;color:var(--accent-2);text-transform:uppercase;margin:0 0 6px}
+.why{color:var(--muted);font-size:13px;margin:0 0 10px;min-height:72px}
+.panel{position:relative;background:linear-gradient(var(--panel-2),var(--panel));border:1px solid var(--line);
+  clip-path:polygon(0 0,calc(100% - var(--cut)) 0,100% var(--cut),100% 100%,0 100%);padding:16px}
+.panel::before{content:"";position:absolute;top:-1px;left:16px;width:36px;height:2px;background:var(--accent-2)}
+.back{font:600 14px var(--disp);letter-spacing:.12em;color:var(--accent-2);text-transform:uppercase;min-height:24px}
+.title{font:700 24px/1.15 var(--disp);letter-spacing:.06em;text-transform:uppercase;margin:0}
+.k{font:700 11px var(--disp);letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+.label{font:700 12px var(--disp);letter-spacing:.14em;color:var(--muted);text-transform:uppercase;margin:18px 0 8px;display:flex;align-items:center;gap:10px}
+.label::after{content:"";flex:1;height:1px;background:var(--line)}
+.label.cy{color:var(--accent-2)}
+.small{font-size:12px;color:var(--muted)}
+.joss{color:var(--accent-2);font-style:italic}
+.cut7{clip-path:polygon(0 0,100% 0,100% calc(100% - 7px),calc(100% - 7px) 100%,0 100%)}
+.face{border-radius:2px;flex:none}
+.fL{background:linear-gradient(160deg,#4a2a20 0 40%,#ff9a5a 40% 55%,#1b2340 55%)}
+.fV{background:linear-gradient(160deg,#2d3a52 0 40%,#3de8d8 40% 55%,#1b2340 55%)}
+.fM{background:linear-gradient(160deg,#2a2440 0 40%,#b48cff 40% 55%,#1b2340 55%)}
+.role{font:600 12px var(--disp);letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+/* segmented bars */
+.bar{display:flex;gap:1px;height:8px}
+.bar i{flex:1;background:#232a35}
+.bar i.on{background:#5a6478}.bar i.new{background:var(--accent-2)}.bar i.y{background:var(--warn)}
+.bar.thin{height:4px}
+.barline{display:flex;justify-content:space-between;font:600 12px var(--disp);letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-top:4px}
+.barline em{font-style:normal;color:var(--accent-2)}.barline strong{color:var(--warn)}
+.chip{display:inline-flex;align-items:center;gap:6px;font:700 12px var(--disp);letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);padding:4px 8px;min-height:30px}
+.chip.cy{border-color:var(--accent-2);color:var(--accent-2)}
+.chip.y{border-color:var(--warn);color:var(--warn)}
+.chip.r{border-color:#ff9a5a;color:#ff9a5a}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.btn{background:var(--accent);color:#fff;font:700 15px var(--disp);letter-spacing:.12em;padding:0 18px;min-height:44px;display:grid;place-items:center;margin-top:12px;text-transform:uppercase;
+  clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
+.btn.ghost{background:none;border:1px solid var(--accent-2);color:var(--accent-2)}
+.notes{margin-top:26px;color:var(--muted);font-size:13px;max-width:900px}
+.notes li{margin:4px 0}
+
+/* R1 runner page */
+.lvchip{display:inline-flex;align-items:baseline;gap:4px;font:700 13px var(--disp);letter-spacing:.12em;color:var(--accent-2)}
+.lvchip b{font-size:22px;letter-spacing:.02em}
+.who{display:flex;gap:12px;align-items:flex-start;margin-top:10px}
+.who .meta{flex:1;min-width:0}
+.oneline{margin:10px 0 0;font-size:15px;line-height:1.45}
+.become{display:grid;gap:6px}
+.brow{display:flex;gap:10px;align-items:center;min-height:44px;border:1px solid var(--line);background:var(--panel);padding:6px 10px}
+.brow .ic{width:24px;height:24px;border:1.5px solid currentColor;border-radius:50%;flex:none;opacity:.8}
+.brow .t{flex:1;font-size:14px}.brow .t b{display:block;font:700 14px var(--disp);letter-spacing:.08em;text-transform:uppercase}
+.brow.skill{color:var(--accent-2)}.brow.trait{color:var(--good)}.brow.pair{color:var(--violet)}.brow.set{color:#ff9a5a}
+.brow .t span{color:#c9cfda}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px}
+.st{display:grid;grid-template-columns:1fr auto;align-items:end;min-height:44px;padding:4px 0;border-bottom:1px solid rgba(42,48,59,.6)}
+.st .n{font:700 20px/1 var(--disp)}
+.st .nm{font:600 12px var(--disp);letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
+.st .bar{grid-column:1/-1;margin-top:4px}
+.st.main .nm{color:var(--accent-2)}
+.road{border-left:2px solid var(--line);padding-left:12px;display:grid;gap:8px}
+.road div{position:relative;font-size:14px}
+.road div::before{content:"";position:absolute;left:-17px;top:6px;width:8px;height:8px;background:var(--line)}
+.road div.hi::before{background:var(--accent-2)}
+.road b{font:700 11px var(--disp);letter-spacing:.12em;color:var(--muted);margin-right:6px}
+
+/* R2 report */
+.came{border:1px solid var(--line);background:var(--panel);padding:12px;margin-top:8px}
+.came .top{display:flex;gap:10px;align-items:center}
+.came .top .nm{flex:1;font:700 17px var(--disp);letter-spacing:.04em}
+.came .say{margin:8px 0 6px;font-size:14px;color:#c9cfda}
+.ticks{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.came.lv{border-color:var(--warn)}
+
+/* R3 roster */
+.rr{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;min-height:64px;padding:8px 0;border-bottom:1px solid rgba(42,48,59,.6)}
+.rr .nm{font:700 16px var(--disp);letter-spacing:.04em}
+.rr .line{font-size:13px;color:#c9cfda}
+.rr .lvn{font:700 13px var(--disp);letter-spacing:.1em;color:var(--accent-2);text-align:right}
+.rr .lvn b{display:block;font-size:22px;line-height:1}
+.rr .lvn.y{color:var(--warn)}
+
+/* V1 dossier */
+.dossier{font:15px/1.6 Georgia,'Times New Roman',serif;color:#d6dae2}
+.dossier p{margin:0 0 10px}
+.dossier .hl{color:var(--accent-2)}
+.fold{display:flex;justify-content:space-between;align-items:center;min-height:44px;border-top:1px solid var(--line);margin-top:8px;font:700 13px var(--disp);letter-spacing:.14em;color:var(--accent-2);text-transform:uppercase}
+
+/* V2 path */
+.path{position:relative;margin-left:22px;border-left:2px solid var(--line);padding-left:18px}
+.node{position:relative;margin-bottom:12px;min-height:44px}
+.node .dot{position:absolute;left:-31px;top:2px;width:24px;height:24px;display:grid;place-items:center;background:var(--bg);border:2px solid var(--line);font:700 12px var(--disp)}
+.node.done .dot{border-color:#5a6478;color:var(--text)}
+.node.now .dot{border-color:var(--accent-2);color:var(--accent-2)}
+.node.next .dot{border-color:var(--warn);color:var(--warn);border-style:dashed}
+.node .what{font:700 14px var(--disp);letter-spacing:.08em;text-transform:uppercase}
+.node .where{font-size:13px;color:var(--muted)}
+.node.big .what{color:var(--accent-2)}
+
+/* V3 HUD */
+.hud{display:grid;grid-template-columns:120px 1fr;gap:14px;align-items:center}
+.ring{width:120px;height:120px;border-radius:50%;display:grid;place-items:center;text-align:center;
+  background:conic-gradient(var(--accent-2) 0 62%,var(--violet) 62% 74%,#232a35 74% 100%);position:relative}
+.ring::after{content:"";position:absolute;inset:10px;border-radius:50%;background:var(--panel)}
+.ring div{position:relative;z-index:1}
+.ring b{display:block;font:700 28px/1 var(--disp)}
+.ring small{font:700 10px var(--disp);letter-spacing:.14em;color:var(--muted)}
+.hbar{display:grid;grid-template-columns:44px 1fr 26px;gap:8px;align-items:center;font:700 12px var(--disp);letter-spacing:.1em;color:var(--muted);margin-top:6px}
+.hbar .t{height:10px;background:#232a35;position:relative}
+.hbar .t i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#5a6478,var(--accent-2))}
+.hbar .t s{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--warn)}
+.hbar span:last-child{color:var(--text);text-align:right}
+
+/* V4 card */
+.tcard{position:relative;width:100%;max-width:300px;margin:0 auto;border:1px solid var(--warn);background:linear-gradient(170deg,#1c1a12,#12151b 50%);padding:0 0 12px;
+  clip-path:polygon(0 0,calc(100% - 14px) 0,100% 14px,100% 100%,14px 100%,0 calc(100% - 14px))}
+.tcard .art{height:200px;background:linear-gradient(160deg,#4a2a20 0 38%,#ff9a5a 38% 52%,#1b2340 52%)}
+.tcard .lvbig{position:absolute;top:10px;left:12px;font:700 40px/1 var(--disp);color:var(--warn);text-shadow:0 2px 0 #000}
+.tcard .lvbig small{display:block;font-size:11px;letter-spacing:.16em}
+.tcard .rl{position:absolute;top:10px;right:16px;font:700 12px var(--disp);letter-spacing:.14em;color:var(--warn)}
+.tcard .nm{text-align:center;font:700 26px var(--disp);letter-spacing:.08em;text-transform:uppercase;margin-top:8px}
+.tcard .ttl{text-align:center;font:700 11px var(--disp);letter-spacing:.16em;color:var(--warn);text-transform:uppercase}
+.tcard .six{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 6px;padding:10px 14px 0;text-align:center}
+.tcard .six div{font:700 20px/1 var(--disp)}.tcard .six small{display:block;font:700 10px var(--disp);letter-spacing:.14em;color:var(--muted)}
+.tcard .sig{margin:10px 14px 0;font-size:13px;color:#c9cfda;text-align:center}
+.minis{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:14px}
+.mini{border:1px solid var(--line);background:var(--panel);text-align:center;padding:0 0 6px;min-height:44px}
+.mini .a{height:54px}.mini b{display:block;font:700 13px var(--disp);letter-spacing:.06em;margin-top:4px}
+.mini span{font:700 11px var(--disp);color:var(--accent-2)}
+
+.hdr2{display:flex;gap:10px;align-items:center;margin-bottom:10px}.nm2{font:700 17px var(--disp);letter-spacing:.04em}
+.cols{display:grid;grid-template-columns:repeat(3,1fr);text-align:center;font:700 11px var(--disp);letter-spacing:.16em;color:var(--accent-2);text-transform:uppercase}
+.band{display:flex;align-items:center;gap:8px;margin:8px 0 4px}.bl{font:700 10px var(--disp);letter-spacing:.16em;color:var(--warn);text-transform:uppercase}
+.band::after{content:"";flex:1;height:1px;background:rgba(242,213,65,.3)}
+.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px;position:relative}
+.lockline{display:flex;align-items:center;gap:8px;margin:6px 0 8px;font:700 10px var(--disp);letter-spacing:.16em;color:#ff6a6a;text-transform:uppercase}
+.lockline::before,.lockline::after{content:"";flex:1;height:1px;background:rgba(255,74,74,.45)}
+.nd{display:grid;justify-items:center;gap:3px;text-align:center;min-height:44px}
+.nd .oct{width:54px;height:54px;display:grid;place-items:center;clip-path:polygon(25% 0,75% 0,100% 25%,100% 75%,75% 100%,25% 100%,0 75%,0 25%)}
+.nd.big .oct{width:62px;height:62px}
+.nn{font:700 11px/1.1 var(--disp);letter-spacing:.06em;text-transform:uppercase}
+.req{font:700 10px var(--disp);letter-spacing:.06em;display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+.req .ok{color:var(--good)}.req .no{color:#ff6a6a}
+.nd.held .oct{background:radial-gradient(circle,#f7d35a,#c99a1a);color:#1a1405;box-shadow:0 0 0 2px #f2d541}
+.nd.held{filter:drop-shadow(0 0 8px rgba(242,213,65,.35))}.nd.held .nn{color:var(--warn)}
+.nd.held.g .oct{background:radial-gradient(circle,#8ff0c4,#2fae76);color:#062014}
+.nd.ready .oct{background:color-mix(in srgb,var(--accent-2) 14%,var(--panel));border:2px solid var(--accent-2);color:var(--accent-2)}.nd.ready .nn{color:var(--accent-2)}
+.nd.locked .oct{background:rgba(255,74,74,.08);color:#a8434b;outline:1px solid rgba(255,74,74,.4)}.nd.locked .nn{color:#c9858b}
+.nd.slot .oct{border:1.5px dashed var(--warn)}.nd.slot .nn{color:var(--warn)}
+.plus{font:700 22px var(--disp);color:var(--warn)}
+.row3.linked{margin-top:22px}
+.row3.linked::after{content:"";position:absolute;left:50%;top:-20px;height:12px;width:1px;background:rgba(255,74,74,.45)}
+.row3.linked::before{content:"MARK ↓";position:absolute;left:calc(50% + 6px);top:-21px;transform:translateX(-50%);font:700 9px var(--disp);letter-spacing:.16em;color:#a8434b}
+.key{display:flex;gap:12px;margin-top:6px;font:700 11px var(--disp);letter-spacing:.12em;text-transform:uppercase}
+.k1{color:var(--warn)}.k2{color:var(--accent-2)}.k3{color:#ff6a6a}
+.sk-top{display:flex;gap:12px;align-items:center}
+.kind{font:700 11px var(--disp);letter-spacing:.16em;color:var(--warn);text-transform:uppercase}
+.what{font-size:15px;line-height:1.45;margin:12px 0 8px}
+.story{font-size:14px;color:#c9cfda;margin:0 0 8px;font-style:italic}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.facts div{border:1px solid var(--line);background:var(--panel);padding:6px 8px;min-height:44px}
+.facts b{display:block;font:700 14px var(--disp);letter-spacing:.04em}.facts b.ok{color:var(--good)}
+.ranks{display:flex;gap:3px;height:8px;margin-top:6px}.ranks i{flex:1;background:#232a35}.ranks i.on{background:var(--warn)}.ranks.g i.on{background:var(--good)}
+.sat{position:relative;height:300px}
+.sat .lines{position:absolute;inset:0;width:100%;height:100%;overflow:visible}.sat .lines path{stroke:#5a6478;stroke-width:2;fill:none}
+.hub{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%)}
+.s{position:absolute;width:118px;display:grid;justify-items:center;text-align:center;gap:2px;min-height:44px}
+.s .sq{width:40px;height:40px;display:grid;place-items:center;clip-path:polygon(0 0,calc(100% - 7px) 0,100% 7px,100% 100%,0 100%)}
+.s b,.s small{background:var(--panel);padding:0 4px}
+.s b{font:700 12px var(--disp);letter-spacing:.06em;text-transform:uppercase}.s small{font-size:11px;color:var(--muted)}
+.s1{left:0;top:10px}.s2{right:0;top:10px}.s3{left:0;bottom:4px}.s4{right:0;bottom:4px}
+.s.own .sq{background:#f2d541;color:#1a1405}.s.own b{color:var(--warn)}
+.s.ready .sq{border:2px solid var(--accent-2);color:var(--accent-2)}.s.ready b{color:var(--accent-2)}
+.s.lock .sq{background:rgba(255,74,74,.08);outline:1px solid rgba(255,74,74,.4);color:#a8434b}.s.lock b{color:#c9858b}
+.twin{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.twin > div{border:1px solid var(--line);background:var(--panel);padding:10px}
+.big2{display:block;font:700 30px/1 var(--disp);color:var(--accent-2)}.big2.y{color:var(--warn);font-size:22px;line-height:30px}
+.lab{font:700 11px var(--disp);letter-spacing:.16em;color:var(--muted);text-transform:uppercase}
+.twin .bar{margin:6px 0 4px}.twin small{font-size:12px;color:var(--muted)}
+.stattabs{display:flex;gap:4px;margin-top:10px;overflow:hidden}
+.stattabs span{flex:none;min-height:44px;display:grid;place-items:center;padding:0 10px;border:1px solid var(--line);font:700 12px var(--disp);letter-spacing:.08em;color:var(--muted)}
+.stattabs span.on{border-color:var(--accent-2);color:var(--accent-2);box-shadow:inset 0 -2px 0 var(--accent-2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Skills and traits in detail</h1>
+<p class="lede">What the reference does well: held, ready and locked are three clear looks; a lock says exactly what it needs ("13 / 15"); small nodes hang off big ones; and two numbers sit at the top (level and reputation). Here those ideas are applied to Jax with the skills, requirements and stats in the game today, in our own skin.</p>
+<div class="grid"><section><p class="look">D1 · Jax's skills as a board</p><p class="why">The skills in the game today, laid out by slot. Gold is held, cyan is ready to swap in, red is waiting on a stat ("COOL 7/10"). Spotter's Eye links to Rout and Breacher because they read its marks. Real names, needs and Jax's real stats.</p><div class="panel">
+<div class="hdr2"><div class="fwrap"><svg class="art portrait" viewBox="9 6 46 46" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="pf2bg" x1="1" x2="0"><stop offset="0" stop-color="#3de8d8" stop-opacity="0.28"/><stop offset="0.65" stop-color="#3de8d8" stop-opacity="0"/></linearGradient>
+    <clipPath id="pf2h"><path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z"/></clipPath>
+    <clipPath id="pf2s"><path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z"/></clipPath>
+    <clipPath id="pf2t"><path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z"/></clipPath>
+    <clipPath id="pf2b"><path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z"/></clipPath>
+    
+  </defs>
+  <rect x="0" y="0" width="64" height="64" fill="#0d1016"/><rect x="0" y="0" width="64" height="64" fill="url(#pf2bg)"/>
+  
+
+  <g >
+  <path d="M18.790399999999998 24 C17.790399999999998 7 46.2096 7 45.2096 24 L46.7096 54 L40.2096 52 L41.7096 35 L22.290399999999998 35 L23.790399999999998 52 L17.290399999999998 54 Z" fill="#7f5428"/>
+  
+  </g>
+
+  <path d="M6 64 C8 52 18 47 32 47 C46 47 56 52 58 64 Z" fill="#1f2b2a"/>
+  <g clip-path="url(#pf2s)"><path d="M64 44 L40 47 L46 64 L64 64 Z" fill="#2a736c"/><path d="M27 46 L32 54 L37 46 Z" fill="#141c1b"/></g>
+  
+  <path d="M27.7036 37 L27.7036 48 Q32 51 36.2964 48 L36.2964 37 Z" fill="#86685f"/><path d="M34.4964 38 L36.2964 37 L36.2964 48 L34.4964 49 Z" fill="#9bb89b" opacity="0.8"/>
+  
+
+  <ellipse cx="20.380799999999997" cy="30" rx="2.062545" ry="3.69087" fill="#86685f"/>
+  <ellipse cx="43.619200000000006" cy="30" rx="2.062545" ry="3.69087" fill="#d49a76"/><path d="M44.519200000000005 27.286125 Q45.547525 30 44.3192 33.25665" stroke="#9bb89b" stroke-width="0.9" fill="none"/>
+  
+
+  <path d="M32 11 C40.7822 11 43.7096 16 43.7096 24 C43.7096 30 43.1096 33 39.248 38 L35.981 44.125 Q32 45.825 28.019 44.125 L24.752000000000002 38 C20.8904 33 20.290399999999998 30 20.290399999999998 24 C20.290399999999998 16 23.2178 11 32 11 Z" fill="#d49a76"/>
+  <g clip-path="url(#pf2h)">
+    <path d="M0 0 L30.594848 9 C25.55972 20 26.379392 31 30.5 48 L0 64 Z" fill="#86685f"/>
+    <path d="M34.9274 33 L42.909600000000005 29.8 L38.748 37.6 Z" fill="#af826b" opacity="0.75"/>
+    <path d="M64 0 L41.909600000000005 12 L42.409600000000005 30 L37.448 40.5 L64 64 Z" fill="#9bb89b"/>
+        
+    
+    
+    <g transform="translate(0 0.15670000000000073)"><path d="M22.290399999999998 26.5 Q28 25.6 30.4 27.6 L28 28.2 Z" fill="#af826b"/></g>
+    
+    
+  </g>
+
+  <path d="M31.5 30.1567 L29.44784 34.4699 L32.7 35.2699 L31.6 33.9699 Z" fill="#86685f"/>
+    <path d="M32.9 32.569900000000004 L33.5 34.569900000000004 L32.7 35.2699 Z" fill="#9bb89b" opacity="0.7"/>
+    <path d="M29.973200000000002 35.3699 Q32 35.7199 33.80144 35.3699" stroke="#7f5643" stroke-width="0.7" fill="none" stroke-linecap="round"/><clipPath id="pf2e-1"><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z"/></clipPath><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854 Q27.3775 30.315035 25.3275 29.211180000000002 Z" fill="#e3d0c0"/><circle cx="27.677500000000002" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e-1)"/><path d="M25.3275 29.211180000000002 Q27.3775 27.414160000000003 29.427500000000002 29.13854" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="27.927500000000002" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/><clipPath id="pf2e1"><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z"/></clipPath><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002 Q36.6225 30.315035 34.572500000000005 29.13854 Z" fill="#e3d0c0"/><circle cx="36.9225" cy="29.0246475" r="1.2710000000000001" fill="#120d0b" clip-path="url(#pf2e1)"/><path d="M34.572500000000005 29.13854 Q36.6225 27.414160000000003 38.6725 29.211180000000002" stroke="#120d0b" stroke-width="0.55" fill="none"/><circle cx="37.1725" cy="28.7605425" r="0.45" fill="#fff" opacity="0.85"/>
+  <path d="M29.677500000000002 25.103300000000004 Q27.0375 24.892920000000007 24.8775 25.684620000000006 L24.8775 26.326380000000004 Q27.0375 26.336880000000004 29.677500000000002 26.707700000000003 Z" fill="#4c331a"/><path d="M34.322500000000005 25.103300000000004 Q36.962500000000006 24.892920000000007 39.1225 25.684620000000006 L39.1225 26.326380000000004 Q36.962500000000006 26.336880000000004 34.322500000000005 26.707700000000003 Z" fill="#4c331a"/><path d="M29.4175 40.841499999999996 Q32 41.741499999999995 34.5825 40.841499999999996" stroke="#7f5643" stroke-width="1.1" fill="none" stroke-linecap="round"/><path d="M30.2175 41.5415 Q32 43.102199999999996 33.782500000000006 41.5415 Z" fill="#c48769"/>
+  <g transform="translate(0 0.84)"></g>
+  <path d="M22.790399999999998 22 L24.290399999999998 24 L23.490399999999998 25.2 L25.290399999999998 28" stroke="#e3af97" stroke-width="0.75" fill="none" stroke-linejoin="bevel"/>
+  
+  
+  
+  
+
+  <g >
+  <path d="M19.490399999999998 27 C18.490399999999998 17 21.290399999999998 7 32 6.5 C42.7096 7 45.5096 16 44.5096 26 C43.1096 22 41.7096 19.5 39.7096 19.1 C33 18.5 30 20.5 28 19.5 C25 19 22.290399999999998 20.5 19.490399999999998 27 Z" fill="#7f5428" />
+    <g clip-path="url(#pf2t)"><path d="M34.9274 0 L64 0 L64 30 L39.02576 30 Z" fill="#5e9e80" opacity="0.75"/>
+    </g>
+  
+  
+  
+  </g>
+  
+
+  <path d="M19.290399999999998 26.2 L44.7096 25.8 L44.3096 31.2 L19.690399999999997 31.6 Z" fill="#0b0f14"/><path d="M19.8904 27.2 L44.1096 26.8" stroke="#3de8d8" stroke-width="0.6" opacity="0.85"/><path d="M36.7096 29.6 h2 M39.3096 29.6 h1" stroke="#3de8d8" stroke-width="0.5" opacity="0.6"/>
+  <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35 L43.1096 33 Z" fill="#d1ab95" opacity="0.85"/>
+        <path d="M43.2096 23 L38.2096 24.5 L37.7096 31.5 L41.2096 35" stroke="#6a4d3b" stroke-width="0.45" fill="none"/>
+        <circle cx="38.2096" cy="24.5" r="0.65" fill="#f2b544" opacity="0.5"/>
+  
+  
+</svg></div><div><div class="nm2">Jax · skills</div><div class="role">LV 6 · 0 picks waiting</div></div></div>
+<div class="cols"><span>Move</span><span>Payload</span><span>Specialist</span></div>
+<div class="band"><span class="bl">Held</span></div>
+<div class="row3">
+<div class="nd held big"><span class="oct"><svg class="icon " viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l6-6 4 4 6-8M15 8h5v5"/></g></svg></span><span class="nn">Ricochet</span></div>
+<div class="nd held big"><span class="oct"><svg class="icon " viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4 0-6-2.6-6-5.6 0-3.4 3-5 3.5-9 2 1.5 3 3.2 3 5 1-1 1.5-2.2 1.5-3.4 2.5 2 4 4.6 4 7.4 0 3-2 5.6-6 5.6z"/></g></svg></span><span class="nn">Incendiary</span></div>
+<div class="nd slot"><span class="oct"><b class="plus">+</b></span><span class="nn">Opens at 9</span></div>
+</div>
+<div class="lockline"><span>Swap or learn</span></div>
+<div class="row3">
+<div class="nd empty"></div>
+<div class="nd ready"><span class="oct"><svg class="icon " viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4 0-6-2.6-6-5.6 0-3.4 3-5 3.5-9 2 1.5 3 3.2 3 5 1-1 1.5-2.2 1.5-3.4 2.5 2 4 4.6 4 7.4 0 3-2 5.6-6 5.6z"/></g></svg></span><span class="nn">Cytotoxic</span></div>
+<div class="nd locked"><span class="oct"><svg class="icon " viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/></g></svg></span><span class="nn">Marksman</span><span class="req"><span class="ok">CMB 15/10</span> <span class="no">COOL 7/8</span></span><span class="req"><span class="no">RIFLE 1/3</span></span></div>
+</div>
+<div class="row3">
+<div class="nd empty"></div>
+<div class="nd locked"><span class="oct"><svg class="icon " viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/></g></svg></span><span class="nn">Spotter's Eye</span><span class="req"><span class="no">COOL 7/10</span></span></div>
+<div class="nd locked"><span class="oct"><svg class="icon " viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/></g></svg></span><span class="nn">Drone Jockey</span><span class="req"><span class="no">DRV 9/10</span></span></div>
+</div>
+<div class="row3 linked">
+<div class="nd empty"></div>
+<div class="nd locked"><span class="oct"><svg class="icon " viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L5 13h6l-1 8 8-10h-6z"/></g></svg></span><span class="nn">Rout</span><span class="req"><span class="no">COOL 7/10</span></span></div>
+<div class="nd empty"></div>
+</div>
+<div class="row3">
+<div class="nd empty"></div>
+<div class="nd locked"><span class="oct"><svg class="icon " viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z"/></g></svg></span><span class="nn">Breacher</span><span class="req"><span class="no">TECH 5/10</span></span></div>
+<div class="nd empty"></div>
+</div>
+<div class="key"><span class="k1">Held</span><span class="k2">Ready</span><span class="k3">Needs more</span></div>
+</div></section><section><p class="look">D2 · One skill, opened</p><p class="why">Tap a node: the badge big, what it does (the game's own text), what it needs, and a record of what it's done in Jax's hands. Ranks are a proposal for levels past 10.</p><div class="panel">
+<div class="sk-top"><div class="nd held big"><span class="oct"><svg class="icon " viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21c-4 0-6-2.6-6-5.6 0-3.4 3-5 3.5-9 2 1.5 3 3.2 3 5 1-1 1.5-2.2 1.5-3.4 2.5 2 4 4.6 4 7.4 0 3-2 5.6-6 5.6z"/></g></svg></span><span class="nn"></span></div><div><div class="kind">Payload · fire</div><div class="title" style="font-size:22px">Incendiary Rounds</div><div class="role">Learned at level 6 · Clear the Ramp</div></div></div>
+<p class="what">Hits and armour cracks cause burning: 10 HP at round-end for two rounds, including machines. Burning never spreads, stacks or renews.</p>
+<div class="facts">
+<div><span class="k">Needs</span><b class="ok">Combat 10 · Jax 15 ✓</b></div>
+<div><span class="k">Fights with it</span><b>6</b></div>
+<div><span class="k">Burned</span><b>11 enemies · 2 kills</b></div>
+<div><span class="k">Joss</span><b class="joss" style="font-weight:500">"The smell gets into the van."</b></div>
+</div>
+<div class="label">Ranks (from level 11)</div>
+<div class="ranks"><i class="on"></i><i></i><i></i></div>
+<div class="barline"><span>Rank 1 of 3</span><span>Rank 2: burns 3 rounds</span></div>
+</div></section><section><p class="look">D3 · Satellites: picks past level 10</p><p class="why">A proposal for the late-game levels: each held skill grows small upgrades around it, some owned, some ready, some waiting on a level or a stat. Deep without new menus.</p><div class="panel">
+<div class="sat">
+<svg class="lines" viewBox="0 0 320 300" preserveAspectRatio="none"><path d="M135 128 L75 62 M185 128 L245 62 M135 172 L75 238 M185 172 L245 238" /></svg>
+<div class="hub"><div class="nd held big"><span class="oct"><svg class="icon " viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l6-6 4 4 6-8M15 8h5v5"/></g></svg></span><span class="nn">Ricochet</span></div></div>
+<div class="s s1 own"><span class="sq"><svg class="icon " viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l6-6 4 4 6-8M15 8h5v5"/></g></svg></span><b>+1 target</b><small>Owned · level 11</small></div>
+<div class="s s2 ready"><span class="sq"><svg class="icon " viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l6-6 4 4 6-8M15 8h5v5"/></g></svg></span><b>Twice a fight</b><small>Pick at level 12</small></div>
+<div class="s s3 lock"><span class="sq"><svg class="icon " viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l6-6 4 4 6-8M15 8h5v5"/></g></svg></span><b>Through cover</b><small>Combat 16 · 15/16</small></div>
+<div class="s s4 lock"><span class="sq"><svg class="icon " viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l6-6 4 4 6-8M15 8h5v5"/></g></svg></span><b>Keeps the heat</b><small>Level 15</small></div>
+</div>
+<p class="small" style="margin-top:8px">Each satellite changes only its own skill, never names another one, so builds still combine through shared words (Mark, Fire) as they do now.</p>
+</div></section><section><p class="look">D4 · An earned trait, detailed</p><p class="why">Traits get the same treatment: the story of how it was earned, how often it has helped, and a rank it deepens toward by doing the same thing again (a proposal).</p><div class="panel">
+<div class="sk-top"><div class="nd held g big"><span class="oct"><svg class="icon " viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19l9-9M14 5l5 5M12 7l5 5M5 15l4 4M3 21l3-3"/></g></svg></span></div><div><div class="kind" style="color:var(--good)">Earned · lasting</div><div class="title" style="font-size:22px">Corner Fighter</div><div class="role">Back Rent · day 52</div></div></div>
+<p class="what">+1 combat in a fight once someone on the crew is hurt.</p>
+<p class="story">Held the stairwell on Back Rent while the others got out. Jax fights better with someone standing behind.</p>
+<div class="facts">
+<div><span class="k">Has helped</span><b>4 fights</b></div>
+<div><span class="k">Deepens</span><b>3 more stands → +2 combat</b></div>
+</div>
+<div class="ranks g"><i class="on"></i><i></i><i></i></div>
+<div class="barline"><span>Rank 1 of 3</span><span>1 of 3 stands toward rank 2</span></div>
+</div></section><section><p class="look">D5 · Level and fame side by side</p><p class="why">The header borrows the two-number top bar: level for what they've learned, fame for what the city thinks. It's the case for not adding a power number: fame already does the reputation job.</p><div class="panel">
+<div class="twin">
+<div><span class="big2">6</span><span class="lab">Level</span><div class="bar thin"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i><i></i><i></i></div><small>what they've learned</small></div>
+<div><span class="big2 y">Respected</span><span class="lab">Fame</span><div class="bar thin"><i class="y"></i><i class="y"></i><i class="y"></i><i></i><i></i></div><small>what the city thinks</small></div>
+</div>
+<div class="stattabs"><span class="on">CMB 15</span><span>END 12</span><span>DRV 9</span><span>SOC 8</span><span>COOL 7</span><span>…</span></div>
+<p class="small" style="margin-top:8px">Two numbers, two meanings: the level climbs with work, fame rises and fades with what the city sees. Tap a stat to see the skills it opens.</p>
+</div></section></div>
+<ul class="notes">
+<li><strong>Real:</strong> the skills and their needs (<code>data/builds.js</code>, <code>data/specialisations.js</code>), their descriptions, Jax's stats. <strong>Placeholder:</strong> Jax holding Ricochet and Incendiary, the fight counts, Joss's line. <strong>Proposal:</strong> ranks, satellites, trait ranks.</li>
+<li>Today a runner holds one skill per slot; the board shows what can be swapped in, not a tree you fill. Satellites (D3) are what would make it a tree, and they're one answer to "what do levels past 10 give".</li>
+<li>Skills borrow trait icons here (Ricochet, Marksman and others need their own). Tap targets are 44px or more; nothing is on hover only.</li>
+</ul></div>
+</body>
+</html>

@@ -26,7 +26,7 @@ The mechanics are thin (a few stats, a percentage, a timer). The feeling comes f
 
 **Already ours:**
 - The pick-up: recruits, free names, leads from an expedition (`core/expeditions.js` recruit goal), a runner's Career tab and path.
-- Sending off: hands-off jobs (`core/autorun.js`), expeditions, security posts and contracts (`core/contracts.js`), side tasks (`core/sidetasks.js`), each with odds shown in words.
+- Sending off: hands-off jobs (`core/autorun.js`), expeditions, security posts and contracts (`core/contracts.js`), side tasks (`core/sidetasks.js`), with odds shown (in words for jobs; the expedition plan shows a percentage).
 - Growth: stats grow from what a runner does (`core/development.js gainXp`), rookie to pro to veteran, skills to learn at a level-up, earned traits, gear, focus.
 - Using what you grew: they are the crew on the main jobs and in the fights you watch.
 - Losses that hurt, but only after a shown risk (the death rule), and never on steady orders when sent off.
@@ -35,6 +35,7 @@ The mechanics are thin (a few stats, a percentage, a timer). The feeling comes f
 - An expedition day gives every runner on it experience (`core/expeditions.js` line 168, `gainXp(... EXPEDITION.xpPerDay ...)`), and a security post day does the same (`core/contracts.js` line 205). Both throw away what `gainXp` returns: the stat rises and the change is logged on the runner's page, but the trip's report says nothing about who got better, and a rookie who graduates to pro out there gets no message or history line.
 - Side tasks do it right (`core/sidetasks.js` line 179: the growth is kept and a graduation gets a message and a history line).
 - This is the opposite of point 2 above: the growth happens, but the player never feels it land.
+- Checked 2026-11-27 (`drafts/REVIEW-research-2026-11-26.md` 1a and 1b): the growth is also tiny. At 1 raw point a day against 50 to 80 a stat point, a six-day expedition raised any stat for anyone about 5% of the time, a week on a post about 10%. And a trip counts toward nothing else: level-ups, earned traits, the crew's mark, loyalty and veteran all count main jobs only.
 
 ## 4. How this applies
 
@@ -44,7 +45,7 @@ The mechanics are thin (a few stats, a percentage, a timer). The feeling comes f
 4. **Odds you can push.** We show odds in words; the plan should show that sending more or better people moves them, the way Brotherhood's percentage climbs.
 5. **Come back with a story.** The adventure log already writes a line a day; the report's last lines should be about the people (who grew, who earned a trait, who got hurt), not only the prize.
 6. **Use them where the player sees.** A runner grown on trips should feel different on a main job: a skill learned out there that shows in a fight, or Joss noticing ("Since the docks trip, Mei moves like she owns the place").
-7. **The ceremony.** Brotherhood's level-10 initiation is a scene. Our veteran promotion and the Hall of Legends could be one too (the runner's page header already has "the ceremony").
+7. **The ceremony.** Brotherhood's level-10 initiation is a scene. Our veteran promotion and the Hall of Legends could be one too (the runner's page header already has a ceremony, for swearing someone in: `core/oath.js`).
 8. **Keep it deeper than Brotherhood without making it heavier.** The owner's note is that the mechanic was shallow and still worked. Depth should come from who the person becomes (traits, partners, scars, history), not from more menus.
 
 ## 5. Open checks

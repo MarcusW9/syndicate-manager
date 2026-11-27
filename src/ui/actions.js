@@ -151,6 +151,7 @@ export function onClick(e) {
     case 'skill-tab': V.skillTab = id; V.skillOpen = null; break;
     case 'skill-open': V.skillOpen = V.skillOpen === id ? null : id; break;
     case 'trait-tip': V.traitTip = V.traitTip === id ? null : id; break;
+    case 'traits-all': V.traitsAll = V.traitsAll === id ? null : id; V.traitTip = null; break;
     // A runner's name or face anywhere (a message, a job board strip, a hall, a district card): their page, on Crew.
     case 'armoury-tab': V.armouryTab = id; V.stashOpen = null; V.sellPick = null; break;
     // Sell mode (option C, 2026-11-22): tick several stash items and sell them in one go.

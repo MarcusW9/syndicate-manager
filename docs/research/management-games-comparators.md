@@ -15,7 +15,7 @@ Not all of these are close. Grouped by what they teach.
 | Dispatch | Superhero-team management: assign people to jobs, writing carries it. Closest in tone to a crew-and-jobs game. |
 | King of Dragon Pass | Text-first, event-driven tribe management with no tactical layer. See section 2. |
 | Kenshi | Pure sandbox. Not a useful model. |
-| Guildmaster Simulator | A small indie in the same space, in playtest (Steam app 5270710). Not the same game as Guild Management Simulator in section 5. |
+| Guildmaster Simulator | A small indie in the same space, in playtest (Steam app 5338710; this note first said 5270710). Not the same game as Guild Management Simulator in section 5. |
 
 Takeaways from the thread:
 - Players ask for an organization that grows (a base, a roster, new options), not just a party.
@@ -120,7 +120,7 @@ Our nearest competitor: a solo-developer guild manager in Early Access since 202
 12. **No paid shortcuts.** Not a plan here, but the reviews are unanimous: paid loot in a single-player game reads as a trap.
 
 13. **Save data for crews out is the weak spot.** GMS broke saves three times on half-written or missing expedition data. Our migrations already default missing `awayJobs` (`save.js`, from v17), but the save tests (`tests/saves.test.js`, `savefail.test.js`) do not load a save with crews out. Done 2026-11-26: `tests/save-crewsout.test.js` saves mid-trip with a call waiting and plays on, and loads eleven half-written versions. It found a real bug: a call-in whose job was lost blocked the day for ever. Fixed by `save.js repairCrewsOut`.
-14. **Hands-off stop rules, said out loud.** Our hands-off crews already never push on. Each report should say why it stopped or pulled out, in one line, the way GMS's tray note does.
+14. **Hands-off stop rules, said out loud.** Our hands-off crews already never push on. Each choice already carries its reason (`core/autorun.js`: "Nothing on the table had good enough odds, so they pulled out."); what's open is whether that line reaches the top of the report, in one line, the way GMS's tray note does.
 15. **Explain what numbers do, on tap.** GMS kept adding text explaining its stats. Our iOS rule (tap to reveal, no hover) fits; check every stat and tag on the runner's page opens a plain line.
 
 ## 7. Open checks
