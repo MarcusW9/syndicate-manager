@@ -17,6 +17,8 @@ import { itemName } from '../core/gear.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
 import { templateById } from '../core/jobs.js';
+import { skillMenu } from '../core/abilities.js';
+import { skillIcon } from './skillicons.js';
 import { STARTING_ROSTER_CAP, canHire, signingFee } from '../core/recruits.js';
 import { changesSince, primaryStat, progressShare, declineChance, ageRate, potentialRead, scoutFor, focusOf, FOCUS, STATS, ROLL_STATS } from '../core/development.js';
 import { levelUpOpen } from '../core/levelup.js';
@@ -400,10 +402,9 @@ function renderOpTab(op, nameOf) {
       <p class="body">${esc(op.bio)}</p>
       <p class="body muted">${esc(op.origin)}</p>
       ${op.freelance ? '' : renderHome(op)}
-      <h2>Traits</h2>
-      ${traitChips(op.id, op.traits.map(bornChip))}
-      ${earnedChips(op)}
+      ${traitBadges(op)}
       ${synergies(op)}
+      ${skillsLine(op)}
       </div>
 
       <div class="opgrid__stats">
@@ -467,22 +468,65 @@ function traitChips(pageId, items) {
       ${open ? `<div class="tipcard${open.setback ? ' tipcard--setback' : ''}" role="note"><strong>${esc(open.name)}</strong><p>${esc(open.desc)}</p>${open.when ? `<p class="muted small">${esc(open.when)}</p>` : ''}</div>` : ''}`;
 }
 
-/** "Earned on the job": every earned trait but synergies, which get their own row. */
-function earnedChips(op) {
-  const list = (op.earned ?? []).filter((e) => e.id !== 'crew_anchor');
-  if (!list.length) return '';
-  return `<h2>Earned on the job</h2>
-      ${traitChips(op.id, list.map((e, i) => {
-        const def = EARNED_TRAITS[e.id];
-        return { key: `e:${i}`, icon: def.icon, name: def.name, desc: earnedText(state, e), kind: def.kind, setback: def.setback,
-          when: `${def.kind === 'temporary' ? 'For now' : 'For good'} · ${earnedWhere(e)}` };
-      }))}`;
-}
-
 /** Where a trait came from: "Back Rent, day 52" when it remembers its job (save v92), else "since day 52". */
 export function earnedWhere(e) {
   const job = e.job ? templateById(e.job)?.name : null;
   return job ? `${job}, day ${e.day}` : `since day ${e.day}`;
+}
+
+// What they've become (owner, 2026-11-27; drafts/PROPOSAL-traits.md 3d; the look is O1 of
+// docs/mockups/2026-11-27-trait-octagons.html): born and earned traits as octagon badges, each with a
+// three-segment gauge for its rank, at most TRAIT_SHELF on the page and the rest behind "All". Partners
+// (Synergy) keep their own row of faces; skills are one line to the Skills tab.
+export const TRAIT_SHELF = 6;
+export const TRAIT_RANKS = 3; // gauge segments. Every earned trait is rank 1 until ranks are built (the proposal's step 4).
+export const NEW_DAYS = 7; // earned this recently: a yellow corner
+
+/**
+ * A runner's traits in the order the page shows them: anything earned in the last week, then what's
+ * "lately" (temporary), then the other lasting ones newest first, then what they were born with.
+ * Partners are left out (their own row). Pure: [{ key, kind, icon, name, desc, when, rank, setback, isNew }].
+ */
+export function traitShelf(op, today) {
+  const earned = (op.earned ?? []).map((e, i) => ({ e, i, def: EARNED_TRAITS[e.id] })).filter((x) => x.def && x.e.id !== 'crew_anchor');
+  const item = ({ e, i, def }) => ({
+    key: `e:${i}`, kind: def.kind === 'temporary' ? 'lately' : 'earned', icon: def.icon, name: def.name, desc: earnedText(state, e),
+    when: `${def.kind === 'temporary' ? 'For now' : 'For good'} · ${earnedWhere(e)}`, rank: def.kind === 'temporary' ? TRAIT_RANKS : 1,
+    setback: !!def.setback, isNew: e.day >= today - NEW_DAYS, day: e.day,
+  });
+  const fresh = earned.filter((x) => x.e.day >= today - NEW_DAYS).sort((a, b) => b.e.day - a.e.day);
+  const lately = earned.filter((x) => !fresh.includes(x) && x.def.kind === 'temporary').sort((a, b) => b.e.day - a.e.day);
+  const lasting = earned.filter((x) => !fresh.includes(x) && x.def.kind !== 'temporary').sort((a, b) => b.e.day - a.e.day);
+  const born = op.traits.map((t) => ({ ...bornChip(t), kind: 'born', when: 'Born with it', rank: 0, setback: false, isNew: false }));
+  return [...fresh, ...lately, ...lasting].map(item).concat(born);
+}
+
+function traitBadges(op) {
+  const all = traitShelf(op, state.day);
+  if (!all.length) return '<h2>What they\'ve become</h2><p class="muted small">Nothing yet. The work will show.</p>';
+  const showAll = V.traitsAll === op.id;
+  const list = showAll ? all : all.slice(0, TRAIT_SHELF);
+  const open = all.find((it) => V.traitTip === `${op.id}|${it.key}`);
+  const more = all.length > TRAIT_SHELF
+    ? `<button class="h2link" data-action="traits-all" data-id="${esc(op.id)}" aria-expanded="${showAll}">${showAll ? 'Fewer' : `All ${all.length} ›`}</button>` : '';
+  const gauge = (it) => (it.kind === 'born' ? '<span class="tbadge__gauge tbadge__gauge--none"></span>'
+    : `<span class="tbadge__gauge" aria-hidden="true">${Array.from({ length: TRAIT_RANKS }, (_, j) => `<i${j < it.rank ? ' class="on"' : ''}></i>`).join('')}</span>`);
+  return `<div class="h2row"><h2>What they've become</h2>${more}</div>
+      <ul class="tbadges">${list.map((it) => {
+        const on = it === open;
+        const sub = it.kind === 'born' ? 'Born' : it.kind === 'lately' ? 'Lately' : `Rank ${it.rank}`;
+        return `<li><button class="tbadge tbadge--${it.kind}${it.setback ? ' tbadge--setback' : ''}${it.isNew ? ' is-new' : ''}${on ? ' is-open' : ''}" data-action="trait-tip" data-id="${esc(`${op.id}|${it.key}`)}" aria-expanded="${on}">`
+          + `<span class="tbadge__oct">${traitGlyph(it.icon)}</span>${gauge(it)}<span class="tbadge__name">${esc(it.name)}</span><span class="tbadge__sub">${sub}${it.isNew ? ' · new' : ''}</span></button></li>`;
+      }).join('')}</ul>
+      ${open ? `<div class="tipcard tipcard--${open.kind}${open.setback ? ' tipcard--setback' : ''}" role="note"><strong>${esc(open.name)}</strong><p>${esc(open.desc)}</p><p class="muted small">${esc(open.when)}</p></div>` : ''}`;
+}
+
+/** The skills they hold, as one line that opens the Skills tab (skills live there, not with traits). */
+function skillsLine(op) {
+  if (op.freelance) return '';
+  const held = skillMenu(op).items.filter((i) => i.state === 'held');
+  return `<button class="skillsline" data-action="op-tab" data-id="skills">${held.map((i) => skillIcon(i.id, 32)).join('')}`
+    + `<span class="skillsline__text">${held.length ? `Skills: ${esc(held.map((i) => i.name).join(' · '))}` : 'No skills yet'}</span><span class="skillsline__go" aria-hidden="true">›</span></button>`;
 }
 
 /** Synergies (crew_anchor, shown as Synergy since 2026-11-03): who they work best with, as portraits. */
@@ -492,7 +536,7 @@ function synergies(op) {
     .filter((x) => x.mate);
   if (!list.length) return '';
   const open = list.find((x) => V.traitTip === `${op.id}|s:${x.mate.id}`);
-  return `<h2>Synergies</h2>
+  return `<h2>Partners</h2>
       <ul class="synergies">${list.map(({ mate }) => {
         const on = mate === open?.mate;
         return `<li><button class="synergy${on ? ' is-open' : ''}" data-action="trait-tip" data-id="${esc(`${op.id}|s:${mate.id}`)}" aria-expanded="${on}" aria-label="Synergy with ${esc(mate.handle)}">${face(mate, 'sm')}<span>${esc(mate.handle)}</span></button></li>`;

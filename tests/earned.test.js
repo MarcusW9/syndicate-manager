@@ -481,3 +481,24 @@ test('a v91 save upgrades to v92 and keeps its traits as they were, with no job'
   assert.equal(loaded.version, SAVE_VERSION);
   assert.deepEqual(loaded.crew.find((o) => o.id === a.id).earned, [{ id: 'corner_fighter', day: 52 }]);
 });
+
+// --- what they've become: the badges on a runner's page (DESIGN.md 2026-11-27, drafts/PROPOSAL-traits.md 3d) -------------
+
+test('the trait badges: new this week first, then lately, then lasting newest first, then born; partners left out', async () => {
+  const { traitShelf, TRAIT_SHELF } = await import('../src/ui/crew.js');
+  const s = game(); const [a, b] = s.crew;
+  a.traits = ['hothead', 'loyal'];
+  a.earned = [
+    { id: 'clean_professional', day: 10 }, { id: 'corner_fighter', day: 40, job: 'back_rent' }, { id: 'crowd_reader', day: 20 },
+    { id: 'short_fuse', day: 30 }, { id: 'crew_anchor', day: 15, partner: b.id }, { id: 'wirewise', day: 58 },
+  ];
+  const shelf = traitShelf(a, 60);
+  assert.deepEqual(shelf.map((t) => t.name), ['Wirewise', 'Short Fuse', 'Corner Fighter', 'Crowd Reader', 'Clean Professional', 'Hothead', 'Loyal']);
+  assert.deepEqual(shelf.map((t) => t.kind), ['earned', 'lately', 'earned', 'earned', 'earned', 'born', 'born']);
+  assert.ok(shelf[0].isNew && !shelf[1].isNew, 'earned in the last week is marked new');
+  assert.ok(!shelf.some((t) => t.name === 'Synergy'), 'partners have their own row');
+  assert.equal(shelf.find((t) => t.name === 'Corner Fighter').when, 'For good · Back Rent, day 40');
+  assert.equal(shelf.find((t) => t.name === 'Corner Fighter').rank, 1, 'every earned trait is rank 1 until ranks exist');
+  assert.equal(TRAIT_SHELF, 6);
+  assert.ok(shelf.length > TRAIT_SHELF, 'seven here, so the page shows six and "All 7"');
+});
