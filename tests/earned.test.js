@@ -444,3 +444,40 @@ test('a v23 save with two messages sharing an id upgrades to two ids', async () 
   assert.equal(up.version, SAVE_VERSION);
   assert.equal(new Set(up.inbox.map((m) => m.id)).size, up.inbox.length, 'every id unique');
 });
+
+// --- a trait remembers its job (save v92; DESIGN.md 2026-11-27, drafts/PROPOSAL-traits.md 3c) ---------------------------
+
+test('a trait earned on a job remembers the job; off a job it has none; the job never makes a second copy', () => {
+  const s = game(); const [a] = s.crew;
+  for (let i = 0; i < 3; i++) job(s, [roll(a, 'medical', true)], [a], { jobId: 'container409' });
+  assert.equal(E.earnedOf(a, 'clinic_hands')?.job, 'container409');
+  for (let i = 0; i < 3; i++) job(s, [roll(a, 'medical', true)], [a], { jobId: 'backrent' });
+  assert.equal((a.earned ?? []).filter((e) => e.id === 'clinic_hands').length, 1, 'a lasting trait is held once, whatever job comes next');
+  const [, b] = s.crew;
+  for (let i = 0; i < 3; i++) job(s, [roll(b, 'medical', true)], [b]);
+  assert.ok(has(b, 'clinic_hands'));
+  assert.equal('job' in E.earnedOf(b, 'clinic_hands'), false, 'no job given, none kept');
+});
+
+test('in play, earned traits name real jobs, and the runner page says which', async () => {
+  const { templateById } = await import('../src/core/jobs.js');
+  const { earnedWhere } = await import('../src/ui/crew.js');
+  const { state } = playWeeks(16, 21, carefulPolicy, { startCrew: 'fresh' });
+  const withJob = state.crew.flatMap((o) => o.earned ?? []).filter((e) => e.job);
+  assert.ok(withJob.length > 0, 'some trait came from a job');
+  for (const e of withJob) {
+    const tpl = templateById(e.job);
+    assert.ok(tpl, `${e.id} names a job that exists: ${e.job}`);
+    assert.equal(earnedWhere(e), `${tpl.name}, day ${e.day}`);
+  }
+  assert.equal(earnedWhere({ id: 'clinic_hands', day: 52 }), 'since day 52');
+});
+
+test('a v91 save upgrades to v92 and keeps its traits as they were, with no job', async () => {
+  const s = game(17); const [a] = s.crew;
+  a.earned = [{ id: 'corner_fighter', day: 52 }];
+  s.version = 91;
+  const loaded = await importSave({ text: async () => JSON.stringify(s) });
+  assert.equal(loaded.version, SAVE_VERSION);
+  assert.deepEqual(loaded.crew.find((o) => o.id === a.id).earned, [{ id: 'corner_fighter', day: 52 }]);
+});

@@ -16,6 +16,7 @@ import { renderLoadout, renderGearSheet } from './gear.js';
 import { itemName } from '../core/gear.js';
 import { EARNED_TRAITS } from '../data/earnedTraits.js';
 import { earnedText } from '../core/earned.js';
+import { templateById } from '../core/jobs.js';
 import { STARTING_ROSTER_CAP, canHire, signingFee } from '../core/recruits.js';
 import { changesSince, primaryStat, progressShare, declineChance, ageRate, potentialRead, scoutFor, focusOf, FOCUS, STATS, ROLL_STATS } from '../core/development.js';
 import { levelUpOpen } from '../core/levelup.js';
@@ -474,8 +475,14 @@ function earnedChips(op) {
       ${traitChips(op.id, list.map((e, i) => {
         const def = EARNED_TRAITS[e.id];
         return { key: `e:${i}`, icon: def.icon, name: def.name, desc: earnedText(state, e), kind: def.kind, setback: def.setback,
-          when: `${def.kind === 'temporary' ? 'For now' : 'For good'} · since day ${e.day}` };
+          when: `${def.kind === 'temporary' ? 'For now' : 'For good'} · ${earnedWhere(e)}` };
       }))}`;
+}
+
+/** Where a trait came from: "Back Rent, day 52" when it remembers its job (save v92), else "since day 52". */
+export function earnedWhere(e) {
+  const job = e.job ? templateById(e.job)?.name : null;
+  return job ? `${job}, day ${e.day}` : `since day ${e.day}`;
 }
 
 /** Synergies (crew_anchor, shown as Synergy since 2026-11-03): who they work best with, as portraits. */

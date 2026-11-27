@@ -61,7 +61,7 @@ setState(next){ setGame(next); saveGame(state); render(); }
 //   broughtHome, criticalsSurvived, unscathed, bigScores, seriousInjuries, cleanStreak, bestCleanStreak, with:{opId:n}, activeWeeks, lastJobDay,
 //   milestones:[ids], highlights:[{id,day,text,weight}] (best 3), lowWeeks, wasElite, estimated},
 //   fame: 'unknown'|'known'|'respected'|'elite' (shown as Renowned since 2026-11-24), standing: 0-100. None of these touch a roll, pay, heat or the risk read.
-// added lazily: earned: [{id, day, district?, client?, partner?, uses?}], track: {hidden counters},
+// added lazily: earned: [{id, day, job?, district?, client?, partner?, uses?}] (job: the template id it came from, v92), track: {hidden counters},
 //               spec: {id, day}, specSnooze, build {move, payload}|null, buildAt (jobsWithCrew at the last piece taken), buildSnooze, freelance (flag)
 ```
 Morale and burnout exist and are written (in `finish`, `settleWeek`) but nothing reads morale; STATE-OF-PLAY says the owner agreed to cut them, main still has them.
@@ -172,8 +172,9 @@ Seeded and saved. `makeRng(seed)` is mulberry32 (`core/rng.js`). `nextRng(state)
 
 Format: JSON of the state in `localStorage`. Keys: `syndicate-active-slot`, `syndicate-slot-N`, `…-backup` (weekly), `…-unreadable`, `syndicate-ironman-progress`, legacy `syndicate-save-v1`. `storageGet/Set/Remove` are the only storage calls (swap for iOS). `saveGame` writes slot + weekly backup (not in Ironman). `loadGame` migrates; on failure `keepUnreadable` and returns null. `exportSave` downloads JSON; `importSave(file)` migrates then `checkIronman`; `loadBackup`.
 
-**Versioning:** `SAVE_VERSION` 85 in `core/state.js` (v73-v76 and v80-v81 are described in the `migrate` blocks of `save.js`). What each version added, newest first (one per line; grep `v52:`):
+**Versioning:** `SAVE_VERSION` 92 in `core/state.js` (v73-v76 and v80-v81 are described in the `migrate` blocks of `save.js`). What each version added, newest first (one per line; grep `v52:`):
 
+- v92: an earned trait remembers the job it came from: `op.earned[].job`, a template id, set by `core/earned.js afterJob` (from `mission.js finish`, `jobId: tpl.id`). No migration work: older traits keep no job, and the runner's page says "since day N" for them (`ui/crew.js earnedWhere`).
 - v89: "trail" renamed (`core/multimap.js`): a run's `trail` is `maps: { at, path, wrongUsed, then }`, the last map is `finale` (was `held`) in it, in its queue and in its stop events (`finale: true`, was `held: true`). A job's template key is `maps`, its stop crises `stop: true`.
 - v88: a job can follow a trail (`core/trail.js`): a run may carry `trail: { at, path, wrongUsed, then }` and `finale` (the night's queue, spliced in when the trail reaches `held`), and its queue holds `{ type: 'stop' }` and `{ type: 'clue' }` steps. A run saved before has neither and plays on as built.
 - v87: expeditions: `state.expeditions` `{ active, seq }` (`core/expeditions.js`; a trip `{ id, goal, district, crewIds, startDay, days, endDay, progress, prize: { item | cash | recruit }, facts, log, finds, spent?, waiting }`); an expedition's fight is an `activeMission` with `expedition` (the trip id) and template `exp:<district>:<goal>`. Older saves get an empty one.

@@ -1243,7 +1243,7 @@ function finish(state) {
   reactToJob(state, am, tpl, { heatGain, injuries, deaths });
   // Everyone on the job counts towards traits, outside too; incidents and saves count for less
   // than a crisis roll (core/earned.js weightOf, retuned 2026-10-27).
-  afterJob(state, { events, district: tpl.district, clientId: am.clientId, outcome, crewIds: onJob(state, am).map((o) => o.id) });
+  afterJob(state, { events, district: tpl.district, clientId: am.clientId, outcome, crewIds: onJob(state, am).map((o) => o.id), jobId: tpl.id });
 }
 
 export function closeMission(prev) {

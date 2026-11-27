@@ -1,7 +1,8 @@
 // Earned traits: what happens to people on the job changes them (owner's list and calls,
 // 2026-10-26; DESIGN.md). Pure logic.
 //
-// op.earned  [{ id, day, district?, client?, partner?, uses? }]  what they've become
+// op.earned  [{ id, day, job?, district?, client?, partner?, uses? }]  what they've become (job: the template id of the
+//            job it came from, save v92; none for a trait earned off a job, such as side work, or before v92)
 // op.track   counters towards traits, hidden from the player (progress isn't shown: a trait
 //            arrives as a story, with Joss's note saying why)
 //
@@ -81,7 +82,7 @@ const RESTART = {
 };
 
 /** They become something. Mutates the (cloned) state. */
-export function earn(state, op, id, extra = {}) {
+export function earn(state, op, id, extra = {}, job = null) {
   if (earnedOf(op, id, extra)) return;
   if (id === 'short_fuse') {
     const t = track(op);
@@ -93,7 +94,7 @@ export function earn(state, op, id, extra = {}) {
     const temps = (op.earned ?? []).filter((e) => EARNED_TRAITS[e.id].kind === 'temporary');
     if (temps.length >= MAX_TEMPORARY) fade(state, op, temps[0], 'makes room', id);
   }
-  const entry = { id, day: state.day, ...extra };
+  const entry = { id, day: state.day, ...(job ? { job } : {}), ...extra };
   op.earned = [...(op.earned ?? []), entry];
   RESTART[id]?.(track(op), extra); // a temporary trait comes back only after a fresh run of the same
   op.history.push(`Day ${state.day}: ${def.name}. ${earnedText(state, entry, 'history')}`);
@@ -263,7 +264,8 @@ const weigh = (xs) => xs.reduce((n, e) => n + weightOf(e), 0);
  * Counts are weighted (weightOf); whether a job was clean, failed or theirs (streaks, Client's
  * Favourite, Clean Professional, Overconfident, Second Wind) still reads the crisis rolls only.
  */
-export function afterJob(state, { events, district, clientId, outcome, crewIds }) {
+export function afterJob(state, { events, district, clientId, outcome, crewIds, jobId = null }) {
+  const earnHere = (op, id, extra) => earn(state, op, id, extra, jobId); // the trait remembers this job (save v92)
   const crew = crewIds.map((id) => state.crew.find((o) => o.id === id)).filter((o) => o && !o.freelance);
   const done = outcome === 'completed';
   const all = events.filter((e) => (e.kind === 'roll' || e.kind === 'save' || (e.kind === 'critical' && e.action === 'stabilise')) && e.actor);
@@ -286,24 +288,24 @@ export function afterJob(state, { events, district, clientId, outcome, crewIds }
       if (e.actor?.id === op.id && (e.kind === 'roll' || e.kind === 'save') && e.success && ['cool', 'combat'].includes(e.stat) && hurtSoFar) t.steadyFire = (t.steadyFire ?? 0) + weightOf(e);
       if (e.injury && e.injury.id !== op.id) hurtSoFar = true;
     }
-    if ((t.steadyFire ?? 0) >= NEEDS.steadyUnderFire) earn(state, op, 'steady_under_fire');
+    if ((t.steadyFire ?? 0) >= NEEDS.steadyUnderFire) earnHere(op, 'steady_under_fire');
 
     t.medPasses = (t.medPasses ?? 0) + weigh(every.filter((e) => e.stat === 'medical' && e.success));
-    if (t.medPasses >= NEEDS.clinicHands) earn(state, op, 'clinic_hands');
+    if (t.medPasses >= NEEDS.clinicHands) earnHere(op, 'clinic_hands');
 
     const sitOf = (e) => new Set(e.situations ?? []);
     t.cleanDrives = (t.cleanDrives ?? 0) + weigh(every.filter((e) => e.stat === 'piloting' && e.success && sitOf(e).has('escape') && !heatOf(e) && !e.injury));
-    if (t.cleanDrives >= NEEDS.ghostDriver) earn(state, op, 'ghost_driver');
+    if (t.cleanDrives >= NEEDS.ghostDriver) earnHere(op, 'ghost_driver');
 
     if (done && !causedHeat) t.cleanJobs = (t.cleanJobs ?? 0) + 1;
-    if ((t.cleanJobs ?? 0) >= NEEDS.cleanProfessional) earn(state, op, 'clean_professional');
+    if ((t.cleanJobs ?? 0) >= NEEDS.cleanProfessional) earnHere(op, 'clean_professional');
 
     // Synergy (crew_anchor): jobs together with someone, both back unhurt.
     if (!wasHurt) {
       for (const mate of crew) {
         if (mate === op || hurt.has(mate.id)) continue;
         t.together = { ...(t.together ?? {}), [mate.id]: (t.together?.[mate.id] ?? 0) + 1 };
-        if (t.together[mate.id] >= NEEDS.crewAnchor) earn(state, op, 'crew_anchor', { partner: mate.id });
+        if (t.together[mate.id] >= NEEDS.crewAnchor) earnHere(op, 'crew_anchor', { partner: mate.id });
       }
     }
     if (t.anchorShaken && done) delete t.anchorShaken; // one job to settle
@@ -322,7 +324,7 @@ export function afterJob(state, { events, district, clientId, outcome, crewIds }
     // Only jobs where they made a roll count towards the run; a job they sat out neither builds nor breaks it.
     if (failed || wasHurt || causedHeat || !done) t.streak = 0;
     else if (contributed) t.streak = (t.streak ?? 0) + 1;
-    if (t.streak >= NEEDS.ridingHigh && !earnedOf(op, 'riding_high')) earn(state, op, 'riding_high');
+    if (t.streak >= NEEDS.ridingHigh && !earnedOf(op, 'riding_high')) earnHere(op, 'riding_high');
 
     // District Rhythm: lots of work in one district lately.
     t.jobs = [...(t.jobs ?? []).filter((j) => j.day > state.day - NEEDS.rhythmDays), { day: state.day, district }];
@@ -331,26 +333,26 @@ export function afterJob(state, { events, district, clientId, outcome, crewIds }
       rhythm.away = (rhythm.away ?? 0) + 1;
       if (rhythm.away >= NEEDS.rhythmAway) fade(state, op, rhythm, 'worked elsewhere');
     }
-    if (t.jobs.filter((j) => j.district === district).length >= NEEDS.rhythmJobs) earn(state, op, 'district_rhythm', { district });
+    if (t.jobs.filter((j) => j.district === district).length >= NEEDS.rhythmJobs) earnHere(op, 'district_rhythm', { district });
 
     // Known Face: trouble they caused in one district.
     if (causedHeat) {
       t.heatJobs = { ...(t.heatJobs ?? {}), [district]: (t.heatJobs?.[district] ?? 0) + 1 };
       t.lastHeat = { ...(t.lastHeat ?? {}), [district]: state.day };
-      if (t.heatJobs[district] >= NEEDS.knownFaceJobs) earn(state, op, 'known_face', { district });
+      if (t.heatJobs[district] >= NEEDS.knownFaceJobs) earnHere(op, 'known_face', { district });
     }
 
     // Group 2: what they did in which kind of situation.
     const passes = (stats, sit) => weigh(every.filter((e) => e.success && stats.includes(e.stat) && sitOf(e).has(sit)));
     const fails = (stats, sit) => weigh(every.filter((e) => !e.success && stats.includes(e.stat) && sitOf(e).has(sit)));
     t.entryPasses = (t.entryPasses ?? 0) + weigh(every.filter((e) => e.success && e.stat === 'stealth' && sitOf(e).has('entry') && !sitOf(e).has('escape')));
-    if (t.entryPasses >= NEEDS.lightFingered) earn(state, op, 'light_fingered');
+    if (t.entryPasses >= NEEDS.lightFingered) earnHere(op, 'light_fingered');
     t.crowdPasses = (t.crowdPasses ?? 0) + passes(['social', 'cool'], 'crowd');
-    if (t.crowdPasses >= NEEDS.crowdReader) earn(state, op, 'crowd_reader');
+    if (t.crowdPasses >= NEEDS.crowdReader) earnHere(op, 'crowd_reader');
     t.streetTechPasses = (t.streetTechPasses ?? 0) + weigh(every.filter((e) => e.success && e.stat === 'tech' && sitOf(e).has('street-tech') && !sitOf(e).has('corp-tech')));
-    if (t.streetTechPasses >= NEEDS.wirewise) earn(state, op, 'wirewise');
+    if (t.streetTechPasses >= NEEDS.wirewise) earnHere(op, 'wirewise');
     t.fightPasses = (t.fightPasses ?? 0) + passes(['combat'], 'fight');
-    if (t.fightPasses >= NEEDS.cornerFighter) earn(state, op, 'corner_fighter');
+    if (t.fightPasses >= NEEDS.cornerFighter) earnHere(op, 'corner_fighter');
 
     // Rattled by Sirens: comes from failing in front of the police, goes from facing them down.
     const rattled = earnedOf(op, 'rattled_by_sirens');
@@ -359,7 +361,7 @@ export function afterJob(state, { events, district, clientId, outcome, crewIds }
       if (rattled.faced >= NEEDS.rattledFaced) fade(state, op, rattled, 'faced the police down');
     } else {
       t.policeFails = (t.policeFails ?? 0) + weigh(every.filter((e) => !e.success && sitOf(e).has('police')));
-      if (t.policeFails >= NEEDS.rattledFails) earn(state, op, 'rattled_by_sirens');
+      if (t.policeFails >= NEEDS.rattledFails) earnHere(op, 'rattled_by_sirens');
     }
 
     // Short Fuse: talking or keeping cool failed when someone squared up; calm jobs settle it.
@@ -371,12 +373,12 @@ export function afterJob(state, { events, district, clientId, outcome, crewIds }
       }
     } else {
       t.threatFails = (t.threatFails ?? 0) + fails(['social', 'cool'], 'threat');
-      if (t.threatFails >= NEEDS.fuseFails) earn(state, op, 'short_fuse');
+      if (t.threatFails >= NEEDS.fuseFails) earnHere(op, 'short_fuse');
     }
 
     // Burned Out: tech or neural work failing them, within three jobs.
     t.techFails = [...(t.techFails ?? []), weigh(every.filter((e) => !e.success && (e.stat === 'tech' || sitOf(e).has('neural'))))].slice(-NEEDS.burnoutJobs);
-    if (t.techFails.reduce((n, x) => n + x, 0) >= NEEDS.burnoutFails) earn(state, op, 'burned_out');
+    if (t.techFails.reduce((n, x) => n + x, 0) >= NEEDS.burnoutFails) earnHere(op, 'burned_out');
 
     // Overconfident: hard rolls going their way, one after another; any failure resets.
     for (const e of mine.filter((x) => x.kind === 'roll')) {
@@ -385,13 +387,13 @@ export function afterJob(state, { events, district, clientId, outcome, crewIds }
     }
     const over = earnedOf(op, 'overconfident');
     if (over && (failed || wasHurt)) fade(state, op, over, failed ? 'a roll went wrong' : 'got hurt');
-    else if ((t.hardStreak ?? 0) >= NEEDS.overconfident && !over) earn(state, op, 'overconfident');
+    else if ((t.hardStreak ?? 0) >= NEEDS.overconfident && !over) earnHere(op, 'overconfident');
 
     // Second Wind: made the last roll of the job count while hurt.
     const last = rolls.filter((e) => e.kind === 'roll').at(-1);
     if (last && last.actor.id === op.id && last.success && (last.notes ?? []).includes('hurt')) {
       t.secondWind = (t.secondWind ?? 0) + 1;
-      if (t.secondWind >= NEEDS.secondWind) earn(state, op, 'second_wind', { uses: 0 });
+      if (t.secondWind >= NEEDS.secondWind) earnHere(op, 'second_wind', { uses: 0 });
     }
 
     // Client's Favourite: good, quiet work for one client.
@@ -400,7 +402,7 @@ export function afterJob(state, { events, district, clientId, outcome, crewIds }
       if (fav && !done) fade(state, op, fav, `a job for ${clientName(clientId)} went wrong`);
       if (done && !causedHeat && contributed) {
         t.clientJobs = { ...(t.clientJobs ?? {}), [clientId]: (t.clientJobs?.[clientId] ?? 0) + 1 };
-        if (t.clientJobs[clientId] >= NEEDS.favouriteJobs) earn(state, op, 'client_favourite', { client: clientId });
+        if (t.clientJobs[clientId] >= NEEDS.favouriteJobs) earnHere(op, 'client_favourite', { client: clientId });
       }
     }
     for (const fav of (op.earned ?? []).filter((e) => e.id === 'client_favourite' && e.client !== clientId)) {

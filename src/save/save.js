@@ -1165,5 +1165,10 @@ function migrate(state) {
     state.cashToday = state.cashToday ?? [];
     state.version = 91;
   }
+  if (state.version === 91) {
+    // v92: an earned trait remembers the job it came from (op.earned[].job, a template id; DESIGN.md 2026-11-27,
+    // drafts/PROPOSAL-traits.md 3c). Traits earned before then have no job: the runner's page shows the day alone.
+    state.version = 92;
+  }
   return state;
 }
