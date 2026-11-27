@@ -79,6 +79,7 @@ export function onClick(e) {
     // A district's page, from its card in Districts or from the pick on the map.
     case 'district-open': remember(action, id); goHome('district'); V.tongsView = null; V.cityDistrict = id; break;
     // A crew's district in the list: light it on the map (scrolled into view) and narrow the list to it.
+    case 'out-open': e.preventDefault?.(); V.outOpen = V.outOpen === id ? null : id; break; // a crew out's row opens in place, one at a time (ui/outrows.js)
     case 'city-show': V.cityTab = 'map'; V.cityDistrict = V.cityDistrict === id ? null : id; V.cityMapDue = !!V.cityDistrict; break;
     // City's sub-tabs (the Book's own are 'lore-tab'): a different part of the tab, so no page stays open.
     case 'city-tab': V.cityTab = id; V.cityDistrict = null; V.tongsView = null; break;

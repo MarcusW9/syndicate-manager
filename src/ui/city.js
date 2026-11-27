@@ -22,10 +22,8 @@ import { sideTasksOut } from '../core/sidetasks.js';
 import { renderTongs } from './tongs.js';
 import { renderThreats, grudgeGauge, raidWhen } from './raidcards.js';
 import { cityName, esc, face, districtName, daysLeft, rootBack, subTabs } from './shared.js';
-import { whereButton, renderCrewsOut, logDetails } from './today.js';
-import { crewLinks } from './messages.js';
 import { expeditionsOut } from '../core/expeditions.js';
-import { expeditionCard } from './expeditions.js';
+import { outRows, jobRow, tripRow, sideRow } from './outrows.js';
 import { state, root, canGoBack, backLabel, V } from './view.js';
 
 /** Jobs on the board right now, by district. */
@@ -93,29 +91,13 @@ function renderOps() {
   const trips = expeditionsOut(state).filter((x) => !f || x.district === f);
   const raids = openRaids(state).filter((r) => !f || r.district === f);
   const any = crewsOut(state).length + sideTasksOut(state).length + expeditionsOut(state).length;
-  const sideList = side.length ? `
-    <ul class="crewsout" aria-label="Side work out">
-      ${side.map((t) => {
-        const ops = t.crewIds.map((id) => state.crew.find((o) => o.id === id)).filter(Boolean);
-        return `
-        <li class="crewsout__job is-side">
-          <div class="crewsout__top">
-            <span class="crewsout__light" aria-hidden="true"></span>
-            <p class="crewsout__head"><strong>${esc(t.name)}</strong> <span class="muted small">side work · back ${esc(calendar(t.returnDay).weekday)}</span></p>
-            <span class="crewsout__faces">${ops.map((op) => face(op, 'sm')).join('')}</span>
-          </div>
-          ${t.log?.length ? `<div class="crewsout__text"><p class="small">Day ${t.log.at(-1).day}: ${crewLinks(t.log.at(-1).text)}</p>${logDetails(t.log)}</div>` : ''}
-          ${t.district ? `<div class="crewsout__foot">${whereButton(t.district)}</div>` : ''}
-        </li>`;
-      }).join('')}
-    </ul>` : '';
   return `<div class="ops">
       ${renderThreats(raids)}
       <div class="ops__head">
         <h2>Out now</h2>
         ${f ? `<button class="linkbtn" data-action="city-whole">${esc(cityName(f))} only · show all</button>` : ''}
       </div>
-      ${jobs.length || side.length || trips.length ? `${renderCrewsOut(jobs)}${trips.length ? `<ul class="crewsout" aria-label="Out on an expedition">${trips.map((x) => expeditionCard(x, { where: true })).join('')}</ul>` : ''}${sideList}`
+      ${jobs.length || side.length || trips.length ? outRows([...jobs.map(jobRow), ...trips.map(tripRow), ...side.map(sideRow)])
         : `<p class="muted small">${any ? `Nobody of ours is out in ${esc(cityName(f))}.` : 'Nobody is out. Crews you send away are followed here, day by day.'}</p>
            ${any ? '' : '<button class="btn" data-action="nav" data-id="jobs">Find work</button>'}`}
     </div>`;

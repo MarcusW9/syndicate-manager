@@ -3239,6 +3239,45 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .advlog__days li { margin: 0; }
 .advlog__day { font: 700 0.72rem/1 var(--display, inherit); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-right: 4px; }
 .advlog--report { margin: 10px 0 12px; }
+
+/* Crews out as rows that open (2026-11-26, ui/outrows.js; docs/mockups/2026-11-26-crews-out-condensed.html, look A
+   revised). One row per crew out: faces, name, kind and day, a thin track of the trip's days. The action is a small
+   link at the row's right, not a filled button; the colour is on the left edge. Two across from 700px. */
+.outrows { gap: 6px; align-items: start; }
+@media (min-width: 700px) { .outrows { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); } }
+.outrow { position: relative; background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--line); }
+.outrow.is-call { border-color: rgba(255, 61, 95, 0.5); border-left-color: var(--accent); }
+.outrow.is-open { border-color: var(--accent-2); border-left-color: var(--accent-2); }
+.outrow.is-open.is-call { border-left-color: var(--accent); }
+.outrow details > summary { list-style: none; cursor: pointer; }
+.outrow details > summary::-webkit-details-marker { display: none; }
+.outrow__row { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; min-height: 56px; padding: 6px 96px 6px 10px; }
+.outrow__faces { display: flex; }
+.outrow__faces .face { box-shadow: 0 0 0 2px var(--panel); }
+.outrow__faces .face + .face { margin-left: -9px; }
+.outrow__mid { display: grid; min-width: 0; }
+.outrow__name { font: 700 0.95rem/1.15 var(--display, inherit); letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.outrow__sub { font-size: 0.72rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.outrow__track { display: grid; grid-template-columns: repeat(var(--days), 1fr); gap: 2px; height: 5px; margin-top: 5px; }
+.outrow__track i { position: relative; background: #232a35; }
+.outrow__track i.is-done { background: #4a5466; }
+.outrow__track i.is-today { background: var(--accent-2); }
+.outrow__track i.is-call { background: var(--accent); }
+.outrow__track i.is-lead::after { content: ''; position: absolute; left: 50%; top: 50%; width: 6px; height: 6px; transform: translate(-50%, -50%) rotate(45deg); background: var(--text); box-shadow: 0 0 0 2px var(--panel); }
+.outrow__act, .outrow__back { position: absolute; top: 6px; right: 8px; min-height: 44px; display: inline-flex; align-items: center; font: 700 0.75rem/1 var(--display, inherit); letter-spacing: 0.12em; text-transform: uppercase; white-space: nowrap; }
+.outrow__act { background: none; border: 0; padding: 0 2px 0 10px; color: var(--accent-2); cursor: pointer; }
+.outrow__act.is-call { color: var(--accent); }
+.outrow__act::after { content: '\203A'; margin-left: 5px; font-size: 1rem; }
+.outrow__back { color: var(--muted); font-weight: 600; pointer-events: none; }
+.outrow__more { padding: 0 10px 8px; border-top: 1px solid var(--line); display: grid; gap: 6px; }
+.outrow__more p { margin: 0; }
+.outrow__people { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 8px; margin-top: 10px; }
+.outrow__op { display: grid; justify-items: center; gap: 2px; background: none; border: 0; padding: 0; color: var(--text); font: 700 0.72rem/1.1 var(--display, inherit); letter-spacing: 0.04em; cursor: pointer; }
+.outrow__map { margin-left: auto; width: 96px; height: 64px; border: 1px solid var(--line); background: #0b0d11; overflow: hidden; }
+.outrow__facts { display: flex; justify-content: space-between; gap: 8px; font: 600 0.7rem/1.2 var(--display, inherit); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.outrow__facts b { color: var(--accent-2); }
+.outrow__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
+.outrow__foot .linkbtn { min-height: var(--tap); }
 .advlog__head { font: 700 0.8rem/1.2 var(--display, inherit); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
 
 /* Expeditions (2026-11-22, Jobs › Expeditions, ui/expeditions.js): the district picked as two tiles side by side. */

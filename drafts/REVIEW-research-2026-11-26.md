@@ -2,7 +2,7 @@
 
 Written 2026-11-26, a fresh read of the research from the same day. Planning only: no game code changed, nothing decided.
 
-**Where the research lives.** The notes, mockups and the 2026-11-26 design-log rows are on the unmerged branch `claude/inspiring-mccarthy-tz3ojz`, not on `main`. That branch does not merge cleanly into `main` (conflicts in `save.js`, `CODEMAP.md`, the design log, the changelog and the screenshots README), so this review does not bring the notes over. Section 1 lists each correction for whoever merges that branch. Code line numbers below are from `main` (95e508e); the files they point to are the same on both branches.
+**Where the research lives.** When this was written the notes were on the unmerged branch `claude/inspiring-mccarthy-tz3ojz`; they reached `main` in #261. The corrections in section 1 were applied to the notes on 2026-11-27 (changelog), except 1g, which is about a mockup. Code line numbers below are from `main` (95e508e); the files they point to are the same on both branches.
 
 **What "trip" means here.** A crew sent away from home for several days on an **expedition** (the tong's own errand: a weapon, cash or a recruit, 4 to 6 days, no client or pay) or a **security post** (a client's guard or escort contract, usually a week). The game uses the word too (Jobs › Trips on the research branch, "trip report"). Hands-off jobs and side tasks also send people off but are *not* trips in this review: hands-off jobs run on the main job code and side tasks keep their growth, so both already say who improved.
 

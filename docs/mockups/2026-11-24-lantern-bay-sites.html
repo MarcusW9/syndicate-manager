@@ -1,0 +1,490 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lantern Bay | Site studies</title>
+<style>
+  @font-face { font-family: Rajdhani; src: url("../../node_modules/@fontsource/rajdhani/files/rajdhani-latin-700-normal.woff2"); font-weight: 700; }
+  :root { color-scheme: dark; --bg: #0a0c0f; --panel: #12151b; --line: #2a303b; --ink: #e9ecf1; --dim: #a4adbf; --cyan: #3de8d8; --red: #ff3d5f; --violet: #b48cff; --display: Rajdhani, "Arial Narrow", system-ui, sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin: 0; color: var(--ink); background: var(--bg); font: 14px/1.45 system-ui, sans-serif; background-image: linear-gradient(#3de8d807 1px, transparent 1px), linear-gradient(90deg, #3de8d807 1px, transparent 1px); background-size: 32px 32px; }
+  main { max-width: 930px; margin: auto; padding: 18px max(16px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+  h1, h2, .eyebrow, label, .legend { font-family: var(--display); font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+  h1 { font-size: clamp(29px, 5vw, 46px); line-height: 1.05; margin: 2px 0 6px; }
+  h2 { font-size: 21px; line-height: 1.05; margin: 5px 0 2px; }
+  p { color: var(--dim); margin: 0; }
+  .eyebrow { color: var(--violet); font-size: 12px; }
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; margin: 8px 0 10px; }
+  label { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; color: var(--cyan); }
+  input { accent-color: var(--cyan); margin: 0; }
+  input:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+  .legend { display: flex; gap: 14px; font-size: 12px; color: var(--dim); }
+  .legend span::before { content: ''; display: inline-block; vertical-align: middle; width: 14px; margin-right: 5px; border-top: 2px solid var(--cyan); }
+  .legend .legend-beat::before { width: 7px; height: 7px; border: 1.5px solid #f2d541; transform: rotate(45deg); }
+  .legend .legend-target::before { border-top: 2px dashed var(--red); }
+  nav { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 4px 0 12px; }
+  nav a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; color: var(--cyan); }
+  section { margin-top: 20px; scroll-margin-top: 12px; }
+  .district-title { margin-bottom: 8px; border-bottom: 1px solid var(--line); padding-bottom: 6px; color: var(--district-light, var(--violet)); }
+  section .eyebrow { color: var(--district-light, var(--violet)); }
+  h3 { font: 700 21px/1.05 var(--display); text-transform: uppercase; letter-spacing: .08em; margin: 5px 0 2px; }
+  .sites { display: grid; gap: 12px; }
+  @media (min-width: 720px) { .sites { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  article { background: linear-gradient(#161a21, var(--panel)); border: 1px solid var(--line); position: relative; clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%); }
+  article::before { content: ''; position: absolute; top: 0; left: 0; width: 36px; border-top: 2px solid var(--cyan); }
+  article::after { content: ''; position: absolute; top: 4px; right: -3px; width: 15px; border-top: 1px solid var(--line); transform: rotate(45deg); }
+  article header, article p { padding: 8px 12px; }
+  .map { display: block; width: 100%; height: auto; background: #0d1017; border-block: 1px solid var(--line); }
+  main:has(#overlay:not(:checked)) .overlay { display: none; }
+  main:has(#overlay:not(:checked)) .legend { visibility: hidden; }
+  .route { fill: none; stroke: var(--cyan); stroke-width: 2.4; stroke-linejoin: round; stroke-linecap: round; paint-order: stroke; }
+  .route-edge { stroke: #090c12; stroke-width: 6; }
+  .start { fill: #10191e; stroke: var(--cyan); stroke-width: 2; }
+  .beat { fill: #12151b; stroke: #f2d541; stroke-width: 1.6; }
+  .target { fill: #ff3d5f19; stroke: var(--red); stroke-width: 1.5; stroke-dasharray: 4 3; }
+  .tag { fill: #e9ecf1; font: 700 11px var(--display); letter-spacing: .9px; stroke: #0a0c0f; stroke-width: 3; paint-order: stroke; stroke-linejoin: round; }
+  .beat-tag { fill: #f2d541; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" aria-hidden="true" style="position:absolute">
+  <defs>
+    <pattern id="tiles" width="16" height="16" patternUnits="userSpaceOnUse">
+      <path d="M0 16V0H16" fill="none" stroke="#71819c" stroke-opacity=".16"/>
+      <path d="M1 1h7v7H1z" fill="#71819c" opacity=".045"/>
+    </pattern>
+    <pattern id="gravel" width="21" height="15" patternUnits="userSpaceOnUse">
+      <path d="M3 4h3m8 7h3m2-8h1" stroke="#8a748b" stroke-opacity=".28"/>
+    </pattern>
+    <g id="vent">
+      <path d="M1 2h30v16H0l-10 5V8z" fill="#1b2340"/>
+      <path d="M0 0h30v16H0z" fill="#33384c"/><path d="M28 0h2v16h-2z" fill="#837597"/>
+      <path d="M5 4h17m-17 4h17m-17 4h17" stroke="#637189" stroke-width="1.5"/>
+    </g>
+    <g id="crate">
+      <path d="M-5 5L0 0h19v14L0 19h-5z" fill="#1b2340"/>
+      <path d="M0 0h19v14H0z" fill="#69516a"/><path d="M16 0h3v14h-3z" fill="#95748c"/>
+      <path d="M3 3h10v8H3z" fill="#3c354c"/>
+    </g>
+    <g id="awning">
+      <path d="M0 0h34v18l-11 7h-35V8z" fill="#1b2340"/>
+      <path d="M0 0h34v15H0z" fill="currentColor"/>
+      <path d="M2 0h9v15H2z" fill="#0d111b" opacity=".23"/>
+      <path d="M0 15h34v4H0z" fill="#24233a"/>
+      <path d="M22 17h7v2h-7z" fill="#ffe3a2"/>
+    </g>
+    <g id="steps">
+      <path d="M0 0h22v47H0z" fill="#222838"/>
+      <path d="M2 5h18M2 11h18M2 17h18M2 23h18M2 29h18M2 35h18M2 41h18" stroke="#768099" stroke-opacity=".68"/>
+      <path d="M1 0v47M21 0v47" stroke="#a594ba" stroke-width="2"/>
+    </g>
+    <g id="bed">
+      <path d="M-4 3h24v34H-4z" fill="#1b2340"/><path d="M0 0h20v34H0z" fill="#395d67"/>
+      <path d="M3 3h14v8H3z" fill="#a5c1c6"/><path d="M3 24h14v7H3z" fill="#547d86"/>
+    </g>
+    <path id="beat-marker" d="M0 -4.5L4.5 0 0 4.5 -4.5 0Z"/>
+    <path id="arcade-route" d="M15 196H80L123 157H192L222 130V96H313L325 84H340"/>
+    <path id="clinic-route" d="M329 195H273V157H253L243 147V117L233 107H118L110 99V46L103 39H91"/>
+    <path id="court-route" d="M131 221H168L178 211V184L193 165H253L273 145V104L283 94H305"/>
+    <path id="roof-route" d="M34 195H84L100 180V135H146L164 115H217L234 98V74L254 50H306"/>
+    <pattern id="harbour" width="54" height="22" patternUnits="userSpaceOnUse">
+      <rect width="54" height="22" fill="#121e2c"/>
+      <path d="M4 5h11m19 5h13M19 18h15" stroke="#43536e" opacity=".55"/>
+      <path d="M43 17h6M10 12h5" stroke="#bd625f" opacity=".32"/>
+    </pattern>
+    <pattern id="planks" width="10" height="30" patternUnits="userSpaceOnUse">
+      <rect width="10" height="30" fill="#4d414d"/>
+      <path d="M0 0v30M0 12h10" stroke="#211f2b" opacity=".52"/>
+    </pattern>
+    <g id="container">
+      <path d="M-9 7 0 0h62v23l-11 7H-9z" fill="#1b2340"/>
+      <path d="M0 0h62v23H0z" fill="currentColor"/><path d="M59 0h3v23h-3z" fill="#ffc7a4" opacity=".5"/>
+      <path d="M6 4v15m7-15v15m7-15v15m7-15v15m7-15v15m7-15v15m7-15v15m7-15v15" stroke="#101323" opacity=".48"/>
+    </g>
+    <g id="planter">
+      <path d="M-7 6H68v19H-7z" fill="#1b2340"/><path d="M0 0h68v20H0z" fill="#556975"/>
+      <path d="M4 3h59v14H4z" fill="#243f42"/>
+      <path d="M8 11l6-6 7 2 7 7 6-7 10-2 7 6 6-3 3 6H8z" fill="#48706a"/>
+    </g>
+    <g id="bale">
+      <path d="M-4 3h23v15H-4z" fill="#1b2340"/><path d="M0 0h19v14H0z" fill="#8d6949"/>
+      <path d="M5 0v14m9-14v14" stroke="#594441"/><path d="M17 0h2v14h-2z" fill="#c59a60"/>
+    </g>
+    <path id="float-route" d="M25 181H115L138 157H194L221 130H283V85H314"/>
+    <path id="shed-route" d="M36 201H115L143 173V128L167 105H251L277 79V48H314"/>
+    <path id="stairs-route" d="M30 203H116L137 182V156H218L240 134V91L260 71H313"/>
+    <path id="laundry-route" d="M324 201H249L226 178H150L122 150V110L103 91H62V55"/>
+    <path id="atrium-route" d="M31 188H120L144 164H252L277 139V88L299 66H327"/>
+    <path id="plant-route" d="M27 187H105L128 164V118L149 97H247L273 71H324"/>
+    <path id="tack-route" d="M34 202H128L149 181V151H233L258 126V88L280 66H312"/>
+    <path id="ticket-route" d="M320 202H238L212 176V129L190 107H99L74 82V48H40"/>
+  </defs>
+</svg>
+<main>
+  <header>
+    <div class="eyebrow">Lantern Bay / District studies / 12 sites</div>
+    <h1>Lantern Bay after hours</h1>
+    <p>Everyday mission sites, from the harbour edge to the towers.</p>
+  </header>
+  <div class="toolbar">
+    <label><input type="checkbox" id="overlay" checked> Route &amp; labels</label>
+    <div class="legend"><span>Sample route</span><span class="legend-beat">Possible encounter</span><span class="legend-target">Objective</span></div>
+  </div>
+  <nav aria-label="Districts">
+    <a href="#night-market">Night Market</a><a href="#docks">The Docks</a><a href="#old-town">Old Town</a><a href="#glass-heights">Glass Heights</a><a href="#basin">The Basin</a>
+  </nav>
+  <section id="night-market" aria-labelledby="market-heading">
+    <h2 class="district-title" id="market-heading">Night Market</h2>
+    <div class="sites">
+    <article>
+      <header><div class="eyebrow">01 / Street level</div><h3>Covered arcade</h3></header>
+      <svg class="map" viewBox="0 0 360 236" role="img" aria-label="A diagonal covered arcade between two blocks, turning into a row of shuttered shops.">
+        <path d="M0 0h360v236H0z" fill="#13141f"/><path d="M0 0h360v236H0z" fill="url(#tiles)"/>
+        <path d="M0 222h360" stroke="#586176" stroke-dasharray="14 12" opacity=".36"/>
+        <path d="M0 0h360v56H222L96 153H0z" fill="#1b2340" transform="translate(-8 9)"/>
+        <path d="M0 0h360v56H222L96 153H0z" fill="#27243c"/>
+        <path d="M0 0h360v6H0zM222 52h138v4H222L96 153h-7z" fill="#775288"/>
+        <path d="M53 236l88-62h64l55-47h100v109z" fill="#1b2340" transform="translate(-6 7)"/>
+        <path d="M58 236l87-56h63l54-50h98v106z" fill="#292638"/>
+        <path d="M146 180h62l54-50h98v4h-96l-55 50h-63z" fill="#b075a7"/>
+        <path d="M80 153l28 30 102-88 12-43z" fill="#b48cff" opacity=".14"/>
+        <path d="M222 56h138v65h-59l-43-18h-46z" fill="#ac578d" opacity=".13"/>
+        <path d="M242 58h116v18H242z" fill="#373149"/>
+        <path d="M254 61v14m26-14v14m26-14v14m26-14v14" stroke="#79597c" stroke-width="4"/>
+        <path d="M258 58h15m10 0h15m10 0h15m10 0h15" stroke="#ed8bc9" stroke-width="2"/>
+        <use href="#awning" x="48" y="146" style="color:#9c4a81"/>
+        <use href="#awning" x="99" y="126" style="color:#7754a5"/>
+        <use href="#awning" x="134" y="98" style="color:#498c91"/>
+        <use href="#awning" x="171" y="70" style="color:#a68356"/>
+        <use href="#vent" x="45" y="74"/><use href="#vent" x="285" y="160"/>
+        <use href="#crate" x="307" y="109"/><use href="#crate" x="328" y="109"/>
+        <g fill="#9082a8"><circle cx="87" cy="174" r="2"/><circle cx="119" cy="153" r="2"/><circle cx="153" cy="126" r="2"/><circle cx="192" cy="100" r="2"/></g>
+        <g class="overlay">
+          <rect class="target" x="324" y="77" width="30" height="25"/>
+          <use href="#arcade-route" class="route route-edge"/><use href="#arcade-route" class="route"/>
+          <circle class="start" cx="15" cy="196" r="4"/>
+          <use href="#beat-marker" class="beat" x="80" y="196"/><text class="tag beat-tag" x="94" y="201">STALL QUEUE</text>
+          <use href="#beat-marker" class="beat" x="222" y="118"/><text class="tag beat-tag" x="232" y="119">ARCADE BEND</text>
+          <text class="tag" x="16" y="215">SIDE LANE</text><text class="tag" x="352" y="70" text-anchor="end">SHUTTER 06</text>
+        </g>
+      </svg>
+      <p>A diagonal walkway bends into a row of shuttered shops.</p>
+    </article>
+    <article>
+      <header><div class="eyebrow">02 / Upper floor</div><h3>Walk-up clinic</h3></header>
+      <svg class="map" viewBox="0 0 360 236" role="img" aria-label="An enclosed clinic with a narrow L-shaped hallway, separate treatment rooms and a stair landing.">
+        <path d="M34 25h215v92h49v64h42v43h-87v-45H34z" fill="#1b2340"/>
+        <path d="M44 21h216v98h30v57h46v42h-84v-46H44z" fill="#27303e"/>
+        <path d="M44 21h216v98h30v57h46v42h-84v-46H44z" fill="url(#tiles)"/>
+        <path d="M47 24h74v69H47zM47 115h99v54H47zM156 24h101v57H156zM164 121h68v48h-68z" fill="#23363e"/>
+        <path d="M48 25h73v62L94 78H48z" fill="#477783" opacity=".35"/>
+        <path d="M172 25h85v45h-38z" fill="#5c8e8d" opacity=".16"/>
+        <path d="M45 21h215v98h30v55m10 2h36v42h-84v-46H44V21m0 72h58m15 0h4V21m35 0v60h46m17 0h41M44 115h64m19 0h19v57m18 0v-51h15m23 0h30v51" fill="none" stroke="#596c82" stroke-width="4"/>
+        <path d="M260 23v97h30v45M121 25v63m111 39v41" fill="none" stroke="#89a8ad" stroke-width="1.5"/>
+        <use href="#steps" transform="translate(335 181) rotate(90)"/>
+        <use href="#bed" x="55" y="44"/><use href="#bed" x="227" y="36"/><use href="#bed" x="56" y="126"/>
+        <path d="M166 29h35v10h-35zM210 130h15v32h-15zM94 122h44v8H94z" fill="#465266"/>
+        <path d="M166 29h35v2h-35zM223 130h2v32h-2zM94 122h44v2H94z" fill="#8597a8"/>
+        <path d="M78 26h15v4H78zm5-5h5v14h-5z" fill="#7ee7c1"/>
+        <path d="M266 123h4v9h-4zM145 99h10v3h-10z" fill="#b48cff"/>
+        <g class="overlay">
+          <rect class="target" x="81" y="35" width="23" height="29"/>
+          <use href="#clinic-route" class="route route-edge"/><use href="#clinic-route" class="route"/>
+          <circle class="start" cx="329" cy="195" r="4"/>
+          <use href="#beat-marker" class="beat" x="273" y="157"/><text class="tag beat-tag" x="284" y="159">INTAKE</text>
+          <use href="#beat-marker" class="beat" x="193" y="107"/><text class="tag beat-tag" x="204" y="100">INNER HALL</text>
+          <text class="tag" x="255" y="229">STAIR LANDING</text><text class="tag" x="40" y="106">EXAM ROOM</text>
+        </g>
+      </svg>
+      <p>A tight stair landing and hallway open into small treatment rooms.</p>
+    </article>
+    <article>
+      <header><div class="eyebrow">03 / Service level</div><h3>Delivery court</h3></header>
+      <svg class="map" viewBox="0 0 360 236" role="img" aria-label="A wide open U-shaped loading yard framed by warehouses and reached through a single gate.">
+        <path d="M18 10h324v198H18z" fill="#262332"/><path d="M18 10h324v198H18z" fill="url(#gravel)"/>
+        <path d="M0 211h360v25H0z" fill="#141823"/>
+        <path d="M21 226h318" stroke="#555770" stroke-dasharray="16 14"/>
+        <path d="M32 17h302v56h-67v43H83v65H19V17z" fill="#1b2340" transform="translate(-8 6)"/>
+        <path d="M20 14h320v53h-77v34H76v72H20z" fill="#393143"/>
+        <path d="M20 14h320v4H20zM76 97h187v4H76z" fill="#7c5c71"/>
+        <path d="M280 68h60v70h-60z" fill="#372f42"/>
+        <path d="M283 71h54v1h-54zM282 116h56v18h-56z" fill="#715469"/>
+        <path d="M290 119v12m10-12v12m10-12v12m10-12v12m10-12v12" stroke="#ad8074" stroke-width="2"/>
+        <path d="M263 100l-36 106h110l-15-72h-43V75z" fill="#df9c50" opacity=".12"/>
+        <path d="M92 106v53h47v-53m6 0v53h47v-53m6 0v53h40v-53" fill="none" stroke="#a99179" stroke-width="1" stroke-dasharray="4 4" opacity=".65"/>
+        <path d="M20 179v28h128m62 0h130v-67" fill="none" stroke="#5d5168" stroke-width="4"/>
+        <path d="M146 196v13m65-13v13" stroke="#b48cff" stroke-width="3"/>
+        <use href="#crate" x="37" y="177"/><use href="#crate" x="58" y="177"/><use href="#crate" x="59" y="158"/>
+        <use href="#crate" x="297" y="174"/><use href="#crate" x="319" y="168"/>
+        <path d="M105 107h19v39h-19z" fill="#635268"/><path d="M106 138h17v7h-17z" fill="#8f788a"/>
+        <path d="M164 108h19v35h-19z" fill="#454e66"/><path d="M165 136h17v6h-17z" fill="#707892"/>
+        <use href="#vent" x="112" y="40"/><use href="#vent" x="185" y="40"/>
+        <g class="overlay">
+          <rect class="target" x="287" y="79" width="38" height="30"/>
+          <use href="#court-route" class="route route-edge"/><use href="#court-route" class="route"/>
+          <circle class="start" cx="131" cy="221" r="4"/>
+          <use href="#beat-marker" class="beat" x="178" y="207"/><text class="tag beat-tag" x="112" y="196">YARD GATE</text>
+          <use href="#beat-marker" class="beat" x="253" y="165"/><text class="tag beat-tag" x="244" y="154" text-anchor="end">LOADING APRON</text>
+          <text class="tag" x="282" y="154">LOAD BAY</text>
+        </g>
+      </svg>
+      <p>One gate opens onto a broad yard ringed by loading bays.</p>
+    </article>
+    <article>
+      <header><div class="eyebrow">04 / Roof level</div><h3>Sign roofs</h3></header>
+      <svg class="map" viewBox="0 0 360 236" role="img" aria-label="Two staggered roof decks separated by a dark gap and linked by a narrow footbridge.">
+        <path d="M0 0h360v236H0z" fill="#101321"/>
+        <path d="M132 0h52v236h-52z" fill="#090d16"/>
+        <path d="M149 0v236" stroke="#48405a" stroke-dasharray="18 15" opacity=".5"/>
+        <path d="M10 85h122v128H10zM175 23h164v144H175z" fill="#1b2340"/>
+        <path d="M18 74h116v127H18zM185 13h157v143H185z" fill="#28273e"/>
+        <path d="M18 74h116v127H18zM185 13h157v143H185z" fill="url(#gravel)"/>
+        <path d="M18 74h116v46m0 30v51H18V74m167 31V13h157v143H185v-22" fill="none" stroke="#665777" stroke-width="3"/>
+        <path d="M49 81h71v13H49zM206 25h120v15H206z" fill="#613568"/>
+        <path d="M53 84h62m95-55h113m-113 6h76" stroke="#e884d1" stroke-width="2"/>
+        <path d="M50 94h69l-11 53H33zM206 40h120l-27 79-68-10z" fill="#d076be" opacity=".13"/>
+        <path d="M124 124h17l19-20h35v22h-26l-18 20h-27z" fill="#3a4058"/>
+        <path d="M124 124h17l19-20h35m-71 42h27l18-20h26" fill="none" stroke="#9e8bb6" stroke-width="1.8"/>
+        <path d="M143 130l10 9m-4-15l10 9m-4-15l10 9m-4-15l9 9" stroke="#617088"/>
+        <use href="#steps" transform="translate(31 203) rotate(-90)"/>
+        <use href="#vent" x="42" y="111"/><use href="#vent" x="52" y="150"/>
+        <use href="#vent" x="254" y="112"/><use href="#vent" x="292" y="112"/>
+        <path d="M288 58h31v22h-31z" fill="#394460"/><path d="M290 60h27v4h-27z" fill="#9483bb"/>
+        <path d="M300 43h14v14h-14z" fill="#596b91"/>
+        <g class="overlay">
+          <rect class="target" x="294" y="41" width="26" height="19"/>
+          <use href="#roof-route" class="route route-edge"/><use href="#roof-route" class="route"/>
+          <circle class="start" cx="34" cy="195" r="4"/>
+          <use href="#beat-marker" class="beat" x="100" y="174"/><text class="tag beat-tag" x="91" y="178" text-anchor="end">ROOF HATCH</text>
+          <use href="#beat-marker" class="beat" x="155" y="125"/><text class="tag beat-tag" x="131" y="164">FOOTBRIDGE</text>
+          <text class="tag" x="326" y="101" text-anchor="end">SIGN CONTROLS</text>
+        </g>
+      </svg>
+      <p>Two staggered roofs meet at a narrow bridge over a dark gap.</p>
+    </article>
+    </div>
+  </section>
+  <section id="docks" aria-labelledby="docks-heading" style="--district-light:#ff8676">
+    <h2 class="district-title" id="docks-heading">The Docks</h2>
+    <div class="sites">
+      <article>
+        <header><div class="eyebrow">01 / Waterfront</div><h3>Tidal landing</h3></header>
+        <svg class="map" viewBox="0 0 360 236" role="img" aria-label="A broad quay and a floating landing linked by a slanted gangway.">
+          <path d="M0 0h360v236H0z" fill="url(#harbour)"/>
+          <path d="M0 116h119v120H0z" fill="#303541"/><path d="M0 116h119v120H0z" fill="url(#tiles)"/>
+          <path d="M0 116h119v120" fill="none" stroke="#748080" stroke-width="3"/>
+          <path d="M208 109h54V53h82v105H208z" fill="url(#planks)" stroke="#897481" stroke-width="2"/>
+          <path class="bridge-deck" d="M117 168l17-23h56l23-27 17 10-29 40h-56l-28 25z" fill="#4a5266" stroke="#8c96a0" stroke-width="2"/>
+          <path d="M145 148v17m12-17v17m12-17v17m12-17v17m15-22 12 9m-6-16 12 8" stroke="#252d43"/>
+          <path d="M296 57h42v43h-42z" fill="#594b55"/><path d="M296 57h42v3h-42z" fill="#bd7469"/>
+          <path d="M274 185h58l15 12-15 12h-58l-9-12z" fill="#373547" stroke="#61566a" stroke-width="2"/>
+          <path d="M284 189h23v16h-23z" fill="#574b59"/><path d="M305 192h4v10h-4z" fill="#db9b67"/>
+          <use href="#container" x="19" y="130" style="color:#773f45"/>
+          <use href="#crate" x="78" y="207"/><use href="#crate" x="241" y="135"/>
+          <path d="M117 153h4v9h-4zm0 48h4v9h-4zm141-112h4v8h-4z" fill="#e1a564"/>
+          <g class="overlay">
+            <rect class="target" x="299" y="66" width="30" height="32"/>
+            <use href="#float-route" class="route route-edge"/><use href="#float-route" class="route"/>
+            <circle class="start" cx="25" cy="181" r="4"/>
+            <use href="#beat-marker" class="beat" x="104" y="181"/><text class="tag beat-tag" x="62" y="169">QUAY EDGE</text>
+            <use href="#beat-marker" class="beat" x="169" y="157"/><text class="tag beat-tag" x="138" y="137">GANGWAY</text>
+            <text class="tag" x="339" y="45" text-anchor="end">TIDE OFFICE</text>
+          </g>
+        </svg>
+        <p>Concrete gives way to a narrow gangway, then a floating work platform.</p>
+      </article>
+      <article>
+        <header><div class="eyebrow">02 / Freight level</div><h3>Sorting shed</h3></header>
+        <svg class="map" viewBox="0 0 360 236" role="img" aria-label="A long freight shed divided by a loading throat, roller lines and a glass dispatch booth.">
+          <path d="M14 26h328v197H14z" fill="#1b2340"/>
+          <path d="M22 18h324v202H22z" fill="#30333c"/><path d="M22 18h324v202H22z" fill="url(#tiles)"/>
+          <path d="M22 220v-64m0-31V18h324v202H59m-24 0H22" fill="none" stroke="#656574" stroke-width="3"/>
+          <path d="M25 168h80v13H25zM25 74h109v13H25zM152 139h174v13H152zM153 75h91v12h-91z" fill="#4c3f4f"/>
+          <path d="M25 168h80v2H25zM25 74h109v2H25zM152 139h174v2H152zM153 75h91v2h-91z" fill="#a8675c"/>
+          <path d="M156 144h169m-169 4h169M27 79h104m-104 4h104" stroke="#74616a" stroke-dasharray="3 4"/>
+          <use href="#container" x="48" y="118" style="color:#69434e"/><use href="#container" x="164" y="180" style="color:#386370"/>
+          <use href="#crate" x="188" y="53"/><use href="#crate" x="215" y="53"/>
+          <path d="M290 23h51v56h-51z" fill="#463e50"/><path d="M290 23h51v56h-51V58m0-19V23" fill="none" stroke="#a57f85" stroke-width="2"/>
+          <path d="M315 30h19v10h-19zM301 62h33v9h-33z" fill="#786071"/>
+          <path d="M137 92l-22 46h120l-16-46z" fill="#d98f69" opacity=".12"/>
+          <g class="overlay">
+            <rect class="target" x="298" y="35" width="32" height="23"/>
+            <use href="#shed-route" class="route route-edge"/><use href="#shed-route" class="route"/>
+            <circle class="start" cx="36" cy="201" r="4"/>
+            <use href="#beat-marker" class="beat" x="143" y="157"/><text class="tag beat-tag" x="151" y="170">LOADING THROAT</text>
+            <use href="#beat-marker" class="beat" x="221" y="105"/><text class="tag beat-tag" x="210" y="122" text-anchor="middle">ROLLER LINE</text>
+          </g>
+        </svg>
+        <p>A narrow loading throat opens onto a long conveyor floor and a dispatch booth.</p>
+      </article>
+    </div>
+  </section>
+  <section id="old-town" aria-labelledby="old-town-heading" style="--district-light:#ebbf72">
+    <h2 class="district-title" id="old-town-heading">Old Town</h2>
+    <div class="sites">
+      <article>
+        <header><div class="eyebrow">01 / Hillside</div><h3>Stair lane</h3></header>
+        <svg class="map" viewBox="0 0 360 236" role="img" aria-label="A stepped hillside alley with two offset flights and small doorways on each landing.">
+          <path d="M0 0h360v236H0z" fill="#1f2028"/><path d="M0 0h360v236H0z" fill="url(#tiles)"/>
+          <path d="M0 13h360v40H249l-34 25v53H117v55H0z" fill="#1b2340"/>
+          <path d="M0 8h360v40H245l-36 26v54H112v53H0z" fill="#413641"/>
+          <path d="M0 181h112v-53h97V74l36-26h115" fill="none" stroke="#a07c68" stroke-width="3"/>
+          <path d="M155 236v-57h75l30-30V99h100v137z" fill="#1b2340"/>
+          <path d="M165 236v-54h68l33-32v-45h94v131z" fill="#36303c"/>
+          <path d="M165 232v-50h68l33-32v-45h94" fill="none" stroke="#876555" stroke-width="3"/>
+          <use href="#steps" x="124" y="144"/><use href="#steps" x="229" y="86"/>
+          <use href="#awning" x="169" y="123" style="color:#9e5849"/><use href="#vent" x="64" y="76"/>
+          <path d="M115 153h7v10h-7zm140-67h6v9h-6zM39 172h21v8H39z" fill="#e2aa73"/>
+          <path d="M270 50h76v35h-76z" fill="#56414a"/><path d="M270 50h76v3h-76z" fill="#bc855b"/>
+          <path d="M273 163h64m-63 7h64" stroke="#988073" opacity=".6"/>
+          <g class="overlay">
+            <rect class="target" x="298" y="57" width="33" height="23"/>
+            <use href="#stairs-route" class="route route-edge"/><use href="#stairs-route" class="route"/>
+            <circle class="start" cx="30" cy="203" r="4"/>
+            <use href="#beat-marker" class="beat" x="137" y="173"/><text class="tag beat-tag" x="151" y="173">LOWER STEPS</text>
+            <use href="#beat-marker" class="beat" x="240" y="112"/><text class="tag beat-tag" x="228" y="107" text-anchor="end">UPPER LANDING</text>
+            <text class="tag" x="345" y="97" text-anchor="end">TOP FLAT</text>
+          </g>
+        </svg>
+        <p>Two flights climb between tenements, with a landing wide enough for a stop.</p>
+      </article>
+      <article>
+        <header><div class="eyebrow">02 / Tenement interior</div><h3>Laundry well</h3></header>
+        <svg class="map" viewBox="0 0 360 236" role="img" aria-label="A tenement corridor wraps around a central lightwell full of washing lines.">
+          <path d="M22 20h319v203H22z" fill="#443843"/><path d="M22 20h319v203H22z" fill="url(#tiles)"/>
+          <path d="M142 49h121v109H142z" fill="#111622"/><path d="M153 57h110v98H153z" fill="#252137"/>
+          <path d="M142 49h121v109H142z" fill="none" stroke="#70626d" stroke-width="3"/>
+          <path d="M148 68h108m-108 24h108m-108 25h108m-108 22h108" stroke="#766576"/>
+          <path d="M158 68h21v13h-21zm43 0h14v10h-14zm-23 24h25v11h-25zm45 25h20v12h-20zm-66 22h32v10h-32z" fill="#826b79"/>
+          <path d="M24 111h73v83H24zM280 23h59v125h-59z" fill="#322e3e"/>
+          <path d="M24 111h73v83m183-171v125h59" fill="none" stroke="#7d6269" stroke-width="2"/>
+          <path d="M27 28h65v42H27z" fill="#635048"/><path d="M27 29h65v3H27z" fill="#ae805b"/>
+          <path d="M33 35h15v14H33zM71 37h15v14H71z" fill="#8b7161"/>
+          <use href="#vent" x="286" y="165"/><use href="#crate" x="60" y="151"/>
+          <path d="M29 81l77-5 25 64H26z" fill="#edb472" opacity=".12"/>
+          <g class="overlay">
+            <rect class="target" x="48" y="40" width="28" height="27"/>
+            <use href="#laundry-route" class="route route-edge"/><use href="#laundry-route" class="route"/>
+            <circle class="start" cx="324" cy="201" r="4"/>
+            <use href="#beat-marker" class="beat" x="226" y="178"/><text class="tag beat-tag" x="216" y="199" text-anchor="end">REAR GALLERY</text>
+            <use href="#beat-marker" class="beat" x="122" y="120"/><text class="tag beat-tag" x="112" y="123" text-anchor="end">WELL CORNER</text>
+            <text class="tag" x="24" y="18">SUPER'S ROOM</text>
+          </g>
+        </svg>
+        <p>A gallery wraps around a dark central well strung with washing lines.</p>
+      </article>
+    </div>
+  </section>
+  <section id="glass-heights" aria-labelledby="glass-heading" style="--district-light:#7edcdd">
+    <h2 class="district-title" id="glass-heading">Glass Heights</h2>
+    <div class="sites">
+      <article>
+        <header><div class="eyebrow">01 / Public floor</div><h3>Winter garden</h3></header>
+        <svg class="map" viewBox="0 0 360 236" role="img" aria-label="A tiled corporate atrium with an island of planted beds and a glass reception suite.">
+          <path d="M9 10h342v216H9z" fill="#263643"/><path d="M9 10h342v216H9z" fill="url(#tiles)" stroke="#608491" stroke-width="2"/>
+          <path d="M15 20h330M15 25h330M15 220h330" stroke="#597987"/>
+          <path d="M25 27h227L122 222H43z" fill="#76c4da" opacity=".12"/>
+          <path d="M75 41h151l27 28v49l-28 26H84l-28-28V69z" fill="#1b2340"/>
+          <path d="M81 36h153l25 28v51l-26 24H85l-25-24V63z" fill="#2b454c" stroke="#5a7a7b" stroke-width="2"/>
+          <use href="#planter" x="88" y="58"/><use href="#planter" x="166" y="58"/>
+          <use href="#planter" x="90" y="101"/><use href="#planter" x="166" y="101"/>
+          <path d="M296 37h49v61h-49V77m0-20V37" fill="#354a58" stroke="#89aab2" stroke-width="2"/>
+          <path d="M313 44h24v10h-24zM312 77h24v13h-24z" fill="#617783"/>
+          <path d="M31 158h85v3H31zM30 199h54v3H30z" fill="#87cacea0"/>
+          <g class="overlay">
+            <rect class="target" x="316" y="55" width="23" height="20"/>
+            <use href="#atrium-route" class="route route-edge"/><use href="#atrium-route" class="route"/>
+            <circle class="start" cx="31" cy="188" r="4"/>
+            <use href="#beat-marker" class="beat" x="120" y="188"/><text class="tag beat-tag" x="130" y="206">LOBBY TURN</text>
+            <use href="#beat-marker" class="beat" x="277" y="122"/><text class="tag beat-tag" x="267" y="130" text-anchor="end">GLASS DOOR</text>
+            <text class="tag" x="345" y="113" text-anchor="end">RECEPTION</text>
+          </g>
+        </svg>
+        <p>The main walk skirts a planted island on its way to a glass-fronted reception.</p>
+      </article>
+      <article>
+        <header><div class="eyebrow">02 / Mechanical floor</div><h3>Cooling plant</h3></header>
+        <svg class="map" viewBox="0 0 360 236" role="img" aria-label="A mechanical floor with two rows of fans and a narrow aisle leading to a control bank.">
+          <path d="M13 21h333v195H13z" fill="#172333"/><path d="M13 21h333v195H13z" fill="url(#tiles)" stroke="#546980" stroke-width="2"/>
+          <path d="M24 34h113v82H24zM148 116h183v72H148z" fill="#25324a"/>
+          <path d="M25 116h102m20 72h184M145 38h110v40" fill="none" stroke="#648c9b" stroke-width="3"/>
+          <path d="M29 41h100v10H29zM155 122h171v11H155z" fill="#3e5270"/>
+          <g fill="#283448" stroke="#5b748f" stroke-width="3">
+            <circle cx="51" cy="76" r="18"/><circle cx="105" cy="76" r="18"/>
+            <circle cx="178" cy="155" r="18"/><circle cx="232" cy="155" r="18"/><circle cx="286" cy="155" r="18"/>
+          </g>
+          <path d="M42 67l18 18m0-18L42 85m54-18 18 18m0-18-18 18m73 61 18 18m0-18-18 18m54-18 18 18m0-18-18 18m54-18 18 18m0-18-18 18" stroke="#708aa1" stroke-width="3"/>
+          <path d="M150 80h104v33H150z" fill="#51bbc1" opacity=".12"/>
+          <path d="M284 36h52v53h-52z" fill="#394960"/><path d="M291 41h37v13h-37z" fill="#608b9e"/><path d="M295 45h28" stroke="#8ddcd7" stroke-dasharray="4 3"/>
+          <path d="M27 159h77v8H27zM25 202h79v4H25z" fill="#487583"/>
+          <g class="overlay">
+            <rect class="target" x="304" y="59" width="25" height="22"/>
+            <use href="#plant-route" class="route route-edge"/><use href="#plant-route" class="route"/>
+            <circle class="start" cx="27" cy="187" r="4"/>
+            <use href="#beat-marker" class="beat" x="128" y="143"/><text class="tag beat-tag" x="116" y="145" text-anchor="end">PIPE TURN</text>
+            <use href="#beat-marker" class="beat" x="220" y="97"/><text class="tag beat-tag" x="210" y="84" text-anchor="middle">FAN AISLE</text>
+            <text class="tag" x="334" y="104" text-anchor="end">CONTROL BANK</text>
+          </g>
+        </svg>
+        <p>An offset aisle threads between banks of fans and ends at the plant controls.</p>
+      </article>
+    </div>
+  </section>
+  <section id="basin" aria-labelledby="basin-heading" style="--district-light:#f1ad6e">
+    <h2 class="district-title" id="basin-heading">The Basin</h2>
+    <div class="sites">
+      <article>
+        <header><div class="eyebrow">01 / Course service lane</div><h3>Tack yard</h3></header>
+        <svg class="map" viewBox="0 0 360 236" role="img" aria-label="A gravel yard with a curving paddock rail, pitched stable roof and tack workshop.">
+          <path d="M0 0h360v236H0z" fill="#322b30"/><path d="M0 0h360v236H0z" fill="url(#gravel)"/>
+          <path d="M0 0h220v70C167 122 67 136 0 118z" fill="#383b31"/>
+          <path d="M0 118C67 136 167 122 220 70V0M0 126c73 18 174 2 228-50V0" fill="none" stroke="#ccb996" stroke-width="2"/>
+          <path d="M21 132h95v51H21z" fill="#503d35"/><path d="M21 132h95v25H21z" fill="#705244"/>
+          <path d="M21 157h95" stroke="#a57956" stroke-width="2"/>
+          <path d="M167 167h66v55h-66z" fill="#513d36"/><path d="M171 173h57v22h-57z" fill="#755745"/>
+          <use href="#bale" x="177" y="198"/><use href="#bale" x="203" y="198"/>
+          <path d="M274 32h65v60h-65V76m0-19V32" fill="#573e3a" stroke="#956c52" stroke-width="2"/>
+          <path d="M280 38h53v13h-53zM320 75h15v11h-15z" fill="#82624d"/>
+          <path d="M274 87l-45 54h98l-28-54z" fill="#e99f5f" opacity=".14"/>
+          <use href="#crate" x="297" y="127"/><use href="#bale" x="38" y="153"/>
+          <g class="overlay">
+            <rect class="target" x="297" y="55" width="32" height="22"/>
+            <use href="#tack-route" class="route route-edge"/><use href="#tack-route" class="route"/>
+            <circle class="start" cx="34" cy="202" r="4"/>
+            <use href="#beat-marker" class="beat" x="149" y="166"/><text class="tag beat-tag" x="139" y="168" text-anchor="end">STALL END</text>
+            <use href="#beat-marker" class="beat" x="258" y="105"/><text class="tag beat-tag" x="248" y="111" text-anchor="end">PADDOCK TURN</text>
+            <text class="tag" x="339" y="23" text-anchor="end">TACK SHOP</text>
+          </g>
+        </svg>
+        <p>A curved paddock rail and the end of the stable row frame the approach to a workshop.</p>
+      </article>
+      <article>
+        <header><div class="eyebrow">02 / Betting floor</div><h3>Ticket arcade</h3></header>
+        <svg class="map" viewBox="0 0 360 236" role="img" aria-label="An enclosed betting hall with a long row of ticket windows and barriers splitting the queue floor.">
+          <path d="M15 18h331v203H15z" fill="#3b3038"/><path d="M15 18h331v203H15z" fill="url(#tiles)" stroke="#7a6166" stroke-width="2"/>
+          <path d="M24 29h301v26H24z" fill="#553946"/>
+          <path d="M88 31h236v21H88z" fill="#6a4854"/>
+          <path d="M98 37h14m14 0h14m14 0h14m14 0h14m14 0h14m14 0h14m14 0h14m14 0h14" stroke="#e0916d" stroke-width="4"/>
+          <path d="M93 70h111v4H93zM94 133h93v4H94zM94 160h93v4H94zM237 78h92v4h-92zM237 135h92v4h-92z" fill="#8e6a66"/>
+          <path d="M96 82h101m-103 40h94m51-32h89m-89 38h89" stroke="#aa7d74" stroke-dasharray="5 6" opacity=".68"/>
+          <path d="M24 60h34v3H24zM24 32h33v29H24z" fill="#795658"/>
+          <path d="M240 157h89v26h-89z" fill="#4b3b48"/><path d="M253 164h63v9h-63z" fill="#73535c"/>
+          <path d="M105 54l-14 30h111l-17-30zm134 0-16 29h91l-9-29z" fill="#e89972" opacity=".14"/>
+          <path d="M80 185h97v4H80z" fill="#86616b"/>
+          <g class="overlay">
+            <rect class="target" x="27" y="37" width="28" height="24"/>
+            <use href="#ticket-route" class="route route-edge"/><use href="#ticket-route" class="route"/>
+            <circle class="start" cx="320" cy="202" r="4"/>
+            <use href="#beat-marker" class="beat" x="238" y="202"/><text class="tag beat-tag" x="228" y="207" text-anchor="end">ENTRY CORRAL</text>
+            <use href="#beat-marker" class="beat" x="146" y="107"/><text class="tag beat-tag" x="143" y="96" text-anchor="middle">QUEUE DIVIDE</text>
+            <text class="tag" x="25" y="77">CASH OFFICE</text>
+          </g>
+        </svg>
+        <p>Queue rails break up an indoor concourse beneath a long bank of ticket windows.</p>
+      </article>
+    </div>
+  </section>
+</main>
+</body>
+</html>

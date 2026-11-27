@@ -1170,5 +1170,69 @@ function migrate(state) {
     // drafts/PROPOSAL-traits.md 3c). Traits earned before then have no job: the runner's page shows the day alone.
     state.version = 92;
   }
+  repairCrewsOut(state);
   return state;
+}
+
+/**
+ * Crews out (hands-off jobs and expeditions) are the state most likely to be half-written: a save interrupted while
+ * a crew was being sent, or a field a later version added. Runs on every load, whatever the version, and only fills
+ * what is missing; a well-formed save comes out unchanged. An entry that can't be played on (no mission, no id, no
+ * crew list) is dropped and its crew come home. Research, 2026-11-26: Guild Management Simulator broke saves three
+ * times on exactly this (docs/research/management-games-comparators.md).
+ */
+function repairCrewsOut(state) {
+  // A dropped entry's crew come home today. Crew away for any other reason (scouting, contracts, missing after a fight)
+  // are left alone; anyone whose entry was lost without a crew list comes home on their own return day as usual.
+  const home = (ids) => {
+    for (const id of ids) {
+      const op = (state.crew ?? []).find((o) => o?.id === id);
+      if (op?.condition && (op.condition.awayUntil ?? 0) > state.day) op.condition.awayUntil = state.day;
+    }
+  };
+  if (!Array.isArray(state.awayJobs)) state.awayJobs = [];
+  state.awayJobs = state.awayJobs.filter((j) => {
+    if (j?.mission && typeof j.mission === 'object' && Array.isArray(j.mission.crewIds)) return true;
+    if (j?.mission && typeof j.mission === 'object') home(crewOfRun(j.mission));
+    return false;
+  });
+  for (const j of state.awayJobs) {
+    j.mission.away ??= { beats: 0 };
+    j.waiting ??= false;
+  }
+  if (!state.expeditions || typeof state.expeditions !== 'object') state.expeditions = { active: [], seq: 0 };
+  const ex = state.expeditions;
+  if (!Array.isArray(ex.active)) ex.active = [];
+  ex.active = ex.active.filter((e) => {
+    if (e && typeof e.id === 'string' && typeof e.goal === 'string' && Array.isArray(e.crewIds)) return true;
+    if (Array.isArray(e?.crewIds)) home(e.crewIds);
+    return false;
+  });
+  for (const e of ex.active) {
+    e.startDay ??= state.day;
+    e.days ??= Math.max(1, (e.endDay ?? state.day + 1) - e.startDay);
+    e.endDay ??= e.startDay + e.days;
+    e.progress ??= 0;
+    e.prize ??= {};
+    e.facts ??= {};
+    e.log = Array.isArray(e.log) ? e.log : [];
+    e.finds = Array.isArray(e.finds) ? e.finds : [];
+    e.waiting ??= false;
+  }
+  const highest = Math.max(0, ...ex.active.map((e) => Number(String(e.id).replace(/\D/g, '')) || 0));
+  ex.seq = Math.max(Number.isFinite(ex.seq) ? ex.seq : 0, highest);
+
+  // A call from a crew that is no longer out can never be answered, and it blocks the day: close it.
+  const jobs = new Set([...state.awayJobs.map((j) => j.mission.jobId), state.activeMission?.jobId].filter(Boolean));
+  const trips = new Set(ex.active.map((e) => e.id));
+  for (const m of state.inbox ?? []) {
+    if (!m || m.resolved) continue;
+    const orphan = (m.kind === 'callin' && !jobs.has(m.payload?.jobId)) || (m.kind === 'expedition' && !trips.has(m.payload?.expeditionId));
+    if (orphan) { m.resolved = true; m.read = true; }
+  }
+}
+
+/** Everyone a run has out: the inside team and whoever is on overwatch, the wheels or standby. */
+function crewOfRun(m) {
+  return [...(m.crewIds ?? []), m.overwatch?.id, m.wheels, m.standby?.id].filter(Boolean);
 }
