@@ -184,9 +184,11 @@ test("Client's Favourite: the note names the client; a save with the client stor
   assert.deepEqual(line(up), m);
 });
 
-test('Synergy (crew_anchor): five jobs together, both unhurt; +1 cool together; shaken for a job after the partner goes critical', () => {
+test('Synergy (crew_anchor): twelve jobs together, both unhurt; +1 cool together; shaken for a job after the partner goes critical', () => {
   const s = game(12); const [a, b] = s.crew;
-  for (let i = 0; i < 5; i++) job(s, [], [a, b]);
+  for (let i = 0; i < E.NEEDS.crewAnchor - 1; i++) job(s, [], [a, b]);
+  assert.ok(!E.earnedOf(a, 'crew_anchor', { partner: b.id }), 'not one job early');
+  job(s, [], [a, b]);
   assert.ok(E.earnedOf(a, 'crew_anchor', { partner: b.id }) && E.earnedOf(b, 'crew_anchor', { partner: a.id }));
   assert.match(effectiveStat(a, 'cool', { crew: [a, b] }).notes.join(), /synergy with/); // shown as Synergy since 2026-11-03 (was Crew Anchor)
   assert.doesNotMatch(effectiveStat(a, 'cool', { crew: [a] }).notes.join(), /synergy with/);
@@ -501,4 +503,15 @@ test('the trait badges: new this week first, then lately, then lasting newest fi
   assert.equal(shelf.find((t) => t.name === 'Corner Fighter').rank, 1, 'every earned trait is rank 1 until ranks exist');
   assert.equal(TRAIT_SHELF, 6);
   assert.ok(shelf.length > TRAIT_SHELF, 'seven here, so the page shows six and "All 7"');
+});
+
+test('Synergy takes twelve jobs, and partners never stack: one +1 cool however many are along (DESIGN.md 2026-11-27)', () => {
+  assert.equal(E.NEEDS.crewAnchor, 12);
+  const s = game(12); const [a, b, c, d] = s.crew;
+  a.earned = [{ id: 'crew_anchor', day: 1, partner: b.id }, { id: 'crew_anchor', day: 2, partner: c.id }, { id: 'crew_anchor', day: 3, partner: d.id }];
+  const mods = E.ownMods(a, { stat: 'cool', crew: [a, b, c, d] }).filter((m) => /synergy/.test(m.note));
+  assert.equal(mods.length, 1);
+  assert.equal(mods[0].value, 1);
+  assert.match(mods[0].note, new RegExp(`synergy with ${b.handle} and ${c.handle} and ${d.handle} \\+1`));
+  assert.deepEqual(E.ownMods(a, { stat: 'cool', crew: [a] }).filter((m) => /synergy/.test(m.note)), [], 'no partner along, no bonus');
 });

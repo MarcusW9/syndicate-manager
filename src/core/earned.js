@@ -21,7 +21,7 @@ export const NEEDS = {
   clinicHands: 3, // medical rolls passed
   cleanProfessional: 10, // finished jobs without personally causing heat
   ghostDriver: 5, // piloting rolls passed with no heat and no injury
-  crewAnchor: 5, // jobs with the same crewmate, both back unhurt
+  crewAnchor: 12, // jobs with the same crewmate, both back unhurt (5 until 2026-11-27: a first bond came in week 5; at 12, about week 15)
   shakyInjuries: 2, // injuries within a week (or one critical)
   shakyClean: 3, // clean jobs to settle again
   ridingHigh: 3, // jobs in a row without a failed roll, an injury or heat they caused
@@ -184,10 +184,9 @@ export function ownMods(op, { stat, crew = [] }) {
   if (stat === 'cool' && earnedOf(op, 'shaky')) out.push({ value: -1, note: 'Shaky −1' });
   if ((stat === 'tech' || stat === 'cool') && earnedOf(op, 'burned_out')) out.push({ value: -1, note: 'Burned Out −1' });
   if (stat === 'cool') {
-    for (const e of (op.earned ?? []).filter((x) => x.id === 'crew_anchor')) {
-      const mate = crew.find((o) => o.id === e.partner);
-      if (mate) out.push({ value: 1, note: `synergy with ${mate.handle} +1` });
-    }
+    // One +1 however many partners are along (owner, 2026-11-27): a runner can bond with anyone, the bonus doesn't stack.
+    const along = (op.earned ?? []).filter((x) => x.id === 'crew_anchor').map((e) => crew.find((o) => o.id === e.partner)).filter(Boolean);
+    if (along.length) out.push({ value: 1, note: `synergy with ${along.map((o) => o.handle).join(' and ')} +1` });
     if (t.anchorShaken) out.push({ value: -1, note: 'shaken (synergy partner hurt) −1' });
   }
   return out;
