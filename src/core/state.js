@@ -17,7 +17,7 @@ import { seedRivals } from './rivals.js';
 import { cleanTongName, tongNameProblem } from './tongname.js';
 import { startCashDay } from './money.js';
 
-export const SAVE_VERSION = 92;
+export const SAVE_VERSION = 93;
 
 // A rookie crew's first board: small work only.
 export const FRESH_OPENING_BOARD = ['clinic', 'ledger', 'container409'];

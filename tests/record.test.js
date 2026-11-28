@@ -135,7 +135,7 @@ test('the dead go to the memorial with a short record summary', () => {
   const m = found.s.memorial[0];
   assert.equal(m.id, found.id);
   assert.ok(m.record && m.record.jobs === 1);
-  assert.deepEqual(Object.keys(m.record).sort(), ['activeWeeks', 'bestCleanStreak', 'carries', 'clean', 'jobs', 'wins']);
+  assert.deepEqual(Object.keys(m.record).sort(), ['activeWeeks', 'bestCleanStreak', 'carries', 'clean', 'fightsWon', 'jobs', 'wins']);
   assert.equal(found.s.crew.some((o) => o.id === found.id), false);
 });
 

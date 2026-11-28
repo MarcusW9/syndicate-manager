@@ -112,6 +112,7 @@ function renderReportTimeline(m) {
   const STEP = 0.8; // seconds per step
   return `
     <div class="report ${play ? 'report--play' : ''}" ${play ? `data-action="skip-report" style="--step:${STEP}s; --end:${(steps.length + 1) * STEP + 0.6}s"` : ''}>
+      ${reportWall(m)}
       ${reportCrew(m)}
       ${reportSpoils(m)}
       ${renderReportSummary(m.timeline)}
@@ -143,11 +144,31 @@ function renderDaysOut(days, steps = []) {
 }
 
 /**
+ * The wall panel that opens a report when someone died (owner's pick A of docs/mockups/2026-11-28-death-report.html): their face
+ * large and grey, the real name and role, how they died, a life in three numbers, and the call that led to it, said plainly.
+ */
+function reportWall(m) {
+  const fallen = m.timeline?.fallen ?? [];
+  if (!fallen.length) return '';
+  return fallen.map((f) => {
+    const op = state.memorial?.find((o) => o.id === f.id) ?? { ...f, cause: f.how };
+    const call = f.call?.label ? `<p class="wall__call">The call: <b>${esc(f.call.label)}</b>${f.call.crew ? ' (the crew\'s call)' : ''}.${f.saveable ? ' Pulling out at any step after it would have brought them home.' : ''}</p>` : '';
+    return `<section class="wall" aria-label="${esc(f.handle)} died">
+        <div class="wall__who">${face(op, 'md')}<div><p class="wall__handle">${esc(f.handle)}</p><p class="wall__name">${esc(f.name)}${f.role ? ` · ${esc(f.role[0].toUpperCase() + f.role.slice(1))}` : ''}</p></div></div>
+        <p class="wall__how">${esc(f.how)}</p>
+        <dl class="wall__facts"><div><dd>${f.jobs}</dd><dt>${f.jobs === 1 ? 'job' : 'jobs'}</dt></div><div><dd>${f.wins}</dd><dt>done well</dt></div><div><dd>${f.fightsWon}</dd><dt>fights won</dt></div></dl>
+        ${call}
+      </section>`;
+  }).join('');
+}
+
+/**
  * Who went, at the top of a report (playtest, 2026-11-07): each face with their own run, the rolls
  * they made work and missed, and the worst they were hurt. Tap a face for their page.
  */
 function reportCrew(m) {
-  const ids = m.back?.crewIds ?? [];
+  const walled = new Set((m.timeline?.fallen ?? []).map((f) => f.id)); // the dead have the wall panel above
+  const ids = (m.back?.crewIds ?? []).filter((id) => !walled.has(id));
   if (!ids.length) return '';
   const events = m.timeline?.events ?? [];
   const SEV = ['light', 'serious', 'critical'];

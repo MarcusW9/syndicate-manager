@@ -30,7 +30,7 @@ export const daysLeft = (lastDay) => { const n = lastDay - state.day; return n <
 export const districtName = (key) => NAMES.districts[key] ?? key;
 
 /** Portrait in a cut-corner frame (crew list, profiles, the wall). Fallen faces are greyed. */
-export const face = (op, size = '') => `<span class="face ${size ? `face--${size}` : ''} ${op.cause ? 'is-fallen' : ''}">${portrait(op, { size: { sm: 32, lg: 104 }[size] ?? 48 })}</span>`;
+export const face = (op, size = '') => `<span class="face ${size ? `face--${size}` : ''} ${op.cause ? 'is-fallen' : ''}">${portrait(op, { size: { sm: 32, md: 72, lg: 104 }[size] ?? 48 })}</span>`;
 export const statName = (k) => k[0].toUpperCase() + k.slice(1);
 
 /** "the Docks hall". */

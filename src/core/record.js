@@ -148,7 +148,7 @@ export function weeklyRecord(state) {
 /** A short copy for the memorial: the headline numbers, not the whole record. */
 export function recordSummary(op) {
   const r = recordOf(op);
-  return { jobs: r.jobs, wins: r.wins, clean: r.clean, bestCleanStreak: r.bestCleanStreak, carries: r.carries, activeWeeks: r.activeWeeks };
+  return { jobs: r.jobs, wins: r.wins, clean: r.clean, bestCleanStreak: r.bestCleanStreak, carries: r.carries, activeWeeks: r.activeWeeks, fightsWon: r.fightsWon ?? 0 };
 }
 
 /** Save v30: give everyone who has worked a record, guessed from the jobs they've done. */

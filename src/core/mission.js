@@ -1022,6 +1022,27 @@ export function dyingLine(state) {
   return `${who} still bleeding out. Pull out now and they live; finish the job and they have a ${Math.round(survivalChance(state) * 100)}% chance.`;
 }
 
+/**
+ * The report's wall panel for each runner who died on the run (owner's pick A, 2026-11-28): who, how, a life in numbers,
+ * and the call that led to it, said plainly (the death rule: the player sees which risk they took). how: id -> 'fight' | 'wayBack'.
+ */
+export function fallenOf(am, deaths, how) {
+  return deaths.map((op) => {
+    const r = recordSummary(op);
+    // The push that led here: keeping a fight going with them down (core/runfight.js), or pushing on with them untreated.
+    const push = [...(am.events ?? [])].reverse().find((e) => (e.push || e.action === 'push') && [e.choice, e.report, e.patient].some((t) => String(t ?? '').includes(op.handle)));
+    const way = how.get(op.id) ?? 'fight';
+    return {
+      id: op.id, handle: op.handle, name: op.name, role: op.role,
+      how: way === 'wayBack' ? `Died on the way back from the ${templateById(am.templateId)?.name ?? 'job'}.` : `Died in the fight on the ${templateById(am.templateId)?.name ?? 'job'}.`,
+      call: push ? { label: push.choice ?? push.report ?? null, crew: !!push.why } : null,
+      // Pulling out later always brings the untreated home (finish: am.aborted), so a death on the way back could have been saved.
+      saveable: way === 'wayBack',
+      jobs: r.jobs, wins: r.wins, fightsWon: r.fightsWon ?? 0,
+    };
+  });
+}
+
 function finish(state) {
   const am = state.activeMission;
   if (am.done) return;
@@ -1031,11 +1052,13 @@ function finish(state) {
   const tpl = templateById(am.templateId);
   const crew = crewOf(state, am);
   const deaths = [];
+  const how = new Map(); // id -> 'fight' | 'wayBack', for the report's wall panel (fallenOf)
   // Engine 2 fights kill in the moment (bleeding out on committed, left behind down, a hand-ordered withdrawal): core/runfight.js.
   for (const id of am.fightDead ?? []) {
     const op = opById(state, id);
     if (!op || deaths.includes(op)) continue;
     deaths.push(op);
+    how.set(op.id, 'fight');
     am.log.push({ kind: 'death', text: `${op.name} "${op.handle}" died in the fight.` });
     record(am, { kind: 'aftermath', death: true, text: `${op.name} "${op.handle}" died in the fight.` });
   }
@@ -1050,6 +1073,7 @@ function finish(state) {
       record(am, { kind: 'aftermath', text: `${op.handle} pulled through. Barely.` });
     } else {
       deaths.push(op);
+      how.set(op.id, 'wayBack');
       am.log.push({ kind: 'death', text: `${op.name} "${op.handle}" dies on the way back.` });
       record(am, { kind: 'aftermath', death: true, text: `${op.name} "${op.handle}" died on the way back.` });
     }
@@ -1109,6 +1133,7 @@ function finish(state) {
   // Everyone's record of the job, the dead included (they go to the memorial with a summary).
   const facts = recordJob(state, am, { threat, outcome: deaths.length ? 'loss' : am.aborted ? 'aborted' : 'completed', heatGain, deaths });
 
+  const fallen = fallenOf(am, deaths, how); // before they leave the crew: their record has this job in it now
   for (const op of deaths) {
     state.crew = state.crew.filter((o) => o.id !== op.id);
     state.memorial.push({ id: op.id, name: op.name, handle: op.handle, role: op.role, color: op.color, age: op.age, marks: op.marks ?? [], day: state.day, cause: `Died of wounds after the ${tpl.name}${isFreelancer(op) ? ' (freelancer)' : ''}`, record: recordSummary(op) });
@@ -1255,6 +1280,8 @@ function finish(state) {
       // A fight's staging (the map, the director's beats, both sides' pips) is for the live view only: the report keeps
       // lean lines (core/report.js reportEvent), so a fight job's report weighs about what any other job's does.
       events: events.map(reportEvent), summary: summariseRun(events, { id, outcome, deaths: deaths.length }),
+      // The dead, for the wall panel that opens the report (owner's pick A, 2026-11-28, docs/mockups/2026-11-28-death-report.html).
+      ...(fallen.length ? { fallen } : {}),
       // Hands-off runs name their orders (the report plays out on first open); a live run says how it was called.
       orders: am.callIn === 'never' || !am.callIn ? am.orders ?? null : null, callIn: am.callIn ?? null, liveOrders: am.callIn && am.callIn !== 'never' ? am.orders ?? null : null,
     },

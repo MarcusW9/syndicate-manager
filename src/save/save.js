@@ -1170,6 +1170,12 @@ function migrate(state) {
     // drafts/PROPOSAL-traits.md 3c). Traits earned before then have no job: the runner's page shows the day alone.
     state.version = 92;
   }
+  if (state.version === 92) {
+    // v93: a memorial entry's record keeps fights won (core/record.js recordSummary, for the report's wall panel; DESIGN.md
+    // 2026-11-28). The fallen before then fought uncounted: 0. A report's `timeline.fallen` is new and optional (old reports have none).
+    for (const m of state.memorial ?? []) if (m.record) m.record.fightsWon ??= 0;
+    state.version = 93;
+  }
   repairCrewsOut(state);
   return state;
 }
