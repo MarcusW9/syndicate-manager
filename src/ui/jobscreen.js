@@ -8,7 +8,7 @@ import { templateById } from '../core/jobs.js';
 import { clientById } from '../core/clients.js';
 import { APPROACHES } from '../core/crew.js';
 import { money } from '../core/money.js';
-import { CALL_IN, describeCritical, describePending, currentStep, describeCrisis, fillBrief } from '../core/mission.js';
+import { CALL_IN, describeCritical, describePending, currentStep, describeCrisis, fillBrief, dyingLine } from '../core/mission.js';
 import { renderFightOrders } from './fightorders.js';
 import { renderFightCallIn, renderFightRound } from './fightscreen.js';
 import { ORDERS, decide, handsOffAllowed, needsPlayer, watchByDay } from '../core/autorun.js';
@@ -293,6 +293,7 @@ function renderCallIn(s) {
       <div class="crisis">
         <p class="crisis__title">${v.kind === 'alert' ? 'The crew is calling in: you\'ve been spotted' : v.kind === 'door' ? 'The crew is calling in: someone is at death\'s door' : v.kind === 'standoff' ? 'The crew is calling in: the guards are still standing' : 'The crew is calling in: someone is down'}</p>
         <p>${esc(v.text)}</p>
+        ${dyingLine(s) ? `<p class="warntext">${esc(dyingLine(s))}</p>` : ''}
         ${v.fight ? fightHealth(v.fight) : ''}
         <div class="choices">${v.choices.map((c) => choiceButton({ ...c, risk: c.exit ? 'safe' : c.push ? 'extreme' : 'moderate', riskReason: c.cost, cost: '' }, 'pending')).join('')}</div>
       </div>`;
@@ -306,6 +307,7 @@ function renderCallIn(s) {
       <div class="crisis">
         <p class="crisis__title">The crew is calling in${currentStep(am).twist ? ': a twist' : ''}</p>
         <p>${esc(v.text)}</p>
+        ${dyingLine(s) ? `<p class="warntext">${esc(dyingLine(s))}</p>` : ''}
         ${lean ? `<p class="small muted">Left to their orders, they would: <strong>${esc(lean.label)}</strong>.</p>` : ''}
         <div class="choices">${v.choices.map((c) => choiceButton(c, 'choose')).join('')}</div>
       </div>`;
@@ -322,6 +324,6 @@ export const watchUi = {
   dice: (r) => `
         <details class="flog__roll">
           <summary>Dice</summary>
-          <p class="small">Die ${r.die} + ${esc(r.stat)} ${r.value} = ${r.die + r.value} · needed ${r.need}${r.notes?.length ? `<br><span class="muted">${esc(r.stat)} ${r.value}: ${esc(r.notes.join(', '))}</span>` : ''}</p>
+          <p class="small">Die ${r.die} + ${r.stat ? `${esc(r.stat)} ` : ''}${r.value} = ${r.die + r.value} · needed ${r.need}${r.notes?.length ? `<br><span class="muted">${esc(r.stat)} ${r.value}: ${esc(r.notes.join(', '))}</span>` : ''}</p>
         </details>`,
 };

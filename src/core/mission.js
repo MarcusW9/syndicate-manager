@@ -997,6 +997,28 @@ export function resolveCritical(prev, option) {
 
 // --- outcome --------------------------------------------------------------------
 
+/**
+ * Someone pushed on for (am.untreated: a critical left untreated, or kept fighting with them down) is dying: the
+ * chance they pull through if the job is finished. Aborting later still gets them out in time: an exit always saves lives.
+ */
+export function survivalChance(state) {
+  const am = state.activeMission;
+  if (state.difficulty === 'story' || am.aborted) return 1;
+  const medic = findRole(crewOf(state, am).filter((o) => !(am.untreated ?? []).includes(o.id)), 'medic');
+  return 0.35 + (medic ? 0.3 : 0);
+}
+
+/** The people dying on this run (pushed on for and not yet steadied), as operatives. */
+export const dyingOps = (state) => (state.activeMission?.untreated ?? []).map((id) => opById(state, id)).filter(Boolean);
+
+/** One line for a call-in while someone is dying: pulling out saves them; finishing is a chance. */
+export function dyingLine(state) {
+  const ops = dyingOps(state);
+  if (!ops.length) return '';
+  const who = ops.length > 1 ? `${ops.slice(0, -1).map((o) => o.handle).join(', ')} and ${ops.at(-1).handle} are` : `${ops[0].handle} is`;
+  return `${who} still bleeding out. Pull out now and they live; finish the job and they have a ${Math.round(survivalChance(state) * 100)}% chance.`;
+}
+
 function finish(state) {
   const am = state.activeMission;
   if (am.done) return;
@@ -1005,7 +1027,6 @@ function finish(state) {
   if (am.expedition) { finishExpeditionFight(state); return; } // an expedition's fight too (core/expeditions.js)
   const tpl = templateById(am.templateId);
   const crew = crewOf(state, am);
-  const medic = findRole(crew.filter((o) => !am.untreated.includes(o.id)), 'medic');
   const deaths = [];
   // Engine 2 fights kill in the moment (bleeding out on committed, left behind down, a hand-ordered withdrawal): core/runfight.js.
   for (const id of am.fightDead ?? []) {
@@ -1019,9 +1040,7 @@ function finish(state) {
   for (const id of am.untreated) {
     const op = opById(state, id);
     if (deaths.includes(op)) continue; // already died in the fight (bled out after being pushed on for)
-    // Aborting later still gets them out in time: an exit always saves lives.
-    const chance = state.difficulty === 'story' || am.aborted ? 1 : 0.35 + (medic ? 0.3 : 0);
-    if (nextRng(state)() < chance) {
+    if (nextRng(state)() < survivalChance(state)) {
       setInjury(op, 'serious');
       op.condition.injuryDays = 21;
       am.log.push({ kind: 'good', text: `${op.handle} pulls through. Barely.` });

@@ -261,7 +261,10 @@ function endFight(state, am) {
   if (b.end.result === 'held' && am.raid) am.pressed = true; // the raiders backed off at the cap: the door held (core/raids.js finishRaid)
   const text = b.end.text;
   const told = hurtLine(hurt, b.end.result === 'leftBehind'); // "The crew left X behind." already says who
-  const report = `${text}${told ? ` ${told}.` : hurt.length ? '' : ' Nobody badly hurt.'}`;
+  // Someone the crew kept fighting for is still dying: say so, every time (owner playtest, 2026-11-28: Plug's death came as a surprise).
+  const bleeding = b.runners.filter((x) => x.fightOn && x.down && !x.stable && !x.dead).map((x) => x.handle);
+  const still = bleeding.length ? ` ${bleeding.join(' and ')} ${bleeding.length > 1 ? 'are' : 'is'} still down and bleeding: pulling out gets them home alive.` : '';
+  const report = `${text}${told ? ` ${told}.` : hurt.length || still ? '' : ' Nobody badly hurt.'}${still}`;
   record(am, { kind: 'battle', phase: 'end', how: b.end.result, text, cause: text, report, hurt, ...fightSnapshot(b), stage: stageOf(b) });
   am.log.push({ kind: hurt.length ? 'bad' : 'good', text: report });
   am.report = [...(am.report ?? []), report];

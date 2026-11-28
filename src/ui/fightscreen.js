@@ -8,7 +8,7 @@
 import * as F from '../core/fight.js';
 import { roundView, planView, orderChoices, RISK_ORDER, riskWords } from '../core/fightview.js';
 import { lineText } from '../core/fighttext.js';
-import { describePending } from '../core/mission.js';
+import { describePending, dyingLine } from '../core/mission.js';
 import { FIGHT } from '../data/fights.js';
 import { getPref } from '../save/save.js';
 import { jossIcon } from './art.js';
@@ -237,6 +237,7 @@ export function renderFightCallIn(state, esc, face = () => '') {
       <p class="fs-title">${esc(heading)}</p>
       <p class="fs-changed">${esc(view.text)}</p>
       ${outside}
+      ${dyingLine(state) ? `<p class="fs-outside">${esc(dyingLine(state))}</p>` : ''}
       ${roster}
       ${intents ? `<p class="fs-lead">${esc(word('callin.intentLead'))}</p><ul class="fs-intents">${intents}</ul>` : ''}
       <div class="choices">${view.choices.map(choice).join('')}</div>

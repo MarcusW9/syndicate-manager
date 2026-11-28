@@ -141,6 +141,23 @@ test('pulling out always calls you under "when it\'s risky": the lead and the or
   assert.ok(found >= 1, 'a cautious crew wanted to pull out somewhere');
 });
 
+test('while someone is bleeding out, every crisis comes to you under "when it\'s risky", and the card says pulling out saves them', () => {
+  let s = createNewGame({ seed: 1, startCrew: 'fresh' });
+  s.crew[0].fame = 'elite';
+  s.jobs = [];
+  addOffer(s, 'warehouse');
+  s = M.startMission(s, s.jobs[0].id, s.crew.slice(0, 3).map((o) => o.id), 'stealth', { callIn: 'risky', orders: 'steady' });
+  const am = s.activeMission;
+  am.step = am.queue.findIndex((q) => q.type === 'crisis' && !q.twist);
+  am.untreated = [s.crew[2].id];
+  assert.ok(needsPlayer(s), 'the call comes to you, whatever the odds');
+  assert.ok(!leadTakes(s), 'the lead does not take it');
+  assert.match(M.dyingLine(s), new RegExp(`${s.crew[2].handle} is still bleeding out. Pull out now and they live`));
+  assert.equal(M.dyingLine({ ...s, activeMission: { ...am, untreated: [] } }), '');
+  am.callIn = 'never';
+  assert.ok(!needsPlayer(s), 'hands-off still decides on orders');
+});
+
 test("a big tong's extra offers lean to routine work; the first three a week don't change", () => {
   const big = createNewGame({ seed: 73, startCrew: 'fresh' });
   big.reputation = 30;
