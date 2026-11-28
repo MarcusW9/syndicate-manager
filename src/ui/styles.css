@@ -2582,11 +2582,23 @@ button.ffo-tag > span { color: var(--muted); font-size: 0.7rem; }
 .watch__map::before { top: 0; } .watch__map::after { bottom: 0; }
 .watch__map.fs-letterbox::before, .watch__map.fs-letterbox::after { height: 40px; }
 .watch__map.fs-letterbox .watch__caption[data-tier="special"] { top: 5px; bottom: auto; z-index: 3; width: max-content; }
+.watch__map.fs-letterbox .watch__caption[data-tier="killed"] { top: 5px; bottom: auto; z-index: 3; width: max-content; }
+.watch__caption[data-tier="killed"] { color: #ffd0d6; border-color: var(--accent); border-left-color: var(--accent); background: rgba(20, 0, 4, 0.94); letter-spacing: 0.16em; box-shadow: 0 0 16px rgba(255, 61, 95, 0.35); text-shadow: 0 0 6px rgba(255, 61, 95, 0.6); }
 .fs-round { fill: #fff; filter: drop-shadow(0 0 2px #ffe680) drop-shadow(0 0 4px #ffb040); }
 .fs-spark { fill: #fff3b0; }
 /* The spotlight (2026-11-20): during a special move everyone but the star and the targets dims. */
 .fs-spotlit .sp-token:not(.is-lit) { filter: brightness(0.45) saturate(0.6); }
 .fs-spotlit .sp-token.is-lit { filter: drop-shadow(0 0 3px var(--warn)); }
+/* A runner falling (2026-11-28, ui/fightstage.js FALL; the Ability Lab's "slow motion, camera pushes in"): the world drains to grey
+   and dark, the one falling and the shooter keep their colour (lit in red), the killing shot is a slow white slug with a red spray where
+   it lands, and a dying runner's face tips over slowly. Reduced motion: no slug, no slow topple (the class lands at once). */
+.fs-falling .sp-token:not(.is-lit) { filter: grayscale(1) brightness(0.4); transition: filter 0.4s; }
+.fs-falling .sp-token.is-lit { filter: drop-shadow(0 0 3px var(--accent)); }
+.fs-falling .sp-token .sp-face { transition: transform 1.4s cubic-bezier(0.2, 0.7, 0.3, 1), filter 1.4s; }
+.sp-token.fs-dying:not(.fs-foe) .sp-face { transform-box: view-box; transform-origin: 0 0; transform: rotate(80deg) translate(1.2px, -1.4px) scale(0.92); }
+.fs-slug { stroke: #fff; stroke-width: 1.4; stroke-linecap: round; filter: drop-shadow(0 0 2px var(--accent)); }
+.fs-spray { fill: var(--accent); pointer-events: none; animation: fs-spray 1.2s ease-out forwards; }
+@keyframes fs-spray { to { transform: translate(var(--dx), var(--dy)); opacity: 0; } }
 /* The ricochet comet (2026-11-20): a trail that stays and dims, sparks, an impact ring, a numbered badge, then the route glows and fades. */
 .fs-trail { stroke: #ffd860; stroke-width: 1.6; stroke-linecap: round; filter: drop-shadow(0 0 2px #ffb040); transition: opacity 0.5s; }
 .fs-trail.is-old { opacity: 0.55; }

@@ -432,3 +432,26 @@ test('a clutch finish slows its last kill, and Resolve and reduced motion still 
   assert.ok(clutch.dur > plain.dur * 2, 'about two and a half times as long');
   for (const sc of [stepsOf(cue, prev, 'resolve'), stepsOf(cue, prev, 'watch', { reduced: true })]) assert.ok(sc.filter((s) => s.do === 'tick').every((s) => s.dur === 0));
 });
+
+test('a runner falling is a big moment: a death pushes in, slows the shot and holds their name; death\'s door is lighter; an enemy falling is not', () => {
+  const { cue, prev, ens, crew } = forged([]);
+  const shot = (key) => ({ kind: 'guard', rule: 'shot', key, guard: ens[0], targetId: crew[0], damage: 3 });
+  cue.lines = [shot('shotHit')];
+  const plain = stepsOf(cue, prev).find((s) => s.do === 'fire');
+  cue.lines = [shot('shotDead')];
+  const dead = stepsOf(cue, prev);
+  const order = dead.map((s) => s.do).filter((d) => ['fallIn', 'fire', 'fallHold', 'fallEnd'].includes(d));
+  assert.deepEqual(order, ['fallIn', 'fire', 'fallHold', 'fallEnd'], 'in, the shot, the hold, out');
+  assert.equal(dead.find((s) => s.do === 'fallIn').kind, 'dead');
+  assert.ok(dead.find((s) => s.do === 'fire').dur >= plain.dur * 5, 'the killing shot plays slowly');
+  assert.ok(dead.findIndex((s) => s.do === 'camera' && s.focus?.includes(crew[0])) < dead.findIndex((s) => s.do === 'fire'), 'the camera pushes in on them before the shot');
+  assert.ok(dead.findIndex((s) => s.do === 'camera' && s.focus === null) > dead.findIndex((s) => s.do === 'fallEnd'), 'and pulls back after');
+  cue.lines = [shot('shotDown')];
+  const door = stepsOf(cue, prev);
+  assert.equal(door.find((s) => s.do === 'fallIn').kind, 'door');
+  const hold = (sc) => sc.find((s) => s.do === 'fallHold').dur + sc.find((s) => s.do === 'fallIn').dur + sc.find((s) => s.do === 'fire').dur;
+  assert.ok(hold(door) < hold(dead) / 2, "death's door is the lighter beat");
+  for (const sc of [stepsOf(cue, prev, 'resolve'), stepsOf(cue, prev, 'watch', { reduced: true })]) assert.ok(sc.filter((s) => s.do.startsWith('fall') || s.do === 'fire').every((s) => s.dur === 0), 'Resolve and reduced motion cut');
+  cue.lines = [{ kind: 'attack', rule: 'attack', key: 'attackOut', actor: crew[0], guard: ens[0], targetId: ens[0], damage: 9, dropped: true }];
+  assert.equal(stepsOf(cue, prev).filter((s) => s.do === 'fallIn').length, 0, 'an enemy going down stays quick');
+});

@@ -31,6 +31,7 @@
 
   Kit.ability({
     id: 'death', name: 'A runner falls (death)',
+    decided: 'Slow motion, camera pushes in (owner, 2026-11-28: "slowmo for now"), with KILLED in the bar instead of GONE. Built: ui/fightstage.js FALL.',
     rules: "A runner killed in a fight: bled out after \"keep fighting\", left behind, or on committed risk (core/runfight.js, the stage's fall with dead: true). Lighter: one going down at death's door, where the crew calls you in.",
     variants: [
       { id: 'now', tag: 'Now', name: 'Same as any knockdown', note: 'Today a death draws like any runner going down: the shot, the token greys and tips, a "Down" float. About half a second, easy to miss in a busy round.',

@@ -1008,8 +1008,11 @@ export function survivalChance(state) {
   return 0.35 + (medic ? 0.3 : 0);
 }
 
-/** The people dying on this run (pushed on for and not yet steadied), as operatives. */
-export const dyingOps = (state) => (state.activeMission?.untreated ?? []).map((id) => opById(state, id)).filter(Boolean);
+/** Who is dying on this run: pushed on for, not yet steadied, and not already dead in a fight (core/runfight.js am.fightDead). */
+export const dyingIds = (am) => (am?.untreated ?? []).filter((id) => !(am.fightDead ?? []).includes(id) && !am.battle?.runners?.find((r) => r.id === id)?.dead);
+
+/** The people dying on this run, as operatives. */
+export const dyingOps = (state) => dyingIds(state.activeMission).map((id) => opById(state, id)).filter(Boolean);
 
 /** One line for a call-in while someone is dying: pulling out saves them; finishing is a chance. */
 export function dyingLine(state) {

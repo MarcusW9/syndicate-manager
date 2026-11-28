@@ -40,6 +40,8 @@ export const FIGHT_TEXT = {
   'pace.fastNote': 'Fast: the next round plays on these orders by itself. Change orders or pick Watch to stop and decide.',
   'stage.hit': 'Hit',
   'stage.down': 'Down',
+  'stage.killedBar': '{who} · KILLED', // the bar's line when a runner dies (ui/fightstage.js FALL, 2026-11-28)
+  'stage.deathsDoor': "AT DEATH'S DOOR", // the tag on a runner who goes down at death's door
   'stage.out': 'Out',
   'stage.absorbed': 'Armour',
   'stage.cracked': 'Cracked',

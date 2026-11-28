@@ -26,6 +26,13 @@ export const PACES = ['fast', 'watch', 'resolve'];
 const CLUTCH_SLOW = 2.6; // a clutch finish's last kill plays this many times slower (0.7 s becomes about 1.8 s)
 const MS = { enter: 900, move: 600, lean: 320, fire: 240, gap: 160, heal: 450, aura: 1100, spread: 900, tick: 560, tickOut: 700, dome: 420, patch: 1100, alarm: 1800, rifleOw: 1600, droneOw: 2300, van: 900, patchTag: 1500, jam: 650, ping: 450, flank: 450, settle: 600 };
 const HIDDEN = new Set(['aboard', 'gone', 'fled']);
+// A runner falling (owner, 2026-11-28, the Ability Lab's "slow motion, camera pushes in", docs/mockups/ability-lab/abilities/death.js):
+// a death freezes the round, the bars come in, the world dims and the camera pushes in; the killing shot crosses slowly, they topple,
+// and their name holds in the bar. Death's door is the lighter version: a half beat, no bars, a tag. In ms at Watch.
+export const FALL = {
+  dead: { in: 900, slow: 6, hold: 1900 },
+  door: { in: 450, slow: 2.5, hold: 1000 },
+};
 
 const mid = (a, b) => [Math.round((a[0] + b[0]) / 2), Math.round((a[1] + b[1]) / 2)];
 const same = (a, b) => !!a && !!b && a[0] === b[0] && a[1] === b[1];
@@ -115,6 +122,9 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
   let special = null; // { star, look, mv, cut, from }
   const cut = pace === 'fast' ? SPECIAL_FAST_CUT : 1;
   const handle = (id) => (cue.runners ?? []).find((r) => r.id === id)?.handle ?? id;
+  // A runner falling (FALL): the camera pushes in before the shot, their name holds after it, then the camera pulls back.
+  const fallIn = (id, by, kind) => { push({ do: 'fallIn', id, by, kind, dur: ms(FALL[kind].in) }); push({ do: 'camera', focus: [id, ...(by ? [by] : [])] }); adv(FALL[kind].in); };
+  const fallOut = (id, kind) => { push({ do: 'fallHold', id, kind, who: handle(id), dur: ms(FALL[kind].hold) }); adv(FALL[kind].hold); push({ do: 'fallEnd', id }); push({ do: 'camera', focus: null }); };
   lines.forEach((l, i) => {
     const rule = l.rule ?? l.kind;
     // Commentary: the director's beat, said as it starts (the strip and the log read it; a fight can be followed without watching).
@@ -159,8 +169,13 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       adv(MS.flank);
     } else if (rule === 'shot' && l.guard != null && l.targetId) {
       const fell = l.key === 'shotDown' || l.key === 'shotDead';
-      push({ do: 'fire', from: enemyId(l.guard), to: l.targetId, hit: (l.damage ?? 0) > 0, absorbed: l.key === 'shotAbsorbed', ...(l.shieldedBy ? { shield: true } : {}), fell, dead: l.key === 'shotDead', damage: l.damage ?? 0, amount: l.hpDamage ?? 0, left: l.hpLeft ?? null, wide, foe: true, dur: ms(MS.fire) });
-      adv(MS.fire + MS.gap);
+      const fall = fell && units[l.targetId]?.side === 'crew' ? (l.key === 'shotDead' ? 'dead' : 'door') : null;
+      const by = enemyId(l.guard);
+      if (fall) fallIn(l.targetId, units[by] ? by : null, fall);
+      const len = MS.fire * (fall ? FALL[fall].slow : 1);
+      push({ do: 'fire', from: by, to: l.targetId, hit: (l.damage ?? 0) > 0, absorbed: l.key === 'shotAbsorbed', ...(l.shieldedBy ? { shield: true } : {}), fell, dead: l.key === 'shotDead', damage: l.damage ?? 0, amount: l.hpDamage ?? 0, left: l.hpLeft ?? null, wide, foe: true, ...(fall ? { slowmo: fall } : {}), dur: ms(len) });
+      adv(len + MS.gap);
+      if (fall) fallOut(l.targetId, fall);
     } else if (['stabilise', 'patch', 'aura'].includes(rule) && l.targetId) {
       // A medic's help that lands (the aura, a patch, a stabilise) is one picture: the medic glows and flashes, an orb crosses to the patient, the pip fills. A miss is the red ring.
       if (rule === 'aura' || l.success) {
@@ -207,8 +222,11 @@ export function stageScript(prev, cue, { pace = 'watch', reduced = false, spent 
       push({ do: 'patch', id: l.actor, targets: tg, amount: l.hpHeal ?? null, share, dur: ms(MS.patchTag) });
       adv(MS.patchTag);
     } else if (rule === 'death' && l.targetId) {
-      push({ do: 'fall', id: l.targetId, dead: true, dur: ms(MS.fire) });
-      adv(MS.fire + MS.gap);
+      const crew = units[l.targetId]?.side === 'crew';
+      if (crew) fallIn(l.targetId, null, 'dead');
+      push({ do: 'fall', id: l.targetId, dead: true, ...(crew ? { slowmo: 'dead' } : {}), dur: ms(MS.fire * (crew ? FALL.dead.slow : 1)) });
+      adv(MS.fire * (crew ? FALL.dead.slow : 1) + MS.gap);
+      if (crew) fallOut(l.targetId, 'dead');
     }
     if (special && !lines[i + 1]?.burst) { // the special move is over: a hold (Watch only), the bars go, the camera pulls back
       adv(special.mv.after, pace === 'fast' ? 0 : 1);
@@ -608,6 +626,19 @@ export function createStage(svg, deps) {
     return end;
   }
 
+  /** The killing shot in slow motion (FALL): a short bright slug crosses the whole way, its muzzle flash first, a spray where it lands. */
+  function slowShot(a, b, s) {
+    flash(a, 'fs-muzzle');
+    const slug = node('line', { class: 'fs-slug', x1: a[0], y1: a[1], x2: a[0], y2: a[1] }); fx.append(slug);
+    const t0 = performance.now();
+    const step = (now) => {
+      const t = Math.min(1, (now - t0) / s.dur); const h = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]; const k = Math.max(0, t - 0.08);
+      slug.setAttribute('x1', a[0] + (b[0] - a[0]) * k); slug.setAttribute('y1', a[1] + (b[1] - a[1]) * k); slug.setAttribute('x2', h[0]); slug.setAttribute('y2', h[1]);
+      if (t < 1) requestAnimationFrame(step); else { slug.remove(); for (let i = 0; i < 7; i++) { const ang = Math.atan2(b[1] - a[1], b[0] - a[0]) + (hash01(b[0], b[1], i) - 0.5) * 1.6; const d = node('circle', { class: 'fs-spray', cx: b[0], cy: b[1], r: 0.9 + hash01(i, b[0]) * 0.8 }); d.style.setProperty('--dx', `${Math.cos(ang) * 9}px`); d.style.setProperty('--dy', `${Math.sin(ang) * 9 + 4}px`); gone(d, 1300); } }
+    };
+    requestAnimationFrame(step);
+  }
+
   // --- the special move's drawing (data/fightLooks.js SPECIAL_MOVES) ---
   const mapBox = svg.closest('.watch__map') ?? svg.parentElement;
   const cinema = (on) => { mapBox?.classList.toggle('fs-letterbox', on); svg.classList.toggle('fs-slowmo', on); };
@@ -856,6 +887,7 @@ export function createStage(svg, deps) {
         else if (s.look === 'ricochet') ricochet(a, b, s);
         else if (s.look === 'slash') slash(a, b, s);
         else if (s.look === 'ping') bolt(a, b, s);
+        else if (s.slowmo && s.dur > 0 && !deps.reduced()) slowShot(a, b, s);
         else tracer(a, b, s);
         setTimeout(() => {
           const g = host(s.to);
@@ -877,6 +909,21 @@ export function createStage(svg, deps) {
         }, s.hitAt ?? s.dur);
         break;
       }
+      case 'fallIn': {
+        // The round holds its breath: a death brings the bars and the dimmed world, death's door only the dimming.
+        if (!s.dur || deps.reduced()) break;
+        if (s.kind === 'dead') cinema(true);
+        spot([s.id, ...(s.by ? [s.by] : [])]);
+        svg.classList.add('fs-falling');
+        break;
+      }
+      case 'fallHold': {
+        const at = pos(s.id);
+        if (s.kind === 'dead') { host(s.id)?.classList.add('fs-dying'); deps.caption?.(word('stage.killedBar', { who: String(s.who).toUpperCase() }), 'killed'); }
+        else if (at) tag(at, word('stage.deathsDoor'), String(s.who).toUpperCase(), 'bad');
+        break;
+      }
+      case 'fallEnd': cinema(false); unspot(); svg.classList.remove('fs-falling'); break;
       case 'flank': { const b = pos(s.id); flash(b, 'sp-flash--miss'); float(b, word('stage.flanked'), 'is-hit'); break; }
       case 'heal': { const b = pos(s.id); if (b) { const c = node('circle', { class: `sp-ring ${s.ok ? 'sp-ring--ok' : 'sp-ring--bad'}`, cx: b[0], cy: b[1], r: 9 }); fx.append(c); setTimeout(() => c.remove(), Math.max(400, s.dur)); } break; }
       case 'aura': {

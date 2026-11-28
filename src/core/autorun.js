@@ -15,7 +15,7 @@
 
 import { templateById } from './jobs.js';
 import { fightAnswer } from './runfight.js';
-import { crisisOdds, chooseOption, revealBeat, resolveCritical, currentStep, startMission, enterZone, runIncident, runBattle, followStops, resolvePending, describePending, RISKY_BELOW } from './mission.js';
+import { crisisOdds, chooseOption, revealBeat, resolveCritical, currentStep, startMission, enterZone, runIncident, runBattle, followStops, resolvePending, describePending, RISKY_BELOW, dyingIds } from './mission.js';
 import { ordersDecision } from './incidents.js';
 
 const pct = (n) => `${Math.round(n * 100)}%`;
@@ -107,7 +107,7 @@ function wouldCall(state) {
   const am = state.activeMission;
   if (am.callIn !== 'risky') return true;
   if (currentStep(am)?.twist) return true; // a twist is the job changing under them: always yours, never the odds' or the lead's (owner, 2026-11-21)
-  if ((am.untreated ?? []).length) return true; // someone is bleeding out: every call is yours until they're out (owner playtest, 2026-11-28)
+  if (dyingIds(am).length) return true; // someone is bleeding out: every call is yours until they're out (owner playtest, 2026-11-28)
   if (pullsOut(state)) return true;
   const tries = (crisisOdds(state) ?? []).filter((o) => !o.exit);
   return !tries.length || Math.max(...tries.map((o) => o.chance)) < RISKY_BELOW;
@@ -127,7 +127,7 @@ function pullsOut(state) {
 export function leadTakes(state) {
   const am = state.activeMission;
   return am.callIn === 'risky' && (am.lead?.calls ?? 0) > 0 && !am.critical && !am.pending && !am.done && !dayDone(am)
-    && currentStep(am)?.type === 'crisis' && !currentStep(am).twist && !(am.untreated ?? []).length && !pullsOut(state) && wouldCall(state);
+    && currentStep(am)?.type === 'crisis' && !currentStep(am).twist && !dyingIds(am).length && !pullsOut(state) && wouldCall(state);
 }
 
 // --- away jobs, day by day (core/away.js) ----------------------------------

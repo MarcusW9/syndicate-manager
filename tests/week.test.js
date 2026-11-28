@@ -154,6 +154,7 @@ test('while someone is bleeding out, every crisis comes to you under "when it\'s
   assert.ok(!leadTakes(s), 'the lead does not take it');
   assert.match(M.dyingLine(s), new RegExp(`${s.crew[2].handle} is still bleeding out. Pull out now and they live`));
   assert.equal(M.dyingLine({ ...s, activeMission: { ...am, untreated: [] } }), '');
+  assert.equal(M.dyingLine({ ...s, activeMission: { ...am, fightDead: [s.crew[2].id] } }), '', 'someone who has died is no longer bleeding out');
   am.callIn = 'never';
   assert.ok(!needsPlayer(s), 'hands-off still decides on orders');
 });
