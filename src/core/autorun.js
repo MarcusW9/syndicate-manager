@@ -107,15 +107,26 @@ function wouldCall(state) {
   const am = state.activeMission;
   if (am.callIn !== 'risky') return true;
   if (currentStep(am)?.twist) return true; // a twist is the job changing under them: always yours, never the odds' or the lead's (owner, 2026-11-21)
+  if (pullsOut(state)) return true;
   const tries = (crisisOdds(state) ?? []).filter((o) => !o.exit);
   return !tries.length || Math.max(...tries.map((o) => o.chance)) < RISKY_BELOW;
 }
 
-/** A crew lead (core/lead.js) takes a risky call themselves while they have one left ('risky' only: 'every' means every). */
+/**
+ * Would the crew's orders pull out here? Pulling out ends the job: under "when it's risky" that is always
+ * yours, never the crew's or the lead's (owner playtest, 2026-11-28: a lead aborted on a bad-odds crisis
+ * and the player never got the chance to push on).
+ */
+function pullsOut(state) {
+  const odds = crisisOdds(state);
+  return !!odds && !!odds.find((o) => o.choice.id === decide(state, state.activeMission.orders).id)?.exit;
+}
+
+/** A crew lead (core/lead.js) takes a risky call themselves while they have one left ('risky' only: 'every' means every), never one that pulls out. */
 export function leadTakes(state) {
   const am = state.activeMission;
   return am.callIn === 'risky' && (am.lead?.calls ?? 0) > 0 && !am.critical && !am.pending && !am.done && !dayDone(am)
-    && currentStep(am)?.type === 'crisis' && !currentStep(am).twist && wouldCall(state);
+    && currentStep(am)?.type === 'crisis' && !currentStep(am).twist && !pullsOut(state) && wouldCall(state);
 }
 
 // --- away jobs, day by day (core/away.js) ----------------------------------

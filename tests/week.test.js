@@ -7,7 +7,7 @@ import { createNewGame, SAVE_VERSION } from '../src/core/state.js';
 import { advanceDay, weeklyBill } from '../src/core/time.js';
 import { billDue, mondayBrief, weekSummary, crewStandard, crewAgainstStandard } from '../src/core/week.js';
 import { crewLead } from '../src/core/lead.js';
-import { needsPlayer, leadTakes, autoStep } from '../src/core/autorun.js';
+import { needsPlayer, leadTakes, autoStep, decide } from '../src/core/autorun.js';
 import * as M from '../src/core/mission.js';
 import { addOffer, postJobs, templateById, NEW_PER_WEEK } from '../src/core/jobs.js';
 
@@ -113,6 +113,32 @@ test('a twist always calls you under "when it\'s risky": the lead and the odds n
   assert.ok(!leadTakes(s), 'the lead does not take it');
   am.callIn = 'never';
   assert.ok(!needsPlayer(s), 'hands-off still decides it by orders');
+});
+
+test('pulling out always calls you under "when it\'s risky": the lead and the orders never end the job', () => {
+  let found = 0;
+  for (let seed = 1; seed <= 80 && found < 3; seed++) {
+    let s = createNewGame({ seed, startCrew: 'fresh' });
+    s.crew[0].fame = 'elite';
+    s.jobs = [];
+    addOffer(s, 'warehouse');
+    s = M.startMission(s, s.jobs[0].id, s.crew.slice(0, 3).map((o) => o.id), 'stealth', { callIn: 'risky', orders: 'cautious' });
+    for (let g = 0; g < 300 && !s.activeMission.done; g++) {
+      const am = s.activeMission;
+      if (M.currentStep(am)?.type === 'crisis' && !am.critical && !am.pending) {
+        const pick = M.crisisOdds(s).find((o) => o.choice.id === decide(s, 'cautious').id);
+        if (pick?.exit) {
+          found++;
+          assert.ok(needsPlayer(s), 'a pull-out comes to you');
+          assert.ok(!leadTakes(s), 'the lead does not take it');
+          break;
+        }
+      }
+      if (needsPlayer(s)) break;
+      s = autoStep(s);
+    }
+  }
+  assert.ok(found >= 1, 'a cautious crew wanted to pull out somewhere');
 });
 
 test("a big tong's extra offers lean to routine work; the first three a week don't change", () => {

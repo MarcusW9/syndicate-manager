@@ -36,7 +36,7 @@ export function renderCallIns(t, days = t.days) {
   if (!V.ordersOpen) {
     return `${head}
       <button class="orderline" data-action="toggle-orders" aria-expanded="false">${esc(summary)} <b>Change</b></button>
-      ${lead && callIn === 'risky' ? `<p class="lead small"><strong>${esc(lead.handle)} leads</strong> (${esc(lead.fame)}): they take one risky call themselves before calling you (never a twist: those are yours).</p>` : ''}`;
+      ${lead && callIn === 'risky' ? `<p class="lead small"><strong>${esc(lead.handle)} leads</strong> (${esc(lead.fame)}): they take one risky call themselves before calling you (never a twist or a pull-out: those are yours).</p>` : ''}`;
   }
   return `${head}
       <div id="plan-orders">
@@ -50,7 +50,7 @@ export function renderCallIns(t, days = t.days) {
         ${Object.entries(CALL_IN).map(([k, c]) => `
           <button class="seg ${callIn === k ? 'is-on' : ''}" data-action="callin" data-id="${k}" aria-pressed="${callIn === k}"><strong>${esc(c.name)}</strong><span>${esc(c.desc)}</span></button>`).join('')}
       </div>
-      ${lead && callIn === 'risky' ? `<p class="lead small"><strong>${esc(lead.handle)} leads</strong> (${esc(lead.fame)}): they take one risky call themselves before calling you (never a twist: those are yours).</p>` : ''}
+      ${lead && callIn === 'risky' ? `<p class="lead small"><strong>${esc(lead.handle)} leads</strong> (${esc(lead.fame)}): they take one risky call themselves before calling you (never a twist or a pull-out: those are yours).</p>` : ''}
       ${callIn === 'every' ? '' : `
       <h3 class="orders__h">When they decide themselves</h3>
       <p class="muted small">Their orders decide each call they don't bring to you. They never push on with a critical wound: at worst, they pull out.</p>
