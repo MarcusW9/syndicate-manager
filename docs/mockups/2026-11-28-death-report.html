@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A death in the report: three looks</title>
+<!-- Mockup, 2026-11-28 (owner: "afterwards should be a bigger deal to highlight it too"). Pictures only; nothing in src/.
+     Same job on every card: Plug died on the way back from the Low Water, day 318. -->
+<style>
+  :root { --bg:#0a0c0f; --panel:#12151b; --panel-2:#161a21; --line:#2a303b; --text:#e9ecf1; --muted:#8a93a6; --accent:#ff3d5f; --accent-2:#3de8d8; --warn:#f2a13d; --danger:#ff4a4a; --display:'Rajdhani', 'Arial Narrow', sans-serif; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.45 system-ui, sans-serif; padding:16px; }
+  h1 { font:700 1.3rem var(--display); letter-spacing:.08em; text-transform:uppercase; margin:0 0 4px; }
+  .lead { color:var(--muted); margin:0 0 16px; max-width:70ch; }
+  .grid { display:flex; flex-wrap:wrap; gap:20px; align-items:flex-start; }
+  .col { width:380px; max-width:100%; }
+  .tag { display:inline-block; font:700 .7rem var(--display); letter-spacing:.14em; text-transform:uppercase; color:var(--accent-2); border:1px solid var(--accent-2); padding:1px 6px; }
+  .col h2 { font:700 1.05rem var(--display); letter-spacing:.06em; text-transform:uppercase; margin:6px 0; }
+  .note { color:var(--muted); font-size:.85rem; margin:8px 0 0; }
+  .phone { position:relative; background:linear-gradient(var(--panel-2), var(--panel)); border:1px solid var(--line); clip-path:polygon(0 0, 100% 0, 100% calc(100% - 14px), calc(100% - 14px) 100%, 0 100%); padding:14px; min-height:520px; overflow:hidden; }
+  .kick { font:700 .7rem var(--display); letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin:0; }
+  .jobname { font:700 1.25rem var(--display); letter-spacing:.06em; text-transform:uppercase; margin:2px 0 10px; }
+  .crew { display:flex; gap:12px; margin:0 0 10px; }
+  .op { display:flex; flex-direction:column; align-items:center; font:600 .8rem var(--display); letter-spacing:.06em; }
+  .op small { color:var(--muted); font:500 .72rem system-ui; }
+  .face { width:44px; height:44px; border-radius:50%; background:#2b3340; border:2px solid var(--accent-2); display:grid; place-items:center; font:700 1rem var(--display); }
+  .op.lost { opacity:.55; } .op.lost .face { border-color:var(--danger); filter:grayscale(1); } .op.lost small { color:var(--danger); }
+  .joss { border-left:3px solid var(--accent-2); padding:6px 10px; background:rgba(61,232,216,.05); margin:0 0 10px; font-size:.9rem; }
+  .sec { font:700 .72rem var(--display); letter-spacing:.14em; text-transform:uppercase; color:var(--accent-2); margin:12px 0 4px; }
+  .muted { color:var(--muted); }
+  .rows p { margin:2px 0; font-size:.9rem; }
+  .bad { color:var(--danger); }
+  /* A: the wall panel at the top */
+  .wall { position:relative; border:1px solid rgba(255,74,74,.5); background:linear-gradient(rgba(255,74,74,.10), rgba(255,74,74,.03)); padding:14px; margin:0 0 12px; clip-path:polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+  .wall::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--danger); }
+  .wall .big { display:flex; gap:12px; align-items:center; }
+  .wall .face { width:72px; height:72px; font-size:1.5rem; border-color:var(--danger); filter:grayscale(1); }
+  .wall .who { font:700 1.4rem/1.05 var(--display); letter-spacing:.06em; text-transform:uppercase; }
+  .wall .real { color:var(--muted); font-size:.85rem; }
+  .wall .how { margin:10px 0 4px; }
+  .facts { display:flex; gap:14px; font:600 .78rem var(--display); letter-spacing:.08em; text-transform:uppercase; color:var(--muted); margin:8px 0 0; }
+  .facts b { display:block; color:var(--text); font-size:1.05rem; }
+  .why { border-top:1px solid rgba(255,74,74,.3); margin-top:10px; padding-top:8px; font-size:.85rem; }
+  /* B: the black card before the report */
+  .black { position:absolute; inset:0; background:#000; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:24px; transition:opacity .6s; z-index:2; }
+  .black .face { width:96px; height:96px; font-size:2rem; border-color:#555; filter:grayscale(1); opacity:0; animation:in 1.2s .3s forwards; }
+  .black .who { font:700 1.8rem var(--display); letter-spacing:.14em; text-transform:uppercase; margin:16px 0 2px; opacity:0; animation:in 1s 1s forwards; }
+  .black .real { color:var(--muted); opacity:0; animation:in 1s 1.4s forwards; }
+  .black .days { font:600 .85rem var(--display); letter-spacing:.14em; text-transform:uppercase; color:#777; margin:14px 0 0; opacity:0; animation:in 1s 2s forwards; }
+  .black .line { max-width:30ch; margin:14px 0 0; color:#bbb; font-style:italic; opacity:0; animation:in 1s 2.6s forwards; }
+  .black button { margin-top:26px; min-height:44px; padding:0 22px; background:none; color:var(--text); border:1px solid #555; font:700 .85rem var(--display); letter-spacing:.14em; text-transform:uppercase; opacity:0; animation:in .8s 3.4s forwards; cursor:pointer; }
+  @keyframes in { to { opacity:1; } }
+  .band { background:#000; border-top:1px solid #333; border-bottom:1px solid #333; padding:8px 12px; display:flex; align-items:center; gap:10px; margin:0 0 12px; font:700 .8rem var(--display); letter-spacing:.12em; text-transform:uppercase; }
+  .band .face { width:30px; height:30px; font-size:.8rem; border-color:#555; filter:grayscale(1); }
+  .replay { margin-top:8px; min-height:44px; background:none; border:1px solid var(--line); color:var(--muted); font:700 .75rem var(--display); letter-spacing:.12em; text-transform:uppercase; padding:0 12px; cursor:pointer; }
+  /* C: the crew answers, then the wall */
+  .grief { border-left:3px solid var(--danger); padding:8px 12px; background:rgba(255,74,74,.06); margin:0 0 12px; }
+  .grief .head { display:flex; gap:10px; align-items:center; }
+  .grief .face { width:52px; height:52px; border-color:var(--danger); filter:grayscale(1); }
+  .grief .who { font:700 1.15rem var(--display); letter-spacing:.08em; text-transform:uppercase; }
+  .said { margin:8px 0 0; font-size:.9rem; }
+  .said b { font-family:var(--display); letter-spacing:.06em; }
+  .after { margin:8px 0 0; font-size:.85rem; color:var(--warn); }
+  @media (prefers-reduced-motion: reduce) { .black * { animation:none !important; opacity:1 !important; } }
+</style>
+</head>
+<body>
+<h1>A death in the report</h1>
+<p class="lead">Owner, 2026-11-28: "afterwards should be a bigger deal to highlight it too." Today a death is one grey face marked Lost, Joss's line, and "Their names go on the wall" near the bottom. Three looks, same job. Each can go with any of the fight looks in the Ability Lab.</p>
+<div class="grid">
+
+  <div class="col">
+    <span class="tag">Now</span><h2>Lost on the strip</h2>
+    <div class="phone">
+      <p class="kick">Report · Day 318</p>
+      <p class="jobname">The Low Water</p>
+      <div class="crew"><div class="op"><div class="face">P</div>Pylon<small>3 ✓ · 2 ✗</small></div><div class="op"><div class="face">S</div>Spectre<small>0 ✓ · 1 ✗</small></div><div class="op lost"><div class="face">P</div>Plug<small>Lost</small></div></div>
+      <p class="joss"><b>Joss</b> We lost someone. I'm here. We don't have to do the rest right now.</p>
+      <p class="sec">How the fight ended</p><p class="rows">The yard is theirs: every enemy is down or running.</p>
+      <p class="sec">Turning point</p><p class="rows">Pylon's stealth let them down.</p>
+      <p class="sec">…</p>
+      <div class="rows"><p>Paid ¥5,800. Heat +1.</p><p>Injured: Pylon (light, 2d), Spectre (light, 2d).</p><p class="bad">Their names go on the wall.</p></div>
+    </div>
+    <p class="note">Easy to read past: the death has the same weight as the heat line.</p>
+  </div>
+
+  <div class="col">
+    <span class="tag">Proposal A</span><h2>The wall comes first</h2>
+    <div class="phone">
+      <p class="kick">Report · Day 318</p>
+      <p class="jobname">The Low Water</p>
+      <div class="wall">
+        <div class="big"><div class="face">P</div><div><div class="who">Plug</div><div class="real">Kwan-yu Kwok · Tech</div></div></div>
+        <p class="how">Kept fighting while down in the container yard. Died on the way back.</p>
+        <div class="facts"><span><b>94</b>days with us</span><span><b>23</b>jobs</span><span><b>11</b>fights won</span></div>
+        <p class="why">The call: <b>Keep fighting with Plug down</b>, round 1. Pulling out at any step after it would have brought them home.</p>
+      </div>
+      <p class="joss"><b>Joss</b> We lost someone. I'm here. We don't have to do the rest right now.</p>
+      <div class="crew"><div class="op"><div class="face">P</div>Pylon<small>3 ✓ · 2 ✗</small></div><div class="op"><div class="face">S</div>Spectre<small>0 ✓ · 1 ✗</small></div></div>
+      <p class="sec">How the fight ended</p><p class="rows">The yard is theirs: every enemy is down or running.</p>
+      <p class="sec">…</p>
+    </div>
+    <p class="note">A red-edged panel opens the report before anything else: the face large and grey, the real name, how they died in one line, a life in three numbers, and the call that led to it, plainly (the death rule: the player sees which risk they took). Cheap to build: everything is on the run and the runner already.</p>
+  </div>
+
+  <div class="col">
+    <span class="tag">Proposal B</span><h2>A black card before the report</h2>
+    <div class="phone" id="b">
+      <div class="black" id="bcard">
+        <div class="face">P</div>
+        <div class="who">Plug</div>
+        <div class="real">Kwan-yu Kwok</div>
+        <div class="days">Day 224 – Day 318 · 23 jobs</div>
+        <p class="line">"Plug has the shift change down to the minute."</p>
+        <button onclick="document.getElementById('bcard').style.opacity=0;setTimeout(()=>document.getElementById('bcard').style.display='none',600)">Go on</button>
+      </div>
+      <p class="kick">Report · Day 318</p>
+      <p class="jobname">The Low Water</p>
+      <div class="band"><div class="face">P</div>Plug didn't come home</div>
+      <div class="crew"><div class="op"><div class="face">P</div>Pylon<small>3 ✓ · 2 ✗</small></div><div class="op"><div class="face">S</div>Spectre<small>0 ✓ · 1 ✗</small></div></div>
+      <p class="joss"><b>Joss</b> We lost someone. I'm here. We don't have to do the rest right now.</p>
+      <p class="sec">How the fight ended</p><p class="rows">The yard is theirs: every enemy is down or running.</p>
+      <p class="sec">…</p>
+    </div>
+    <button class="replay" onclick="const c=document.getElementById('bcard');c.style.display='flex';c.style.opacity=1;c.querySelectorAll('*').forEach(e=>{e.style.animation='none';e.offsetHeight;e.style.animation=''})">Play again</button>
+    <p class="note">Before the report opens, the screen goes black: the face fades in, the name, their days with the crew, and one line the game wrote about them (here from the days-out log). Nothing to read past; you tap Go on. The report then carries a black band. About 4 seconds, and only for a death. The quote needs a line per runner to pick from (the log already has them).</p>
+  </div>
+
+  <div class="col">
+    <span class="tag">Proposal C</span><h2>The crew answers</h2>
+    <div class="phone">
+      <p class="kick">Report · Day 318</p>
+      <p class="jobname">The Low Water</p>
+      <div class="grief">
+        <div class="head"><div class="face">P</div><div><div class="who">Plug is gone</div><div class="muted" style="font-size:.85rem">Died on the way back. 94 days with us.</div></div></div>
+        <p class="said"><b>Pylon</b> "They came for me. That's the only reason they were in reach."</p>
+        <p class="said"><b>Spectre</b> said nothing the whole way back.</p>
+        <p class="after">Pylon and Spectre are grieving: −1 cool for a week. The hall is quiet tonight.</p>
+      </div>
+      <p class="joss"><b>Joss</b> We lost someone. I'm here. We don't have to do the rest right now.</p>
+      <div class="crew"><div class="op"><div class="face">P</div>Pylon<small>3 ✓ · 2 ✗</small></div><div class="op"><div class="face">S</div>Spectre<small>0 ✓ · 1 ✗</small></div></div>
+      <p class="sec">How the fight ended</p><p class="rows">The yard is theirs: every enemy is down or running.</p>
+    </div>
+    <p class="note">The death lands through the people who were there: a line from each, picked by what happened (Plug tried to save Pylon), and a cost that lasts (a week's grief). The biggest change: it needs written lines (WRITING_GUIDE.md) and a rule for grief, which is a design call of its own. Can be added to A later.</p>
+  </div>
+
+</div>
+</body>
+</html>
